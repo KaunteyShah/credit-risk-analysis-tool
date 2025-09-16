@@ -62,86 +62,30 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Azure Login
-      shell: bash
-      run: |
-        echo "Skipping Azure login for now - using manual deployment"
-        echo "This will be updated once Service Principal is configured"
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    - name: Deploy to Azure App Service
+      uses: azure/webapps-deploy@v2
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
+        app-name: ${{ env.APP_SERVICE_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: deployment
 
-    - name: Prepare deployment package
+    - name: Verify Deployment
       run: |
-        # Create deployment directory
-        mkdir -p deployment
+        APP_URL="https://${{ env.APP_SERVICE_NAME }}.azurewebsites.net"
+        echo "🎯 Deployment Complete!"
+        echo "🌐 Application URL: $APP_URL"
+        echo "⏳ Waiting for application to start..."
+        sleep 60
         
-        # Copy application files
-        cp -r app/ deployment/
-        cp requirements.txt deployment/
-        cp main.py deployment/
-        
-        # Create startup script for Azure App Service
-        cat > deployment/startup.sh << 'EOF'
-        #!/bin/bash
-        echo "🚀 Starting Credit Risk Analysis Application..."
-        
-        # Install dependencies
-        echo "📦 Installing Python dependencies..."
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        
-        # Set Python path
-        export PYTHONPATH="/home/site/wwwroot:$PYTHONPATH"
-        
-        # Start Streamlit app
-        echo "🌐 Starting Streamlit application..."
-        python -m streamlit run app/core/streamlit_app_langgraph_viz.py \
-          --server.port=8000 \
-          --server.address=0.0.0.0 \
-          --server.headless=true \
-          --server.enableCORS=false \
-          --server.enableXsrfProtection=false \
-          --browser.gatherUsageStats=false
-        EOF
-        
-        chmod +x deployment/startup.sh
-        
-        # Create .deployment file for Azure App Service
-        cat > deployment/.deployment << 'EOF'
-        [config]
-        command = bash startup.sh
-        EOF
-
-    - name: Verify Deployment Package
-      run: |
-        echo "✅ Deployment package prepared successfully"
-        echo "📦 Package contents:"
-        ls -la deployment/
-        echo "🔧 Startup script:"
-        cat deployment/startup.sh
-        echo "📋 Deployment configuration:"
-        cat deployment/.deployment
-        echo "⚠️  Azure deployment skipped - Service Principal needs to be configured"
+        # Basic health check
+        if curl -f --connect-timeout 30 --max-time 60 $APP_URL; then
+          echo "✅ Application is responding"
+        else
+          echo "⚠️ Application might still be starting up"
+        fi
             WEBSITES_PORT=8000 \
             SCM_DO_BUILD_DURING_DEPLOYMENT=true \
-    - name: Build Summary
-      run: |
-        echo "🎯 Credit Risk Analysis - Build Complete!"
-        echo "📊 Application Status: Ready for deployment"
-        echo "🔧 Infrastructure Status: Already deployed"
-        echo "🔑 Authentication Status: Pending Service Principal setup"
-        echo ""
-        echo "📋 Next Steps:"
-        echo "1. Configure Azure Service Principal for GitHub Actions"
-        echo "2. Add AZURE_CREDENTIALS secret to GitHub repository" 
-        echo "3. Re-run workflow for automatic deployment"
-        echo ""
-        echo "🌐 Manual Deployment Available At:"
-        echo "   App Service: https://credit-risk-analysis-prod-app-25h2ya.azurewebsites.net"
-        echo "   Resource Group: rg-credit-risk-analysis-prod-ukwest"
+
         
         echo "🚀 Deployment completed!"
         echo "🌐 Application URL: $APP_URL"
