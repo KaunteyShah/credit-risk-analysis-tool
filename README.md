@@ -2,6 +2,105 @@
 
 A production-ready, Databricks-compliant multi-agent system for credit risk analysis with advanced SIC code prediction and LangGraph workflow visualization.
 
+## 🚀 Quick Start
+
+### Prerequisites
+- Python 3.11 or 3.12
+- Git
+
+### Option 1: Automated Setup (Recommended)
+
+**For macOS/Linux:**
+```bash
+git clone https://github.com/KaunteyShah/credit-risk-analysis-tool.git
+cd credit-risk-analysis-tool
+./start.sh
+```
+
+**For Windows:**
+```cmd
+git clone https://github.com/KaunteyShah/credit-risk-analysis-tool.git
+cd credit-risk-analysis-tool
+start.bat
+```
+
+### Option 2: Manual Setup
+
+1. **Clone the repository:**
+```bash
+git clone https://github.com/KaunteyShah/credit-risk-analysis-tool.git
+cd credit-risk-analysis-tool
+```
+
+2. **Create and activate virtual environment:**
+```bash
+# Create virtual environment
+python -m venv .venv
+
+# Activate virtual environment
+# On macOS/Linux:
+source .venv/bin/activate
+# On Windows:
+.venv\Scripts\activate
+```
+
+3. **Install dependencies:**
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+4. **Verify setup (optional but recommended):**
+```bash
+python verify_setup.py
+```
+
+5. **Run the application:**
+```bash
+python main.py
+```
+
+6. **Access the app:**
+Open your browser and go to http://localhost:8000
+
+### 📁 Essential Files Included
+- ✅ `data/Sample_data2.csv` - Sample company data (509 companies)
+- ✅ `data/SIC_codes.xlsx` - SIC classification codes
+- ✅ `requirements.txt` - All Python dependencies
+- ✅ `main.py` - Application entry point
+- ✅ `verify_setup.py` - Setup verification script
+- ✅ `start.sh` / `start.bat` - Automated setup scripts
+- ✅ Complete `app/` folder structure
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**"Python not found"**
+- Install Python 3.11+ from https://python.org
+- Make sure Python is added to your PATH
+
+**"Module not found" errors**
+- Ensure virtual environment is activated
+- Run: `pip install -r requirements.txt`
+
+**"Data file not found" errors**
+- Verify you're in the correct directory
+- Check that `data/` folder contains CSV and Excel files
+- Run verification: `python verify_setup.py`
+
+**Port 8000 already in use**
+- Close other applications using port 8000
+- Or kill existing processes: `pkill -f streamlit`
+
+**Permission denied (macOS/Linux)**
+- Make start script executable: `chmod +x start.sh`
+
+### Getting Help
+- Run verification script: `python verify_setup.py`
+- Check all required files are present
+- Ensure Python 3.11+ is installed
+
 ## 🏗️ Architecture
 
 ```
