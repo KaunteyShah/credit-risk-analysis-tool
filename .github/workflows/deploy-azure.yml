@@ -67,54 +67,18 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Prepare deployment package
+    - name: Configure Azure App Service for Python
       run: |
-        # Create deployment directory
-        mkdir -p deployment
-        
-        # Copy application files
-        cp -r app/ deployment/
-        cp requirements.txt deployment/
-        cp main.py deployment/
-        
-        # Create startup script for Azure App Service
-        cat > deployment/startup.sh << 'EOF'
-        #!/bin/bash
-        echo "🚀 Starting Credit Risk Analysis Application..."
-        
-        # Install dependencies
-        echo "📦 Installing Python dependencies..."
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        
-        # Set Python path
-        export PYTHONPATH="/home/site/wwwroot:$PYTHONPATH"
-        
-        # Start Streamlit app
-        echo "🌐 Starting Streamlit application..."
-        python -m streamlit run app/core/streamlit_app_langgraph_viz.py \
-          --server.port=8000 \
-          --server.address=0.0.0.0 \
-          --server.headless=true \
-          --server.enableCORS=false \
-          --server.enableXsrfProtection=false \
-          --browser.gatherUsageStats=false
-        EOF
-        
-        chmod +x deployment/startup.sh
-        
-        # Create .deployment file for Azure App Service
-        cat > deployment/.deployment << 'EOF'
-        [config]
-        command = bash startup.sh
-        EOF
+        echo "🔧 Configuring Azure App Service for Python deployment..."
+        # The deployment will use the repository root with main.py as entry point
 
     - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.APP_SERVICE_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: deployment
+        package: '.'
+        deployment-method: 'auto'
 
     - name: Verify Deployment
       run: |

@@ -1,39 +1,41 @@
+#!/usr/bin/env python3
 """
-Main entry point for the Credit Risk Analysis Application
-Production-ready Databricks-compliant structure
+Main entry point for the Credit Risk Analysis application on Azure App Service.
+This file serves as the entry point that Azure App Service can automatically detect.
 """
-
-import sys
 import os
-from pathlib import Path
-
-# Add the app directory to Python path
-app_dir = Path(__file__).parent
-sys.path.insert(0, str(app_dir))
-
-# Set up logging
-import logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-
-logger = logging.getLogger(__name__)
+import sys
+import subprocess
 
 def main():
-    """Main application entry point"""
-    logger.info("Starting Credit Risk Analysis Application")
+    """Main entry point for the application."""
+    print("🚀 Starting Credit Risk Analysis Application...")
     
-    # Import and run the Streamlit app
+    # Set environment variables
+    os.environ['PYTHONPATH'] = '/home/site/wwwroot'
+    port = os.environ.get('WEBSITES_PORT', '8000')
+    
+    # Install dependencies if needed
     try:
-        from app.core.streamlit_app_langgraph_viz import main as streamlit_main
-        streamlit_main()
-    except ImportError as e:
-        logger.error(f"Failed to import Streamlit app: {e}")
-        raise
-    except Exception as e:
-        logger.error(f"Application error: {e}")
-        raise
+        import streamlit
+        print("✅ Streamlit already installed")
+    except ImportError:
+        print("📦 Installing dependencies...")
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt'])
+    
+    # Start Streamlit app
+    print(f"🌐 Starting Streamlit application on port {port}...")
+    
+    # Run Streamlit with the correct module path
+    cmd = [
+        sys.executable, '-m', 'streamlit', 'run', 
+        'app/core/streamlit_app_langgraph_viz.py',
+        '--server.port', port,
+        '--server.address', '0.0.0.0',
+        '--server.headless', 'true'
+    ]
+    
+    subprocess.run(cmd)
 
 if __name__ == "__main__":
     main()
