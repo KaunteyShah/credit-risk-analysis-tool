@@ -122,7 +122,7 @@ resource databricksWorkspace 'Microsoft.Databricks/workspaces@2023-02-01' = {
   name: '${resourcePrefix}-dbw-${resourceToken}'
   location: location
   sku: {
-    name: 'standard'
+    name: 'premium'
   }
   properties: {
     managedResourceGroupId: subscriptionResourceId('Microsoft.Resources/resourceGroups', '${resourcePrefix}-dbw-managed-rg-${resourceToken}')
@@ -130,7 +130,21 @@ resource databricksWorkspace 'Microsoft.Databricks/workspaces@2023-02-01' = {
       enableNoPublicIp: {
         value: false
       }
+      // Premium tier features
+      requireInfrastructureEncryption: {
+        value: false
+      }
+      storageAccountName: {
+        value: ''
+      }
+      storageAccountSkuName: {
+        value: 'Standard_GRS'
+      }
     }
+    // Enable public network access for ease of use (can be restricted later)
+    publicNetworkAccess: 'Enabled'
+    // Required for premium workspaces
+    requiredNsgRules: 'AllRules'
   }
   tags: {
     Environment: environmentName
