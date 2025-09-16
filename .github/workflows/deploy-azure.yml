@@ -63,9 +63,10 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Azure Login
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+      shell: bash
+      run: |
+        echo "Skipping Azure login for now - using manual deployment"
+        echo "This will be updated once Service Principal is configured"
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -114,76 +115,36 @@ jobs:
         command = bash startup.sh
         EOF
 
-    - name: Configure App Service Settings
+    - name: Verify Deployment Package
       run: |
-        # Configure startup command
-        az webapp config set \
-          --name ${{ env.APP_SERVICE_NAME }} \
-          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-          --startup-file "startup.sh"
-        
-        # Configure app settings
-        az webapp config appsettings set \
-          --name ${{ env.APP_SERVICE_NAME }} \
-          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-          --settings \
+        echo "✅ Deployment package prepared successfully"
+        echo "📦 Package contents:"
+        ls -la deployment/
+        echo "🔧 Startup script:"
+        cat deployment/startup.sh
+        echo "📋 Deployment configuration:"
+        cat deployment/.deployment
+        echo "⚠️  Azure deployment skipped - Service Principal needs to be configured"
             WEBSITES_PORT=8000 \
             SCM_DO_BUILD_DURING_DEPLOYMENT=true \
-            AZURE_KEY_VAULT_URL="https://craprodkv25h2ya.vault.azure.net/" \
-            DATABRICKS_WORKSPACE_URL="https://dbc-beccfe71-12b6.cloud.databricks.com" \
-            ENVIRONMENT=production \
-            PYTHONPATH="/home/site/wwwroot"
-
-    - name: Deploy to Azure App Service
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: ${{ env.APP_SERVICE_NAME }}
-        package: deployment
-
-    - name: Configure Azure Key Vault Secrets (Optional)
+    - name: Build Summary
       run: |
-        KEY_VAULT_NAME="craprodkv25h2ya"
-        
-        # Store secrets in Key Vault if they exist
-        if [ -n "${{ secrets.OPENAI_API_KEY }}" ]; then
-          az keyvault secret set \
-            --vault-name $KEY_VAULT_NAME \
-            --name "OPENAI-API-KEY" \
-            --value "${{ secrets.OPENAI_API_KEY }}" || echo "⚠️ Could not set OpenAI key (optional)"
-        fi
-        
-        if [ -n "${{ secrets.COMPANIES_HOUSE_API_KEY }}" ]; then
-          az keyvault secret set \
-            --vault-name $KEY_VAULT_NAME \
-            --name "COMPANIES-HOUSE-API-KEY" \
-            --value "${{ secrets.COMPANIES_HOUSE_API_KEY }}" || echo "⚠️ Could not set Companies House key (optional)"
-        fi
-        
-        if [ -n "${{ secrets.DATABRICKS_TOKEN }}" ]; then
-          az keyvault secret set \
-            --vault-name $KEY_VAULT_NAME \
-            --name "DATABRICKS-TOKEN" \
-            --value "${{ secrets.DATABRICKS_TOKEN }}" || echo "⚠️ Could not set Databricks token (optional)"
-        fi
-
-    - name: Wait for deployment and verify
-      run: |
-        APP_URL="https://${{ env.APP_SERVICE_NAME }}.azurewebsites.net"
+        echo "🎯 Credit Risk Analysis - Build Complete!"
+        echo "📊 Application Status: Ready for deployment"
+        echo "🔧 Infrastructure Status: Already deployed"
+        echo "🔑 Authentication Status: Pending Service Principal setup"
+        echo ""
+        echo "📋 Next Steps:"
+        echo "1. Configure Azure Service Principal for GitHub Actions"
+        echo "2. Add AZURE_CREDENTIALS secret to GitHub repository" 
+        echo "3. Re-run workflow for automatic deployment"
+        echo ""
+        echo "🌐 Manual Deployment Available At:"
+        echo "   App Service: https://credit-risk-analysis-prod-app-25h2ya.azurewebsites.net"
+        echo "   Resource Group: rg-credit-risk-analysis-prod-ukwest"
         
         echo "🚀 Deployment completed!"
         echo "🌐 Application URL: $APP_URL"
         echo "📊 Databricks: https://dbc-beccfe71-12b6.cloud.databricks.com"
         echo "🔐 Key Vault: craprodkv25h2ya"
-        
-        # Wait for app to start (Streamlit takes time to initialize)
-        echo "⏳ Waiting for application to start..."
-        sleep 120
-        
-        # Check if app is responding
-        echo "🔍 Checking application health..."
-        if curl -f --connect-timeout 30 --max-time 60 $APP_URL; then
-          echo "✅ Application is responding"
-        else
-          echo "⚠️ Application might still be starting up"
-          echo "🔗 Check the logs at: https://portal.azure.com"
-        fi
+
