@@ -7,7 +7,7 @@ on:
 
 env:
   AZURE_RESOURCE_GROUP: rg-credit-risk-analysis-prod
-  APP_SERVICE_NAME: credit-risk-analysis-prod-app-7gxvhd
+  APP_SERVICE_NAME: credit-risk-analysis-prod-app-25h2ya
   PYTHON_VERSION: '3.11'
 
 jobs:
@@ -70,4 +70,4 @@ jobs:
         APP_URL="https://${{ env.APP_SERVICE_NAME }}.azurewebsites.net"
         echo "🚀 Deployment completed!"
         echo "🌐 Application URL: $APP_URL"
-        echo "📊 Databricks: https://adb-3194291270776069.9.azuredatabricks.net"
+        echo "📊 Databricks: https://adb-2180339463017854.14.azuredatabricks.net"

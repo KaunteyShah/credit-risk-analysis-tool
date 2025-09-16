@@ -2,7 +2,7 @@
 # Credit Risk Analysis - Production Deployment
 
 ## Resource Group: rg-credit-risk-analysis-prod
-## Region: East US (or your preferred region)
+## Region: UK West (preferred region for EY UK)
 
 ## Required Azure Resources:
 1. **Resource Group** - Container for all resources

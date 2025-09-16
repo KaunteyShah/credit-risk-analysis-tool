@@ -8,10 +8,10 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_RESOURCE_GROUP: rg-credit-risk-analysis-prod
-  AZURE_LOCATION: eastus
+  AZURE_RESOURCE_GROUP: rg-credit-risk-analysis-prod-ukwest
+  AZURE_LOCATION: ukwest
   PYTHON_VERSION: '3.11'
-  APP_SERVICE_NAME: credit-risk-analysis-prod-app-7gxvhd
+  APP_SERVICE_NAME: credit-risk-analysis-prod-app-25h2ya
 
 jobs:
   # Application Testing
@@ -129,8 +129,8 @@ jobs:
           --settings \
             WEBSITES_PORT=8000 \
             SCM_DO_BUILD_DURING_DEPLOYMENT=true \
-            AZURE_KEY_VAULT_URL="https://craprodkv7gxvhd.vault.azure.net/" \
-            DATABRICKS_WORKSPACE_URL="https://adb-3194291270776069.9.azuredatabricks.net" \
+            AZURE_KEY_VAULT_URL="https://craprodkv25h2ya.vault.azure.net/" \
+            DATABRICKS_WORKSPACE_URL="https://adb-2180339463017854.14.azuredatabricks.net" \
             ENVIRONMENT=production \
             PYTHONPATH="/home/site/wwwroot"
 
@@ -142,7 +142,7 @@ jobs:
 
     - name: Configure Azure Key Vault Secrets (Optional)
       run: |
-        KEY_VAULT_NAME="craprodkv7gxvhd"
+        KEY_VAULT_NAME="craprodkv25h2ya"
         
         # Store secrets in Key Vault if they exist
         if [ -n "${{ secrets.OPENAI_API_KEY }}" ]; then
@@ -172,8 +172,8 @@ jobs:
         
         echo "🚀 Deployment completed!"
         echo "🌐 Application URL: $APP_URL"
-        echo "📊 Databricks: https://adb-3194291270776069.9.azuredatabricks.net"
-        echo "🔐 Key Vault: craprodkv7gxvhd"
+        echo "📊 Databricks: https://adb-2180339463017854.14.azuredatabricks.net"
+        echo "🔐 Key Vault: craprodkv25h2ya"
         
         # Wait for app to start (Streamlit takes time to initialize)
         echo "⏳ Waiting for application to start..."

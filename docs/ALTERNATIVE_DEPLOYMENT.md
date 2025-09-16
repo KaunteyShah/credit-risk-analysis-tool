@@ -9,13 +9,13 @@ Since your organization restricts service principal creation, let's use an alter
 ```bash
 # Create Resource Group
 az group create \
-  --name rg-credit-risk-analysis-prod \
-  --location "East US" \
+  --name rg-credit-risk-analysis-prod-ukwest \
+  --location "UK West" \
   --tags Environment=prod Application=credit-risk-analysis
 
 # Deploy infrastructure using Azure CLI
 az deployment group create \
-  --resource-group rg-credit-risk-analysis-prod \
+  --resource-group rg-credit-risk-analysis-prod-ukwest \
   --template-file infra/main.bicep \
   --parameters @infra/main.parameters.json
 ```
@@ -26,8 +26,8 @@ az deployment group create \
 az webapp up \
   --sku B1 \
   --name credit-risk-analysis-app-$(openssl rand -hex 3) \
-  --resource-group rg-credit-risk-analysis-prod \
-  --location "East US" \
+  --resource-group rg-credit-risk-analysis-prod-ukwest \
+  --location "UK West" \
   --runtime "PYTHON:3.11"
 ```
 

@@ -55,7 +55,7 @@ Update these files with your specific values:
          "value": "YOUR_EMAIL_HERE"
        },
        "location": {
-         "value": "East US"  // or your preferred region
+         "value": "UK West"  // EY UK preferred region
        }
      }
    }
@@ -121,7 +121,7 @@ git push origin main
    az account show --query id --output tsv
    ```
 
-2. **Your preferred Azure region** (e.g., "East US", "West Europe")
+2. **Your preferred Azure region** (e.g., "UK West", "West Europe")
 
 3. **Your email address** for notifications
 
@@ -141,7 +141,7 @@ git push origin main
 
 After successful deployment, you'll have:
 
-- ✅ **Azure Resource Group**: `rg-credit-risk-analysis-prod`
+- ✅ **Azure Resource Group**: `rg-credit-risk-analysis-prod-ukwest`
 - ✅ **Azure App Service**: Hosting your Streamlit application
 - ✅ **Azure Databricks**: Data processing workspace
 - ✅ **Azure Key Vault**: Secure secret storage
