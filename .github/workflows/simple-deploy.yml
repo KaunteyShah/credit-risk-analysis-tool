@@ -1,0 +1,73 @@
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  AZURE_RESOURCE_GROUP: rg-credit-risk-analysis-prod
+  APP_SERVICE_NAME: credit-risk-analysis-prod-app-7gxvhd
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Test application imports
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+        # Test imports
+        python -c "
+        import sys
+        sys.path.insert(0, '.')
+        from app.agents.sector_classification_agent import SectorClassificationAgent
+        from app.utils.config_manager import ConfigManager
+        print('✅ All imports successful')
+        "
+
+    - name: Azure Login with Service Principal
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy to Azure App Service
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.APP_SERVICE_NAME }}
+        package: .
+        startup-command: |
+          pip install -r requirements.txt && 
+          python -m streamlit run app/core/streamlit_app_langgraph_viz.py 
+          --server.port=8000 
+          --server.address=0.0.0.0 
+          --server.headless=true
+
+    - name: Configure App Service Settings
+      run: |
+        az webapp config appsettings set \
+          --name ${{ env.APP_SERVICE_NAME }} \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --settings \
+            WEBSITES_PORT=8000 \
+            SCM_DO_BUILD_DURING_DEPLOYMENT=true \
+            ENVIRONMENT=production \
+            PYTHONPATH="/home/site/wwwroot"
+
+    - name: Verify deployment
+      run: |
+        APP_URL="https://${{ env.APP_SERVICE_NAME }}.azurewebsites.net"
+        echo "🚀 Deployment completed!"
+        echo "🌐 Application URL: $APP_URL"
+        echo "📊 Databricks: https://adb-3194291270776069.9.azuredatabricks.net"

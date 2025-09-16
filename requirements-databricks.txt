@@ -1,0 +1,32 @@
+# Databricks-specific requirements
+# Core Databricks packages
+databricks-connect>=17.0.0
+databricks-sdk>=0.65.0
+pyspark>=4.0.0
+
+# Delta Lake and MLflow
+delta-spark>=4.0.0
+mlflow>=3.3.0
+
+# Data processing
+pandas>=2.0.0
+pyarrow>=15.0.0
+numpy>=1.26.0
+
+# Web framework (Streamlit)
+streamlit>=1.28.0
+plotly>=5.17.0
+
+# AI and ML libraries (existing)
+langchain>=0.2.0
+langgraph>=0.2.0
+langchain-openai>=0.1.0
+langchain-community>=0.2.0
+
+# Utilities
+python-dotenv>=1.0.0
+pyyaml>=6.0.0
+requests>=2.31.0
+
+# Optional: Databricks CLI for management
+# databricks-cli>=0.18.0

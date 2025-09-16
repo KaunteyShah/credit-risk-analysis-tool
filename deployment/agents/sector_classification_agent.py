@@ -10,9 +10,9 @@ from dataclasses import dataclass
 # Add the parent directory to sys.path to import modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from agents.base_agent import BaseAgent, AgentResult
-from utils.config_manager import config
-from utils.logger import logger
+from app.agents.base_agent import BaseAgent, AgentResult
+from app.utils.config_manager import config
+from app.utils.logger import logger
 
 @dataclass
 class SectorSuggestion:

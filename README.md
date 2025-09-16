@@ -1,255 +1,256 @@
-# 🏦 Credit Risk Analysis Demo
+# Credit Risk Analysis - Production Application
 
-[![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=Streamlit&logoColor=white)](https://streamlit.io/)
-[![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org/)
-[![Plotly](https://img.shields.io/badge/Plotly-3F4F75?style=for-the-badge&logo=plotly&logoColor=white)](https://plotly.com/)
-[![Databricks](https://img.shields.io/badge/Databricks-FF3621?style=for-the-badge&logo=databricks&logoColor=white)](https://databricks.com/)
+A production-ready, Databricks-compliant multi-agent system for credit risk analysis with advanced SIC code prediction and LangGraph workflow visualization.
 
-> **Multi-Agent AI System for SIC Code Validation & Revenue Verification**
+## 🏗️ Architecture
 
-A sophisticated Streamlit application demonstrating AI-powered credit risk analysis through automated SIC code validation, accuracy assessment, and revenue data verification using multi-agent orchestration.
+```
+app/
+├── core/                    # Core application modules
+│   ├── streamlit_app_langgraph_viz.py  # Main Streamlit application
+│   └── phase2_integration.py           # LangGraph orchestration
+├── agents/                  # Multi-agent system
+│   ├── base_agent.py       # Base agent class
+│   ├── sector_classification_agent.py  # SIC prediction agent
+│   ├── data_ingestion_agent.py
+│   ├── document_download_agent.py
+│   ├── rag_agent.py
+│   ├── anomaly_detection_agent.py
+│   ├── smart_financial_extraction_agent.py
+│   ├── turnover_estimation_agent.py
+│   └── multi_agent_orchestrator.py
+├── apis/                   # External API integrations
+│   ├── companies_house_api.py
+│   └── financial_data_api.py
+├── utils/                  # Utility modules
+│   ├── config_manager.py
+│   ├── logger.py
+│   ├── data_mapper.py
+│   └── sic_prediction_utils.py
+├── config/                 # Configuration management
+│   └── databricks_config.py
+├── data_layer/            # Data access layer
+│   └── databricks_data.py
+└── workflows/             # Workflow definitions
+    └── credit_risk_workflow.py
+```
 
-## 🎯 **Project Overview**
+## ✨ Features
 
-This demo showcases a production-ready interface for financial institutions to:
-- **Validate SIC codes** using AI-powered business description analysis
-- **Assess accuracy** with color-coded visual indicators
-- **Orchestrate multiple AI agents** for comprehensive data processing
-- **Track revenue updates** and data freshness
-- **Filter and analyze** company data efficiently
+### 🎯 SIC Prediction System
+- **Real-time SIC code prediction** using AI-powered business description analysis
+- **Batch processing** for multiple companies
+- **Confidence scoring** and validation
+- **25+ real UK SIC mappings** with industry expertise
 
-### 🌟 **Key Features**
+### 📊 LangGraph Visualization  
+- **Professional workflow visualization** with enhanced styling
+- **Multi-agent orchestration** display
+- **Interactive node exploration** 
+- **Conditional flow representation**
 
-- **🎨 Professional UI**: Collapsible panels with responsive design
-- **🤖 LangGraph Agent Flows**: Vertical agent orchestration visualization
-- **🎯 Smart Filtering**: Quick accuracy categories (High/Medium/Low)
-- **📊 Color-Coded Accuracy**: Visual SIC code accuracy assessment
-- **⚡ Real-time Controls**: Interactive buttons with status indicators
-- **📈 Analytics Dashboard**: Summary metrics and data insights
+### 🏢 Databricks Integration
+- **Delta Lake** support for data storage
+- **Unity Catalog** integration
+- **MLflow** for model tracking
+- **Auto-detection** of Databricks environment
 
-## 🚀 **Quick Start**
+### 📈 Analytics Dashboard
+- **Interactive data tables** with filtering
+- **Real-time performance metrics**
+- **Batch operation monitoring** 
+- **Export capabilities**
+
+## 🚀 Quick Start
 
 ### Prerequisites
-
-- **Python 3.12+**
-- **Git** (for cloning)
+- Python 3.8+
+- Databricks Runtime (optional, auto-detected)
+- Access to Companies House API (optional)
 
 ### Installation
 
+1. **Clone the repository**
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/credit-risk-analysis-demo.git
-cd credit-risk-analysis-demo
-
-# Install dependencies
-pip install streamlit plotly pandas numpy openpyxl
-
-# Generate enhanced data (first time only)
-python preprocess_data.py
-
-# Launch the application
-streamlit run streamlit_app.py --server.port 8501
+git clone <repository-url>
+cd Credit_Risk
 ```
 
-### Using the Quick Launcher
+2. **Install dependencies**
+```bash
+pip install -r requirements.txt
+```
+
+3. **Configure environment**
+```bash
+# Create .env file with your API keys (optional)
+echo "COMPANIES_HOUSE_API_KEY=your_key_here" > .env
+```
+
+4. **Run the application**
+```bash
+streamlit run app/core/streamlit_app_langgraph_viz.py
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+```bash
+# Optional API keys
+COMPANIES_HOUSE_API_KEY=your_companies_house_key
+OPENAI_API_KEY=your_openai_key
+
+# Databricks configuration (auto-detected if running on Databricks)
+DATABRICKS_HOST=your_databricks_host
+DATABRICKS_TOKEN=your_databricks_token
+```
+
+### Databricks Setup
+The application automatically detects Databricks environment. For external connections:
+
+```python
+from app.config.databricks_config import get_databricks_config
+
+config = get_databricks_config()
+spark = config.get_spark_session()
+```
+
+## 📊 Data Sources
+
+### Primary Data
+- **Sample_data2.csv**: 509 UK companies with full business intelligence
+- **Columns**: Company Number, Name, Address, SIC codes, Status, Incorporation Date
+
+### Supported Formats
+- CSV files with company data
+- Delta tables (Databricks)
+- JSON export/import
+
+## 🤖 Agent System
+
+### Available Agents
+1. **SectorClassificationAgent** - SIC code prediction and validation
+2. **DataIngestionAgent** - Data loading and preprocessing
+3. **DocumentDownloadAgent** - Document retrieval
+4. **RAGAgent** - Retrieval-augmented generation
+5. **AnomalyDetectionAgent** - Outlier detection
+6. **SmartFinancialExtractionAgent** - Financial data extraction
+7. **TurnoverEstimationAgent** - Revenue estimation
+8. **MultiAgentOrchestrator** - Workflow coordination
+
+### Agent Architecture
+```python
+from app.agents.base_agent import BaseAgent, AgentResult
+
+class CustomAgent(BaseAgent):
+    def process(self, data: Dict[str, Any]) -> AgentResult:
+        # Your agent logic here
+        return AgentResult(
+            agent_name=self.name,
+            timestamp=datetime.now(),
+            success=True,
+            data=processed_data
+        )
+```
+
+## 🔄 Workflows
+
+### SIC Prediction Workflow
+1. **Input**: Company business description
+2. **Processing**: AI-powered industry classification
+3. **Validation**: Confidence scoring and verification
+4. **Output**: SIC code with metadata
+
+### Batch Processing
+```python
+# Process multiple companies
+results = batch_predict_visible_companies(companies_df)
+```
+
+## 📈 Performance
+
+### Optimization Features
+- **Lazy loading** of large datasets
+- **Caching** for repeated operations
+- **Batch processing** for efficiency
+- **Memory management** for large files
+
+### Monitoring
+- **Real-time metrics** in dashboard
+- **Error tracking** and logging
+- **Performance profiling** available
+
+## 🔒 Security
+
+### Data Protection
+- **No sensitive data** stored in code
+- **Environment variable** based configuration
+- **Secure API key** management
+- **Access control** via Databricks permissions
+
+## 🧪 Testing
 
 ```bash
-# Make launcher executable
-chmod +x run_app.sh
+# Run tests
+pytest tests/
 
-# Launch with one command
-./run_app.sh
+# Code formatting
+black app/
+
+# Linting
+flake8 app/
 ```
 
-The application will open at: **http://localhost:8501**
+## 📚 API Reference
 
-## 📊 **Current Dataset**
-
-- **509 Companies** with comprehensive business data
-- **149 Unique SIC Codes** from UK SIC 2007 classification
-- **Enhanced Mock Accuracy Scores** using realistic beta distributions
-- **Geographic Coverage**: UK, USA, Australia, Canada
-- **Website Coverage**: 92.9% of companies have website data
-
-### Data Structure
-```
-📁 data/
-├── Sample data_09Sep2025.xlsx     # Original company data
-├── SIC_codes.xlsx                 # Official UK SIC 2007 codes
-└── enhanced_sample_data.pkl       # Processed data with accuracy scores
-```
-
-## 🎮 **Using the Demo**
-
-### 📋 **Panel Controls**
-- **Top Panel**: Company data analysis with filtering
-- **Bottom Panel**: Agent orchestration and system status
-- **Collapsible Design**: Toggle panels on/off via sidebar
-
-### 🔍 **Smart Filtering**
-- **🔴 Low Accuracy** (<70%): Companies needing immediate attention
-- **🟡 Medium Accuracy** (70-90%): Companies that could be improved
-- **🟢 High Accuracy** (≥90%): Companies with excellent classification
-- **Custom Filters**: Employee count, country, revenue update status
-
-### 🤖 **Agent Orchestration**
-- **SIC Prediction Flow**: 5-agent workflow for business classification
-- **Revenue Update Flow**: 4-agent pipeline for data refresh
-- **Live Status Tracking**: Professional Red/Orange/Green indicators
-- **Interactive Controls**: Start/stop agent workflows
-
-### 📊 **Data Table Features**
-- **Column Selection**: Choose which fields to display
-- **Color-Coded Accuracy**: Visual assessment of SIC code quality
-- **Action Buttons**: Individual and batch operations
-- **Pagination**: Efficient navigation through large datasets
-
-## 🏗️ **Architecture**
-
-### Phase 1: UI Foundation (Current)
-```
-streamlit_app.py          # Main Streamlit application
-preprocess_data.py        # Data enhancement pipeline
-run_app.sh               # Application launcher
-├── 📊 Data Layer
-│   ├── Company data loading
-│   ├── SIC codes reference
-│   └── Enhanced accuracy scoring
-├── 🎨 UI Layer
-│   ├── Collapsible panels
-│   ├── Interactive filtering
-│   └── Professional styling
-└── 🤖 Mock Agent Layer
-    ├── LangGraph-style visualization
-    ├── Status tracking
-    └── Workflow simulation
-```
-
-### Future Phases
-- **Phase 2**: Real agent integration with LangGraph
-- **Phase 3**: Databricks deployment and scaling
-- **Phase 4**: Advanced analytics and predictive modeling
-- **Phase 5**: Enterprise integration and automation
-
-## 🔧 **Configuration**
-
-### Customizing Data Sources
+### SIC Prediction
 ```python
-# In preprocess_data.py
-COMPANY_DATA_PATH = "data/Sample data_09Sep2025.xlsx"
-SIC_CODES_PATH = "data/SIC_codes.xlsx"
-OUTPUT_PATH = "enhanced_sample_data.pkl"
+from app.agents.sector_classification_agent import SectorClassificationAgent
+
+agent = SectorClassificationAgent()
+result = agent.predict_sic_code("Software development company")
 ```
 
-### Adjusting Accuracy Thresholds
+### Data Operations
 ```python
-# In streamlit_app.py
-HIGH_ACCURACY_THRESHOLD = 0.9    # 90%+
-MEDIUM_ACCURACY_THRESHOLD = 0.7  # 70%+
-# Below 70% = Low accuracy
+from app.data_layer.databricks_data import DatabricksDataLayer
+
+data_layer = DatabricksDataLayer()
+df = data_layer.read_delta_table("companies")
 ```
 
-## 📈 **Business Value**
+## 🚀 Deployment
 
-### Risk Management
-- **Visual Risk Assessment**: Immediately identify companies with poor SIC classification
-- **Portfolio Analysis**: Track accuracy distribution across business units
-- **Compliance Monitoring**: Ensure regulatory classification requirements
+### Databricks Deployment
+1. Upload the `app/` directory to Databricks workspace
+2. Install requirements via cluster libraries
+3. Run as Databricks notebook or job
 
-### Operational Efficiency
-- **Automated Workflows**: Multi-agent processing reduces manual effort
-- **Quick Filtering**: Focus on high-priority companies needing attention
-- **Batch Operations**: Process multiple companies simultaneously
-
-### Data Quality
-- **Accuracy Tracking**: Monitor and improve classification quality over time
-- **Revenue Validation**: Keep financial data current and accurate
-- **Audit Trails**: Track changes and updates for compliance
-
-## 🛠️ **Development**
-
-### Project Structure
-```
-credit-risk-analysis-demo/
-├── streamlit_app.py              # Main application
-├── preprocess_data.py            # Data processing
-├── run_app.sh                   # Launcher script
-├── data/                        # Data files
-├── docs/                        # Documentation
-└── requirements.txt             # Python dependencies
+### Standalone Deployment
+```bash
+# Production server
+streamlit run app/core/streamlit_app_langgraph_viz.py --server.port 8501
 ```
 
-## 📝 **Changelog**
+## 🤝 Contributing
 
-### Phase 1.0 (Current)
-- ✅ Complete UI foundation with collapsible panels
-- ✅ LangGraph-style agent visualization
-- ✅ Color-coded SIC accuracy assessment
-- ✅ Quick filtering by accuracy categories
-- ✅ Professional table with action buttons
-- ✅ Enhanced data processing pipeline
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
 
-### Planned (Phase 2.0)
-- 🔄 Real agent integration with LangGraph
-- 🔄 Live SIC prediction using ML models
-- 🔄 Companies House API integration
-- 🔄 Website content scraping and analysis
+## 📄 License
 
-## 🤝 **Contributing**
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
-4. **Push** to the branch (`git push origin feature/amazing-feature`)
-5. **Open** a Pull Request
+## 📞 Support
 
-## 📄 **License**
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+For support and questions:
+- Create an issue in the repository
+- Check the documentation in `/docs`
+- Review the example notebooks in `/examples`
 
 ---
 
-## 🎯 **Built for Databricks**
-
-This demo is designed to showcase the potential of deploying AI-powered financial analysis on the Databricks platform, demonstrating:
-- **Scalable data processing** with Delta Lake
-- **ML model deployment** with MLflow
-- **Interactive analytics** with Databricks Apps
-- **Enterprise security** with Unity Catalog
-
-**Ready to revolutionize credit risk analysis with AI! 🏦✨**
-3. **Sector Classification Agent** - Suggests correct sector codes using business descriptions
-4. **Turnover Estimation Agent** - Proposes turnover corrections using alternative data
-5. **Confidence Scoring Agent** - Calculates confidence levels for suggestions
-6. **Human Review Interface** - Workflow for analyst approval/rejection
-
-### Data Sources
-- Companies House API
-- Business websites and social media
-- External agency databases
-- Public financial reports
-- Alternative data sources
-
-## Project Structure
-```
-├── config/              # Configuration files
-├── src/                 # Source code
-│   ├── agents/         # Individual agent implementations
-│   └── utils/          # Utility functions
-├── notebooks/          # Databricks notebooks
-├── data/              # Sample and processed data
-└── tests/             # Test files
-```
-
-## Getting Started
-1. Configure API keys in `config/api_config.yaml`
-2. Set up Databricks environment
-3. Run the main orchestration notebook
-4. Review suggestions in the analyst interface
-
-## Features
-- Real-time anomaly detection
-- AI-powered correction suggestions
-- Confidence scoring
-- Human-in-the-loop workflow
-- Comprehensive audit trail
+**Built with ❤️ for enterprise credit risk analysis**

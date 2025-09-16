@@ -1,0 +1,189 @@
+name: Deploy Credit Risk Analysis to Azure
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  AZURE_RESOURCE_GROUP: rg-credit-risk-analysis-prod
+  AZURE_LOCATION: eastus
+  PYTHON_VERSION: '3.11'
+  APP_SERVICE_NAME: credit-risk-analysis-prod-app-7gxvhd
+
+jobs:
+  # Application Testing
+  test-application:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run tests
+      run: |
+        # Run configuration tests
+        python -c "
+        import sys
+        sys.path.insert(0, '.')
+        from app.utils.config_manager import ConfigManager
+        config = ConfigManager()
+        print('✅ Configuration manager works')
+        "
+        
+        # Test import structure
+        python -c "
+        import sys
+        sys.path.insert(0, '.')
+        from app.agents.sector_classification_agent import SectorClassificationAgent
+        from app.apis.unified_api_service import get_unified_api_service
+        print('✅ All imports successful')
+        "
+
+  # Application Deployment
+  deploy-application:
+    needs: [test-application]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Prepare deployment package
+      run: |
+        # Create deployment directory
+        mkdir -p deployment
+        
+        # Copy application files
+        cp -r app/ deployment/
+        cp requirements.txt deployment/
+        cp main.py deployment/
+        
+        # Create startup script for Azure App Service
+        cat > deployment/startup.sh << 'EOF'
+        #!/bin/bash
+        echo "🚀 Starting Credit Risk Analysis Application..."
+        
+        # Install dependencies
+        echo "📦 Installing Python dependencies..."
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+        # Set Python path
+        export PYTHONPATH="/home/site/wwwroot:$PYTHONPATH"
+        
+        # Start Streamlit app
+        echo "🌐 Starting Streamlit application..."
+        python -m streamlit run app/core/streamlit_app_langgraph_viz.py \
+          --server.port=8000 \
+          --server.address=0.0.0.0 \
+          --server.headless=true \
+          --server.enableCORS=false \
+          --server.enableXsrfProtection=false \
+          --browser.gatherUsageStats=false
+        EOF
+        
+        chmod +x deployment/startup.sh
+        
+        # Create .deployment file for Azure App Service
+        cat > deployment/.deployment << 'EOF'
+        [config]
+        command = bash startup.sh
+        EOF
+
+    - name: Configure App Service Settings
+      run: |
+        # Configure startup command
+        az webapp config set \
+          --name ${{ env.APP_SERVICE_NAME }} \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --startup-file "startup.sh"
+        
+        # Configure app settings
+        az webapp config appsettings set \
+          --name ${{ env.APP_SERVICE_NAME }} \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --settings \
+            WEBSITES_PORT=8000 \
+            SCM_DO_BUILD_DURING_DEPLOYMENT=true \
+            AZURE_KEY_VAULT_URL="https://craprodkv7gxvhd.vault.azure.net/" \
+            DATABRICKS_WORKSPACE_URL="https://adb-3194291270776069.9.azuredatabricks.net" \
+            ENVIRONMENT=production \
+            PYTHONPATH="/home/site/wwwroot"
+
+    - name: Deploy to Azure App Service
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.APP_SERVICE_NAME }}
+        package: deployment
+
+    - name: Configure Azure Key Vault Secrets (Optional)
+      run: |
+        KEY_VAULT_NAME="craprodkv7gxvhd"
+        
+        # Store secrets in Key Vault if they exist
+        if [ -n "${{ secrets.OPENAI_API_KEY }}" ]; then
+          az keyvault secret set \
+            --vault-name $KEY_VAULT_NAME \
+            --name "OPENAI-API-KEY" \
+            --value "${{ secrets.OPENAI_API_KEY }}" || echo "⚠️ Could not set OpenAI key (optional)"
+        fi
+        
+        if [ -n "${{ secrets.COMPANIES_HOUSE_API_KEY }}" ]; then
+          az keyvault secret set \
+            --vault-name $KEY_VAULT_NAME \
+            --name "COMPANIES-HOUSE-API-KEY" \
+            --value "${{ secrets.COMPANIES_HOUSE_API_KEY }}" || echo "⚠️ Could not set Companies House key (optional)"
+        fi
+        
+        if [ -n "${{ secrets.DATABRICKS_TOKEN }}" ]; then
+          az keyvault secret set \
+            --vault-name $KEY_VAULT_NAME \
+            --name "DATABRICKS-TOKEN" \
+            --value "${{ secrets.DATABRICKS_TOKEN }}" || echo "⚠️ Could not set Databricks token (optional)"
+        fi
+
+    - name: Wait for deployment and verify
+      run: |
+        APP_URL="https://${{ env.APP_SERVICE_NAME }}.azurewebsites.net"
+        
+        echo "🚀 Deployment completed!"
+        echo "🌐 Application URL: $APP_URL"
+        echo "📊 Databricks: https://adb-3194291270776069.9.azuredatabricks.net"
+        echo "🔐 Key Vault: craprodkv7gxvhd"
+        
+        # Wait for app to start (Streamlit takes time to initialize)
+        echo "⏳ Waiting for application to start..."
+        sleep 120
+        
+        # Check if app is responding
+        echo "🔍 Checking application health..."
+        if curl -f --connect-timeout 30 --max-time 60 $APP_URL; then
+          echo "✅ Application is responding"
+        else
+          echo "⚠️ Application might still be starting up"
+          echo "🔗 Check the logs at: https://portal.azure.com"
+        fi
