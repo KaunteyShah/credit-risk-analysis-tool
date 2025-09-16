@@ -13,6 +13,13 @@ param location string = resourceGroup().location
 @description('kauntey.shah@uk.ey.com')
 param adminEmail string
 
+@description('External Databricks workspace URL (e.g., https://your-workspace.cloud.databricks.com)')
+param databricksWorkspaceUrl string = ''
+
+@description('External Databricks workspace token (will be stored in Key Vault)')
+@secure()
+param databricksToken string = ''
+
 // Variables
 var resourcePrefix = '${applicationName}-${environmentName}'
 var resourceToken = substring(uniqueString(resourceGroup().id), 0, 6)
@@ -106,6 +113,14 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
           name: 'ENVIRONMENT'
           value: environmentName
         }
+        {
+          name: 'DATABRICKS_WORKSPACE_URL'
+          value: databricksWorkspaceUrl
+        }
+        {
+          name: 'DATABRICKS_TOKEN_SECRET_NAME'
+          value: 'databricks-token'
+        }
       ]
     }
     httpsOnly: true
@@ -117,40 +132,40 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
   }
 }
 
-// Azure Databricks Workspace
-resource databricksWorkspace 'Microsoft.Databricks/workspaces@2023-02-01' = {
-  name: '${resourcePrefix}-dbw-${resourceToken}'
-  location: location
-  sku: {
-    name: 'premium'
-  }
-  properties: {
-    managedResourceGroupId: subscriptionResourceId('Microsoft.Resources/resourceGroups', '${resourcePrefix}-dbw-managed-rg-${resourceToken}')
-    parameters: {
-      enableNoPublicIp: {
-        value: false
-      }
-      // Premium tier features
-      requireInfrastructureEncryption: {
-        value: false
-      }
-      storageAccountName: {
-        value: ''
-      }
-      storageAccountSkuName: {
-        value: 'Standard_GRS'
-      }
-    }
-    // Enable public network access for ease of use (can be restricted later)
-    publicNetworkAccess: 'Enabled'
-    // Required for premium workspaces
-    requiredNsgRules: 'AllRules'
-  }
-  tags: {
-    Environment: environmentName
-    Application: applicationName
-  }
-}
+// Azure Databricks Workspace - REMOVED (Using existing external workspace)
+// resource databricksWorkspace 'Microsoft.Databricks/workspaces@2023-02-01' = {
+//   name: '${resourcePrefix}-dbw-${resourceToken}'
+//   location: location
+//   sku: {
+//     name: 'premium'
+//   }
+//   properties: {
+//     managedResourceGroupId: subscriptionResourceId('Microsoft.Resources/resourceGroups', '${resourcePrefix}-dbw-managed-rg-${resourceToken}')
+//     parameters: {
+//       enableNoPublicIp: {
+//         value: false
+//       }
+//       // Premium tier features
+//       requireInfrastructureEncryption: {
+//         value: false
+//       }
+//       storageAccountName: {
+//         value: ''
+//       }
+//       storageAccountSkuName: {
+//         value: 'Standard_GRS'
+//       }
+//     }
+//     // Enable public network access for ease of use (can be restricted later)
+//     publicNetworkAccess: 'Enabled'
+//     // Required for premium workspaces
+//     requiredNsgRules: 'AllRules'
+//   }
+//   tags: {
+//     Environment: environmentName
+//     Application: applicationName
+//   }
+// }
 
 // Container Registry (Optional - for custom Docker images)
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
@@ -185,9 +200,22 @@ resource keyVaultAccessPolicy 'Microsoft.KeyVault/vaults/accessPolicies@2023-07-
   }
 }
 
+// Databricks Token Secret (if provided)
+resource databricksTokenSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (databricksToken != '') {
+  parent: keyVault
+  name: 'databricks-token'
+  properties: {
+    value: databricksToken
+    contentType: 'Databricks Personal Access Token'
+  }
+  dependsOn: [
+    keyVaultAccessPolicy
+  ]
+}
+
 // Outputs
 output appServiceUrl string = 'https://${appService.properties.defaultHostName}'
-output databricksWorkspaceUrl string = databricksWorkspace.properties.workspaceUrl
+// databricksWorkspaceUrl removed - using external workspace
 output keyVaultName string = keyVault.name
 output containerRegistryLoginServer string = containerRegistry.properties.loginServer
 output applicationInsightsInstrumentationKey string = appInsights.properties.InstrumentationKey

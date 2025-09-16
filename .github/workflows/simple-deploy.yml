@@ -70,4 +70,4 @@ jobs:
         APP_URL="https://${{ env.APP_SERVICE_NAME }}.azurewebsites.net"
         echo "🚀 Deployment completed!"
         echo "🌐 Application URL: $APP_URL"
-        echo "📊 Databricks: https://adb-2180339463017854.14.azuredatabricks.net"
+        echo "📊 Databricks: ${{ secrets.DATABRICKS_WORKSPACE_URL }}"
