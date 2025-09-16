@@ -103,7 +103,7 @@ def load_company_data():
             df = pd.read_pickle('data/enhanced_sample_data.pkl')
         else:
             # Load raw data and add mock enhancements
-            df = pd.read_excel('data/Sample data_09Sep2025.xlsx')
+            df = pd.read_csv('data/Sample_data2.csv')
             
             # Generate mock accuracy data
             np.random.seed(42)
