@@ -130,7 +130,7 @@ jobs:
             WEBSITES_PORT=8000 \
             SCM_DO_BUILD_DURING_DEPLOYMENT=true \
             AZURE_KEY_VAULT_URL="https://craprodkv25h2ya.vault.azure.net/" \
-            DATABRICKS_WORKSPACE_URL="${{ secrets.DATABRICKS_WORKSPACE_URL }}" \
+            DATABRICKS_WORKSPACE_URL="https://dbc-beccfe71-12b6.cloud.databricks.com" \
             ENVIRONMENT=production \
             PYTHONPATH="/home/site/wwwroot"
 
@@ -172,7 +172,7 @@ jobs:
         
         echo "🚀 Deployment completed!"
         echo "🌐 Application URL: $APP_URL"
-        echo "📊 Databricks: ${{ secrets.DATABRICKS_WORKSPACE_URL }}"
+        echo "📊 Databricks: https://dbc-beccfe71-12b6.cloud.databricks.com"
         echo "🔐 Key Vault: craprodkv25h2ya"
         
         # Wait for app to start (Streamlit takes time to initialize)

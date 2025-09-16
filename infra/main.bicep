@@ -16,9 +16,12 @@ param adminEmail string
 @description('External Databricks workspace URL (e.g., https://your-workspace.cloud.databricks.com)')
 param databricksWorkspaceUrl string = ''
 
-@description('External Databricks workspace token (will be stored in Key Vault)')
+@description('Databricks username for authentication')
+param databricksUsername string = ''
+
+@description('Databricks password for authentication')
 @secure()
-param databricksToken string = ''
+param databricksPassword string = ''
 
 // Variables
 var resourcePrefix = '${applicationName}-${environmentName}'
@@ -118,8 +121,12 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
           value: databricksWorkspaceUrl
         }
         {
-          name: 'DATABRICKS_TOKEN_SECRET_NAME'
-          value: 'databricks-token'
+          name: 'DATABRICKS_USERNAME_SECRET_NAME'
+          value: 'databricks-username'
+        }
+        {
+          name: 'DATABRICKS_PASSWORD_SECRET_NAME'
+          value: 'databricks-password'
         }
       ]
     }
@@ -200,13 +207,25 @@ resource keyVaultAccessPolicy 'Microsoft.KeyVault/vaults/accessPolicies@2023-07-
   }
 }
 
-// Databricks Token Secret (if provided)
-resource databricksTokenSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (databricksToken != '') {
+// Databricks Credentials Secrets (if provided)
+resource databricksUsernameSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (databricksUsername != '') {
   parent: keyVault
-  name: 'databricks-token'
+  name: 'databricks-username'
   properties: {
-    value: databricksToken
-    contentType: 'Databricks Personal Access Token'
+    value: databricksUsername
+    contentType: 'Databricks Username'
+  }
+  dependsOn: [
+    keyVaultAccessPolicy
+  ]
+}
+
+resource databricksPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (databricksPassword != '') {
+  parent: keyVault
+  name: 'databricks-password'
+  properties: {
+    value: databricksPassword
+    contentType: 'Databricks Password'
   }
   dependsOn: [
     keyVaultAccessPolicy

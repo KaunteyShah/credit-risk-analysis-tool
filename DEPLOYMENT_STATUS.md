@@ -5,7 +5,7 @@
 ### **1. Azure Infrastructure** 
 - ✅ **Resource Group**: `rg-credit-risk-analysis-prod-ukwest` (DEPLOYED)
 - ✅ **App Service**: `credit-risk-analysis-prod-app-25h2ya` (READY)
-- ✅ **Databricks**: `https://adb-2180339463017854.14.azuredatabricks.net` (**PREMIUM TIER**)
+- ✅ **Databricks**: `https://dbc-beccfe71-12b6.cloud.databricks.com` (**Your AWS Workspace**)
 - ✅ **Key Vault**: `craprodkv25h2ya` (READY)
 - ✅ **Application Insights**: Monitoring enabled (READY)
 - ✅ **Container Registry**: `creditriskanalysisprodacr25h2ya` (READY)
@@ -19,7 +19,7 @@
 
 ### **3. Integration Ready**
 - ✅ **Azure Key Vault**: Integrated for secure secrets
-- ✅ **Databricks Config**: Workspace ready for connection
+- ✅ **Databricks Config**: Connected to your AWS workspace (eu-west-1)
 - ✅ **OpenAI Integration**: Ready for API key
 - ✅ **Companies House**: Ready for API key
 
@@ -63,7 +63,7 @@ Once code is on GitHub, add these repository secrets:
 | Service | URL | Status |
 |---------|-----|--------|
 | **Web App** | https://credit-risk-analysis-prod-app-25h2ya.azurewebsites.net | 🔄 Ready for deployment |
-| **Databricks** | https://adb-2180339463017854.14.azuredatabricks.net | ✅ **Premium Tier** |
+| **Databricks** | https://dbc-beccfe71-12b6.cloud.databricks.com | ✅ **Your Workspace** |
 | **Azure Portal** | [UK West Resource Group](https://portal.azure.com/#@5b973f99-77df-4beb-b27d-aa0c70b8482c/resource/subscriptions/c09f5850-099b-4458-ac6d-f31d69f68ae7/resourceGroups/rg-credit-risk-analysis-prod-ukwest) | ✅ Live |
 
 ---
