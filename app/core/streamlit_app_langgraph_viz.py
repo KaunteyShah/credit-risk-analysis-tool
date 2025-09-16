@@ -1,18 +1,29 @@
 """
-Streamlit UI for Credit Risk A# Page configuration
-st.set_page_config(
-    page_title="Credit Risk Analysis - LangGraph Visualization",
-    page_icon="🚀",
-    layout="wide",
-    initial_sidebar_state="expanded"
-) Demo - Phase 1 with LangGraph Visualization
+Streamlit UI for Credit Risk Analysis Demo - Phase 1 with LangGraph Visualization
 Features:
 - Collapsible top and bottom panels
 - Company data table with filtering
 - Mock SIC accuracy analysis
 - Enhanced LangGraph workflow visualization
 """
+
+# Add the project root to Python path for imports
+import sys
+import os
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 import streamlit as st
+
+# Page configuration
+st.set_page_config(
+    page_title="Credit Risk Analysis - LangGraph Visualization",
+    page_icon="🚀",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -20,7 +31,6 @@ from plotly.subplots import make_subplots
 import numpy as np
 from datetime import datetime, timedelta
 import pickle
-import os
 import time
 import json
 
@@ -28,9 +38,6 @@ import json
 from app.utils.sic_prediction_utils import get_sic_prediction_manager, display_prediction_result, batch_predict_visible_companies
 
 # Import Phase 2 integration for LangGraph visualization
-import sys
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
 try:
     from app.core.phase2_integration import (
         initialize_phase2_integration,
@@ -236,14 +243,23 @@ def create_filter_panel(df):
         
         # Company size filter
         if 'Employees (Total)' in df.columns:
-            emp_min, emp_max = int(df['Employees (Total)'].min()), int(df['Employees (Total)'].max())
-            emp_range = st.slider(
-                "Employee Count Range",
-                min_value=emp_min,
-                max_value=emp_max,
-                value=(emp_min, emp_max),
-                help="Filter companies by number of employees"
-            )
+            # Clean and convert employee data
+            emp_clean = df['Employees (Total)'].copy()
+            emp_clean = emp_clean.astype(str).str.replace(',', '').str.replace('NaN', '0')
+            emp_clean = pd.to_numeric(emp_clean, errors='coerce').fillna(0)
+            
+            # Only show filter if we have valid employee data
+            if emp_clean.max() > 0:
+                emp_min, emp_max = int(emp_clean.min()), int(emp_clean.max())
+                emp_range = st.slider(
+                    "Employee Count Range",
+                    min_value=emp_min,
+                    max_value=emp_max,
+                    value=(emp_min, emp_max),
+                    help="Filter companies by number of employees"
+                )
+            else:
+                emp_range = None
         else:
             emp_range = None
         
@@ -291,9 +307,14 @@ def apply_filters(df, filters):
     
     # Employee range filter
     if filters['emp_range'] and 'Employees (Total)' in df.columns:
+        # Clean employee data for filtering
+        emp_clean = filtered_df['Employees (Total)'].copy()
+        emp_clean = emp_clean.astype(str).str.replace(',', '').str.replace('NaN', '0')
+        emp_clean = pd.to_numeric(emp_clean, errors='coerce').fillna(0)
+        
         filtered_df = filtered_df[
-            (filtered_df['Employees (Total)'] >= filters['emp_range'][0]) &
-            (filtered_df['Employees (Total)'] <= filters['emp_range'][1])
+            (emp_clean >= filters['emp_range'][0]) &
+            (emp_clean <= filters['emp_range'][1])
         ]
     
     # Manual accuracy filter (only if no category filter is active)
