@@ -37,15 +37,11 @@ jobs:
         print('✅ All imports successful')
         "
 
-    - name: Azure Login with Service Principal
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-
     - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.APP_SERVICE_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: .
         startup-command: |
           pip install -r requirements.txt && 
@@ -53,17 +49,6 @@ jobs:
           --server.port=8000 
           --server.address=0.0.0.0 
           --server.headless=true
-
-    - name: Configure App Service Settings
-      run: |
-        az webapp config appsettings set \
-          --name ${{ env.APP_SERVICE_NAME }} \
-          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-          --settings \
-            WEBSITES_PORT=8000 \
-            SCM_DO_BUILD_DURING_DEPLOYMENT=true \
-            ENVIRONMENT=production \
-            PYTHONPATH="/home/site/wwwroot"
 
     - name: Verify deployment
       run: |
