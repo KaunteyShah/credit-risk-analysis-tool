@@ -1056,7 +1056,6 @@ class SICPredictionApp {
         
         try {
             // Find the currently selected company index
-            // This function should be called from a prediction context where we know which company
             const companyIndex = this.currentPredictionIndex;
             
             if (companyIndex === undefined || companyIndex === null) {
@@ -1064,24 +1063,45 @@ class SICPredictionApp {
                 return;
             }
             
-            this.showLoading('Updating SIC score...');
+            this.showLoading('Saving prediction results...');
             
-            // Update the data locally first for immediate UI feedback
-            if (this.currentData && this.currentData[companyIndex]) {
-                this.currentData[companyIndex]['New_SIC'] = predictedSic;
-                this.currentData[companyIndex]['New_Accuracy'] = confidence.toFixed(1) + '%';
-                
-                // Refresh the table to show updated values
-                this.renderTable();
+            // Call backend API to save to CSV and update table
+            const response = await fetch('/api/update_sic', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    company_index: companyIndex,
+                    new_sic: predictedSic
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Update the local data with the response values
+                if (this.currentData && this.currentData[companyIndex]) {
+                    this.currentData[companyIndex]['New_SIC'] = result.new_sic;
+                    this.currentData[companyIndex]['New_Accuracy'] = result.new_accuracy.toFixed(1) + '%';
+                    
+                    // Refresh the table to show updated values
+                    this.renderTable();
+                }
                 
                 this.hideLoading();
-                this.logActivity('Score Update', `Updated SIC to ${predictedSic} with ${confidence.toFixed(1)}% accuracy`, 'success');
+                this.logActivity('Score Update', `Updated SIC to ${result.new_sic} with ${result.new_accuracy.toFixed(1)}% accuracy for ${result.company_name}`, 'success');
                 
                 // Show success message in results panel
                 $('#sicResults').prepend(`
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         <i class="fas fa-check-circle me-2"></i>
-                        Score updated successfully! New SIC: <strong>${predictedSic}</strong>, Accuracy: <strong>${confidence.toFixed(1)}%</strong>
+                        Score updated successfully! New SIC: <strong>${result.new_sic}</strong>, Accuracy: <strong>${result.new_accuracy.toFixed(1)}%</strong>
+                        <br><small class="text-muted">Saved to updated_sic_predictions.csv</small>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 `);
@@ -1090,6 +1110,9 @@ class SICPredictionApp {
                 setTimeout(() => {
                     $('.alert-success').fadeOut();
                 }, 5000);
+                
+            } else {
+                throw new Error(result.error || 'Failed to update SIC code');
             }
             
         } catch (error) {
@@ -1306,8 +1329,7 @@ class SICPredictionApp {
                 <div class="card-body">
                     ${data.company_name ? `
                         <div class="mb-3">
-                            <h6 class="text-primary">Company</h6>
-                            <p class="mb-1"><strong>${data.company_name}</strong></p>
+                            <p class="mb-1 fs-5"><strong>${data.company_name}</strong></p>
                             ${data.current_sic ? `<small class="text-muted">Current SIC: ${data.current_sic}</small>` : ''}
                         </div>
                     ` : ''}
@@ -1335,13 +1357,6 @@ class SICPredictionApp {
                         <div class="mt-3">
                             <h6>Analysis Details</h6>
                             <p class="text-muted">${data.description}</p>
-                        </div>
-                    ` : ''}
-                    
-                    ${data.workflow_type ? `
-                        <div class="mt-3">
-                            <h6>Processing Method</h6>
-                            <span class="badge bg-${data.workflow_type === 'REAL AGENTS' ? 'success' : 'secondary'}">${data.workflow_type}</span>
                         </div>
                     ` : ''}
                     
