@@ -75,7 +75,19 @@ jobs:
     - name: Configure Azure App Service for Python
       run: |
         echo "🔧 Configuring Azure App Service for Python deployment..."
-        # The deployment will use the repository root with main.py as entry point
+        echo "✅ Python version: ${{ env.PYTHON_VERSION }}"
+        echo "✅ Entry point: main.py"
+        echo "✅ Dependencies: requirements.txt"
+        
+        # Create application settings for Azure
+        echo "Creating Azure-specific configuration..."
+        
+        # Verify requirements.txt exists and has flask-cors
+        if grep -q "flask-cors" requirements.txt; then
+          echo "✅ flask-cors found in requirements.txt"
+        else
+          echo "❌ flask-cors missing from requirements.txt"
+        fi
 
     - name: Pre-deployment checks
       run: |
@@ -94,6 +106,10 @@ jobs:
       timeout-minutes: 20
       continue-on-error: true
       id: first_deploy
+      env:
+        SCM_DO_BUILD_DURING_DEPLOYMENT: true
+        ENABLE_ORYX_BUILD: true
+        PYTHON_ENABLE_GUNICORN_MULTIWORKERS: true
       
     - name: Retry deployment if failed
       if: steps.first_deploy.outcome == 'failure'
@@ -109,6 +125,10 @@ jobs:
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: '.'
       timeout-minutes: 20
+      env:
+        SCM_DO_BUILD_DURING_DEPLOYMENT: true
+        ENABLE_ORYX_BUILD: true
+        PYTHON_ENABLE_GUNICORN_MULTIWORKERS: true
       
     - name: Wait for deployment completion
       run: |
