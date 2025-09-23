@@ -98,7 +98,9 @@ jobs:
         echo "📦 Preparing deployment package with data files..."
         # Ensure data directory is included in deployment
         ls -la data/
-        echo "✅ Data files will be included in deployment"
+        # Copy data to root level as backup for Azure
+        cp -r data ./deployment-data
+        echo "✅ Data files prepared for deployment"
 
     - name: Set up Python
       uses: actions/setup-python@v4

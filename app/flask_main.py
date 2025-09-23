@@ -51,7 +51,7 @@ def create_app():
             company_file = os.path.join(project_root, 'data', 'Sample_data2.csv')
             if os.path.exists(company_file):
                 app.company_data = pd.read_csv(company_file)
-                logger.info(f"Loaded {len(app.company_data)} companies")
+                logger.info(f"Loaded {len(app.company_data)} companies from CSV")
                 
                 # Clean numeric columns
                 numeric_columns = ['Employees (Total)', 'Sales (USD)', 'Pre Tax Profit (USD)']
