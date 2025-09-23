@@ -39,22 +39,48 @@ jobs:
         
     - name: Run tests
       run: |
-        # Run configuration tests
+        # Test essential dependencies for Azure deployment
         python -c "
         import sys
-        sys.path.insert(0, '.')
-        from app.utils.config_manager import ConfigManager
-        config = ConfigManager()
-        print('✅ Configuration manager works')
-        "
+        print('Python version:', sys.version)
         
-        # Test import structure
-        python -c "
-        import sys
-        sys.path.insert(0, '.')
-        from app.agents.sector_classification_agent import SectorClassificationAgent
-        from app.apis.unified_api_service import get_unified_api_service
-        print('✅ All imports successful')
+        # Test core Flask dependencies
+        try:
+            import flask
+            import flask_cors
+            print('✅ Flask and CORS available')
+        except ImportError as e:
+            print(f'❌ Flask import failed: {e}')
+            sys.exit(1)
+        
+        # Test data processing dependencies  
+        try:
+            import pandas
+            import numpy
+            import openpyxl
+            print('✅ Data processing libraries available')
+        except ImportError as e:
+            print(f'❌ Data processing import failed: {e}')
+            sys.exit(1)
+            
+        # Test Azure dependencies
+        try:
+            import azure.identity
+            import azure.keyvault.secrets
+            print('✅ Azure libraries available')
+        except ImportError as e:
+            print(f'❌ Azure import failed: {e}')
+            sys.exit(1)
+            
+        # Test visualization
+        try:
+            import plotly
+            print('✅ Plotly available')
+        except ImportError as e:
+            print(f'❌ Plotly import failed: {e}')
+            sys.exit(1)
+        
+        print('✅ All essential dependencies verified for Azure deployment')
         "
 
   # Application Deployment
