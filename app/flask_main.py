@@ -113,6 +113,53 @@ def create_app():
         """Main dashboard page with enhanced dual-panel layout"""
         return render_template('index_enhanced.html')
 
+    @app.route('/health')
+    def health_check():
+        """Health check endpoint for Azure monitoring"""
+        try:
+            # Test critical imports and configurations
+            health_status = {
+                'status': 'healthy',
+                'timestamp': pd.Timestamp.now().isoformat(),
+                'python_version': sys.version,
+                'flask_available': True,
+                'cors_available': True,
+                'data_loaded': app.company_data is not None,
+                'config_loaded': True
+            }
+            
+            # Test configuration manager
+            try:
+                from app.utils.config_manager import ConfigManager
+                config = ConfigManager()
+                audit = config.get_secrets_audit()
+                health_status['secrets_audit'] = {
+                    'key_vault_available': audit['key_vault_available'],
+                    'secrets_loaded': len(audit['secrets_loaded']),
+                    'secrets_missing': len(audit['secrets_missing'])
+                }
+            except Exception as config_error:
+                health_status['config_error'] = str(config_error)
+                health_status['status'] = 'degraded'
+            
+            # Test data loading
+            if app.company_data is None:
+                try:
+                    load_company_data()
+                    health_status['data_load_result'] = 'success'
+                except Exception as data_error:
+                    health_status['data_load_error'] = str(data_error)
+                    health_status['status'] = 'degraded'
+            
+            return jsonify(health_status), 200 if health_status['status'] == 'healthy' else 503
+            
+        except Exception as e:
+            return jsonify({
+                'status': 'unhealthy',
+                'error': str(e),
+                'timestamp': pd.Timestamp.now().isoformat()
+            }), 503
+
     @app.route('/debug')
     def debug_page():
         """Debug page to test button functionality"""
