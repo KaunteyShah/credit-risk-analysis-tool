@@ -830,14 +830,14 @@ class SICPredictionApp {
         $('.btn-predict').on('click', (e) => {
             e.preventDefault();
             const index = $(e.currentTarget).data('company-index');
-            this.handlePredictSIC(index);
+            this.predictSIC(index);
         });
         
         // Attach click events for Update Revenue buttons
         $('.btn-update').on('click', (e) => {
             e.preventDefault();
             const index = $(e.currentTarget).data('company-index');
-            this.handleUpdateRevenue(index);
+            this.updateRevenue(index);
         });
     }
 
@@ -924,34 +924,39 @@ class SICPredictionApp {
     async predictSIC(companyIndex) {
         console.log('🎯 Predict SIC button clicked for company index:', companyIndex);
         
+        // Store the current prediction index for later use
+        this.currentPredictionIndex = companyIndex;
+        
         try {
-            this.showLoading('Predicting SIC code...');
+            // Start showing the workflow visualization immediately
+            this.startSICWorkflow();
             
             const response = await fetch('/api/predict_sic', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ company_index: companyIndex })
+                body: JSON.stringify({ 
+                    company_index: companyIndex,
+                    use_real_agents: true
+                })
             });
             
             const result = await response.json();
-            console.log('API Response:', result);
+            console.log('🚀 Real Agent API Response:', result);
             
             if (result.error) {
                 throw new Error(result.error);
             }
             
-            // Start SIC workflow visualization
-            console.log('🚀 Starting SIC workflow with result:', result);
+            // Update SIC workflow visualization with real agent data
+            console.log('🤖 Starting real agent workflow with result:', result);
             this.startSICWorkflow(result);
             
-            this.hideLoading();
-            this.logActivity('SIC Prediction', `Predicted SIC code for ${result.company_name}: ${result.predicted_sic}`, 'success');
+            this.logActivity('SIC Prediction', `Real agents predicted SIC code for ${result.company_name}: ${result.predicted_sic} (${result.confidence} confidence)`, 'success');
             
         } catch (error) {
             console.error('❌ Error predicting SIC:', error);
-            this.hideLoading();
             this.showError(`Error predicting SIC: ${error.message}`);
         }
     }
@@ -1046,43 +1051,118 @@ class SICPredictionApp {
         }
     }
 
+    async updateScoreFromPrediction(predictedSic, confidence) {
+        console.log('💾 Update Score from prediction:', predictedSic, 'confidence:', confidence);
+        
+        try {
+            // Find the currently selected company index
+            // This function should be called from a prediction context where we know which company
+            const companyIndex = this.currentPredictionIndex;
+            
+            if (companyIndex === undefined || companyIndex === null) {
+                this.showError('No company selected for update. Please select a company first.');
+                return;
+            }
+            
+            this.showLoading('Updating SIC score...');
+            
+            // Update the data locally first for immediate UI feedback
+            if (this.currentData && this.currentData[companyIndex]) {
+                this.currentData[companyIndex]['New_SIC'] = predictedSic;
+                this.currentData[companyIndex]['New_Accuracy'] = confidence.toFixed(1) + '%';
+                
+                // Refresh the table to show updated values
+                this.renderTable();
+                
+                this.hideLoading();
+                this.logActivity('Score Update', `Updated SIC to ${predictedSic} with ${confidence.toFixed(1)}% accuracy`, 'success');
+                
+                // Show success message in results panel
+                $('#sicResults').prepend(`
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Score updated successfully! New SIC: <strong>${predictedSic}</strong>, Accuracy: <strong>${confidence.toFixed(1)}%</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `);
+                
+                // Auto-dismiss the alert after 5 seconds
+                setTimeout(() => {
+                    $('.alert-success').fadeOut();
+                }, 5000);
+            }
+            
+        } catch (error) {
+            console.error('Error updating score from prediction:', error);
+            this.hideLoading();
+            this.showError(`Error updating score: ${error.message}`);
+        }
+    }
+
     startSICWorkflow(result = null) {
-        // If no result provided, show demo workflow
-        if (!result) {
-            const demoWorkflow = {
-                workflow_steps: [
-                    {
-                        step: 1,
-                        agent: "Data Ingestion Agent",
-                        message: "Processing company data and extracting key information..."
-                    },
-                    {
-                        step: 2,
-                        agent: "Anomaly Detection Agent", 
-                        message: "Analyzing data for inconsistencies and outliers..."
-                    },
-                    {
-                        step: 3,
-                        agent: "Sector Classification Agent",
-                        message: "Predicting SIC code based on company characteristics..."
-                    },
-                    {
-                        step: 4,
-                        agent: "Results Compilation Agent",
-                        message: "Compiling final prediction results and confidence scores..."
-                    }
-                ],
-                prediction: "73110",
-                confidence: 0.87,
-                description: "Research and experimental development on biotechnology"
+        // If real agent result provided, use it
+        if (result && result.workflow_steps) {
+            console.log('🤖 Using real agent workflow:', result);
+            
+            // Map the real workflow steps to our display format
+            const workflowSteps = result.workflow_steps.map(step => ({
+                step: step.step,
+                agent: step.agent,
+                message: step.message,
+                status: step.status || 'completed'
+            }));
+            
+            // Store the real workflow data
+            const workflowData = {
+                workflow_steps: workflowSteps,
+                prediction: result.predicted_sic,
+                confidence: parseFloat(result.confidence.replace('%', '')) / 100, // Convert "87.5%" to 0.875
+                description: result.reasoning || 'Real agent prediction',
+                company_name: result.company_name,
+                current_sic: result.current_sic,
+                workflow_type: result.workflow_type
             };
-            result = demoWorkflow;
+            
+            this.agentWorkflows.sic = workflowData;
+            this.renderAgentWorkflow('sic', workflowSteps);
+            this.displaySICResults(workflowData);
+            this.logActivity('Agent Workflow', `Real ${result.workflow_type} SIC prediction workflow completed for ${result.company_name}`, 'success');
+            return;
         }
         
-        this.agentWorkflows.sic = result;
-        this.renderAgentWorkflow('sic', result.workflow_steps);
-        this.displaySICResults(result);
-        this.logActivity('Agent Workflow', 'SIC prediction workflow started', 'info');
+        // Fallback to demo workflow if no real data
+        const demoWorkflow = {
+            workflow_steps: [
+                {
+                    step: 1,
+                    agent: "Data Ingestion Agent",
+                    message: "Processing company data and extracting key information..."
+                },
+                {
+                    step: 2,
+                    agent: "Anomaly Detection Agent", 
+                    message: "Analyzing data for inconsistencies and outliers..."
+                },
+                {
+                    step: 3,
+                    agent: "Sector Classification Agent",
+                    message: "Predicting SIC code based on company characteristics..."
+                },
+                {
+                    step: 4,
+                    agent: "Results Compilation Agent",
+                    message: "Compiling final prediction results and confidence scores..."
+                }
+            ],
+            prediction: "73110",
+            confidence: 0.87,
+            description: "Demo: Research and experimental development on biotechnology"
+        };
+        
+        this.agentWorkflows.sic = demoWorkflow;
+        this.renderAgentWorkflow('sic', demoWorkflow.workflow_steps);
+        this.displaySICResults(demoWorkflow);
+        this.logActivity('Agent Workflow', 'Demo SIC prediction workflow started', 'info');
     }
 
     startRevenueWorkflow(result = null) {
@@ -1221,13 +1301,21 @@ class SICPredictionApp {
         const resultsHTML = `
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>SIC Prediction Results</h5>
+                    <h5 class="mb-0"><i class="fas fa-robot me-2"></i>Real Agent Prediction</h5>
                 </div>
                 <div class="card-body">
+                    ${data.company_name ? `
+                        <div class="mb-3">
+                            <h6 class="text-primary">Company</h6>
+                            <p class="mb-1"><strong>${data.company_name}</strong></p>
+                            ${data.current_sic ? `<small class="text-muted">Current SIC: ${data.current_sic}</small>` : ''}
+                        </div>
+                    ` : ''}
+                    
                     <div class="row">
                         <div class="col-md-6">
                             <h6>Predicted SIC Code</h6>
-                            <div class="alert alert-info">
+                            <div class="alert alert-info mb-2">
                                 <strong>${data.prediction}</strong>
                             </div>
                         </div>
@@ -1242,18 +1330,28 @@ class SICPredictionApp {
                             </div>
                         </div>
                     </div>
+                    
                     ${data.description ? `
                         <div class="mt-3">
-                            <h6>SIC Code Description</h6>
+                            <h6>Analysis Details</h6>
                             <p class="text-muted">${data.description}</p>
                         </div>
                     ` : ''}
-                    ${data.sector ? `
+                    
+                    ${data.workflow_type ? `
                         <div class="mt-3">
-                            <h6>Sector Classification</h6>
-                            <span class="badge bg-secondary">${data.sector}</span>
+                            <h6>Processing Method</h6>
+                            <span class="badge bg-${data.workflow_type === 'REAL AGENTS' ? 'success' : 'secondary'}">${data.workflow_type}</span>
                         </div>
                     ` : ''}
+                    
+                    <div class="mt-4 d-grid">
+                        <button class="btn btn-success btn-update-score" 
+                                onclick="sicApp.updateScoreFromPrediction('${data.prediction}', ${confidence * 100})"
+                                title="Save this prediction as New SIC and update accuracy score">
+                            <i class="fas fa-save me-2"></i>Update Score (${data.prediction})
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -1483,94 +1581,3 @@ class SICPredictionApp {
         };
     }
 }
-
-// Initialize the application when the DOM is ready
-$(document).ready(function() {
-    // Add emergency fallback for loading modal
-    setTimeout(() => {
-        if ($('#loadingModal').hasClass('show')) {
-            console.warn('Emergency fallback: Force hiding loading modal after 15 seconds');
-            $('#loadingModal').modal('hide');
-        }
-    }, 15000);
-    
-    window.sicApp = new SICPredictionApp();
-});
-
-// Global error handler
-window.onerror = function(msg, url, lineNo, columnNo, error) {
-    console.error('JavaScript Error:', msg, 'at', url, ':', lineNo);
-    return false;
-};
-
-// Global test function for debugging
-window.testSICWorkflow = function() {
-    if (window.sicApp) {
-        window.sicApp.startSICWorkflow();
-    } else {
-        console.error('❌ window.sicApp not found');
-    }
-};
-
-// Debug function to check agent visibility
-window.debugAgents = function() {
-    console.log('🔍 Debugging Agent Dashboard...');
-    console.log('Bottom panel visible:', $('#bottom-panel').is(':visible'));
-    console.log('Bottom panel height:', $('#bottom-panel').height());
-    console.log('SIC content element:', $('#sicWorkflowChart').length > 0 ? 'Found' : 'Not found');
-    console.log('Revenue content element:', $('#revenueWorkflowChart').length > 0 ? 'Found' : 'Not found');
-    console.log('Bottom panel classes:', $('#bottom-panel').attr('class'));
-    
-    // Check tab visibility
-    console.log('SIC tab active:', $('#sic-tab').hasClass('active'));
-    console.log('SIC panel visible:', $('#sic-panel').hasClass('show'));
-    console.log('SIC panel classes:', $('#sic-panel').attr('class'));
-    
-    // Check actual content
-    console.log('SIC workflow chart content:', $('#sicWorkflowChart').html());
-    console.log('SIC workflow chart height:', $('#sicWorkflowChart').height());
-    console.log('SIC workflow chart display:', $('#sicWorkflowChart').css('display'));
-    
-    // Force show agent content without changing UI
-    if (window.sicApp) {
-        console.log('📡 Forcing agent content display...');
-        window.sicApp.showAgentContent();
-        console.log('✅ Agent content forced to display');
-    } else {
-        console.error('❌ window.sicApp not found');
-    }
-};
-
-console.log('Enhanced app JavaScript loaded and ready');
-console.log('💡 Debug Commands Available:');
-console.log('   - testSICWorkflow() - Test the SIC workflow');
-console.log('   - debugAgents() - Debug agent dashboard visibility');
-console.log('   - checkLayout() - Check overall page layout');
-
-// Additional layout debug function
-window.checkLayout = function() {
-    console.log('🏗️ Checking Page Layout...');
-    console.log('Main container height:', $('.main-container').height());
-    console.log('Content area height:', $('.content-area').height());
-    console.log('Split container height:', $('.split-container').height());
-    console.log('Top panel height:', $('#top-panel').height());
-    console.log('Bottom panel height:', $('#bottom-panel').height());
-    console.log('Viewport height:', $(window).height());
-    
-    // Check if panels are taking up the full space
-    const totalHeight = $('#top-panel').height() + $('#bottom-panel').height();
-    console.log('Total panels height:', totalHeight);
-    
-    // Check scroll position
-    console.log('Page scroll top:', $(window).scrollTop());
-    console.log('Bottom panel offset top:', $('#bottom-panel').offset().top);
-    
-    // Highlight all major containers
-    $('.main-container').css('border', '3px solid blue');
-    $('.content-area').css('border', '3px solid green');
-    $('.split-container').css('border', '3px solid orange');
-    $('#top-panel').css('border', '3px solid purple');
-    $('#bottom-panel').css('border', '3px solid red');
-    
-    console.log('🎨 Added colored borders to major containers');
-};

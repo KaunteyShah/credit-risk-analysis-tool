@@ -324,18 +324,5 @@
     
     <!-- Custom JavaScript -->
     <script src="{{ url_for('static', filename='js/enhanced_app.js') }}"></script>
-    
-    <!-- Emergency fallback to hide loading modal -->
-    <script>
-        // Fallback: If loading modal is still showing after 15 seconds, force hide it
-        setTimeout(function() {
-            const loadingModal = document.getElementById('loadingModal');
-            if (loadingModal && loadingModal.classList.contains('show')) {
-                console.warn('Emergency: Forcing loading modal to hide');
-                const modal = new bootstrap.Modal(loadingModal);
-                modal.hide();
-            }
-        }, 15000);
-    </script>
 </body>
 </html>
