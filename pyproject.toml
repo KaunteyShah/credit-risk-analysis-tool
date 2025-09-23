@@ -2,7 +2,7 @@
 requires = ["setuptools", "wheel"]
 
 [tool.azure]
-runtime = "python|3.11"
+runtime = "python|3.12"
 startup_file = "main.py"
 
 # Azure App Service Python Configuration
