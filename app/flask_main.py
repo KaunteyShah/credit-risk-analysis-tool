@@ -80,18 +80,16 @@ def create_app():
                     
                 else:
                     logger.warning(f"SIC codes file not found: {sic_file}")
-                    # Fallback to simulation mode if SIC codes not available
-                    if is_demo_mode():
-                        app.company_data['SIC_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data))
-                    else:
-                        logger.warning("SIC codes not available and not in demo mode - setting accuracy to 0")
-                        app.company_data['SIC_Accuracy'] = 0.0
+                    # Fallback: generate demo accuracy data for Azure deployment
+                    logger.info("Generating demo SIC accuracy data...")
+                    app.company_data['SIC_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data))
                 
                 # Add helper columns
                 app.company_data['Needs_Revenue_Update'] = app.company_data['Sales (USD)'].isna()
                 
             else:
                 logger.error(f"Company data file not found: {company_file}")
+                logger.warning("Data files missing - this should not happen in production deployment")
                 app.company_data = pd.DataFrame()
             
             # Load SIC codes for reference

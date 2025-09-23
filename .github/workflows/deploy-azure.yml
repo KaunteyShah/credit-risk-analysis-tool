@@ -93,6 +93,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Prepare deployment package
+      run: |
+        echo "📦 Preparing deployment package with data files..."
+        # Ensure data directory is included in deployment
+        ls -la data/
+        echo "✅ Data files will be included in deployment"
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:

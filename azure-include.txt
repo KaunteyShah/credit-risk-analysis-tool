@@ -1,0 +1,4 @@
+# Explicitly include data files in Azure deployment
+data/
+data/Sample_data2.csv
+data/SIC_codes.xlsx
