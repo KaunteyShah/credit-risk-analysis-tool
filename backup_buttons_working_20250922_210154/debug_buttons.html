@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Buttons</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+</head>
+<body>
+    <div class="container mt-4">
+        <h3>Button Test</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Company</th>
+                    <th>Predict SIC</th>
+                    <th>Update Revenue</th>
+                </tr>
+            </thead>
+            <tbody id="testTable">
+                <!-- Will be populated by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Test if jQuery and Bootstrap work
+            console.log('Page loaded, testing buttons...');
+            
+            // Generate test button HTML
+            const testRow = `
+                <tr>
+                    <td>Test Company</td>
+                    <td>
+                        <button class="btn btn-primary btn-predict btn-sm" data-company-index="0" title="Predict SIC Code">
+                            <i class="fas fa-robot"></i>
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn btn-warning btn-update btn-sm" data-company-index="0" title="Update Revenue">
+                            <i class="fas fa-sync"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            
+            $('#testTable').html(testRow);
+            console.log('Test buttons added to table');
+            
+            // Test API call
+            fetch('http://127.0.0.1:8001/api/data?limit=1')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('API test successful:', data);
+                    if (data.data && data.data.length > 0) {
+                        const company = data.data[0];
+                        const realRow = `
+                            <tr>
+                                <td>${company['Company Name'] || 'N/A'}</td>
+                                <td>
+                                    <button class="btn btn-primary btn-predict btn-sm" data-company-index="0" title="Predict SIC Code">
+                                        <i class="fas fa-robot"></i> Predict
+                                    </button>
+                                </td>
+                                <td>
+                                    <button class="btn btn-warning btn-update btn-sm" data-company-index="0" title="Update Revenue">
+                                        <i class="fas fa-sync"></i> Update
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        $('#testTable').html(realRow);
+                        console.log('Real company data loaded with buttons');
+                    }
+                })
+                .catch(error => {
+                    console.error('API test failed:', error);
+                });
+        });
+    </script>
+</body>
+</html>

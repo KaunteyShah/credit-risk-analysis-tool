@@ -1,0 +1,104 @@
+name: Deploy Credit Risk Analysis to Azure
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  AZURE_RESOURCE_GROUP: rg-credit-risk-analysis-prod-ukwest
+  AZURE_LOCATION: ukwest
+  PYTHON_VERSION: '3.11'
+  APP_SERVICE_NAME: credit-risk-analysis-prod-app-25h2ya
+
+jobs:
+  # Application Testing
+  test-application:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run tests
+      run: |
+        # Run configuration tests
+        python -c "
+        import sys
+        sys.path.insert(0, '.')
+        from app.utils.config_manager import ConfigManager
+        config = ConfigManager()
+        print('✅ Configuration manager works')
+        "
+        
+        # Test import structure
+        python -c "
+        import sys
+        sys.path.insert(0, '.')
+        from app.agents.sector_classification_agent import SectorClassificationAgent
+        from app.apis.unified_api_service import get_unified_api_service
+        print('✅ All imports successful')
+        "
+
+  # Application Deployment
+  deploy-application:
+    needs: [test-application]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Configure Azure App Service for Python
+      run: |
+        echo "🔧 Configuring Azure App Service for Python deployment..."
+        # The deployment will use the repository root with main.py as entry point
+
+    - name: Deploy to Azure App Service
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.APP_SERVICE_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: '.'
+
+    - name: Verify Deployment
+      run: |
+        APP_URL="https://${{ env.APP_SERVICE_NAME }}.azurewebsites.net"
+        echo "🎯 Deployment Complete!"
+        echo "🌐 Application URL: $APP_URL"
+        echo "⏳ Waiting for application to start..."
+        sleep 60
+        
+        # Basic health check
+        if curl -f --connect-timeout 30 --max-time 60 $APP_URL; then
+          echo "✅ Application is responding"
+        else
+          echo "⚠️ Application might still be starting up"
+        fi
+            WEBSITES_PORT=8000 \
+            SCM_DO_BUILD_DURING_DEPLOYMENT=true \
+
+        
+        echo "🚀 Deployment completed!"
+        echo "🌐 Application URL: $APP_URL"
+        echo "📊 Databricks: https://dbc-beccfe71-12b6.cloud.databricks.com"
+        echo "🔐 Key Vault: craprodkv25h2ya"
+

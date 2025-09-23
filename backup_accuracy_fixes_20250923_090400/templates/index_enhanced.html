@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Risk Analysis - SIC Code Prediction System</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Plotly.js - Updated to latest version -->
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- Split.js for resizable panels -->
+    <script src="https://cdn.jsdelivr.net/npm/split.js@1.6.5/dist/split.min.js"></script>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhanced_style.css') }}">
+</head>
+<body>
+    <div class="container-fluid p-0 h-100">
+        <!-- Header -->
+        <nav class="navbar navbar-dark bg-primary">
+            <div class="container-fluid">
+                <span class="navbar-brand mb-0 h1">
+                    <i class="fas fa-chart-line"></i>
+                    Credit Risk Analysis - SIC Code Prediction System
+                </span>
+                <div class="navbar-nav flex-row">
+                    <button class="btn btn-outline-light btn-sm me-2" id="toggleFilters">
+                        <i class="fas fa-filter"></i> Filters
+                    </button>
+                    <button class="btn btn-outline-light btn-sm" id="resetFilters">
+                        <i class="fas fa-refresh"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <div class="main-container" id="main-container">
+            <!-- Left Sidebar - Filters -->
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-content">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-filter"></i> Filter Companies
+                                <button class="btn btn-sm btn-outline-secondary float-end" id="collapseSidebar">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                            </h6>
+                        </div>
+                        <div class="card-body filter-panel">
+                            <!-- Employee Filters -->
+                            <div class="filter-group mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-users"></i> Employees
+                                </label>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label for="employeeMin" class="form-label text-muted">Min</label>
+                                        <input type="number" class="form-control form-control-sm" id="employeeMin" placeholder="0">
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="employeeMax" class="form-label text-muted">Max</label>
+                                        <input type="number" class="form-control form-control-sm" id="employeeMax" placeholder="10000">
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <input type="range" class="form-range" id="employeeRange" min="0" max="10000" step="100">
+                                </div>
+                            </div>
+
+                            <!-- Revenue Filters -->
+                            <div class="filter-group mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-dollar-sign"></i> Revenue (USD)
+                                </label>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label for="revenueMin" class="form-label text-muted">Min</label>
+                                        <input type="number" class="form-control form-control-sm" id="revenueMin" placeholder="0">
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="revenueMax" class="form-label text-muted">Max</label>
+                                        <input type="number" class="form-control form-control-sm" id="revenueMax" placeholder="1000000000">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SIC Accuracy Filter -->
+                            <div class="filter-group mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-bullseye"></i> SIC Accuracy
+                                </label>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <label for="accuracyMin" class="form-label text-muted">Minimum: <span id="accuracyValue">70%</span></label>
+                                        <input type="range" class="form-range" id="accuracyMin" min="0" max="100" value="70" step="5">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Country Filter -->
+                            <div class="filter-group mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-globe"></i> Country
+                                </label>
+                                <select class="form-select form-select-sm" id="countryFilter">
+                                    <option value="">All Countries</option>
+                                </select>
+                            </div>
+
+                            <!-- SIC Code Filter -->
+                            <div class="filter-group mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-code"></i> SIC Code
+                                </label>
+                                <input type="text" class="form-control form-control-sm" id="sicCodeFilter" placeholder="Enter SIC code">
+                            </div>
+
+                            <!-- Revenue Update Status -->
+                            <div class="filter-group mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-sync"></i> Revenue Status
+                                </label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="needsUpdateFilter">
+                                    <label class="form-check-label" for="needsUpdateFilter">
+                                        Needs Revenue Update
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="content-area" id="content-area">
+                <!-- Split Panels Container -->
+                <div class="split-container" id="split-container">
+                    <!-- Top Panel - Company Data Table -->
+                    <div class="top-panel" id="top-panel">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-table"></i> Company Information
+                                    <span class="badge bg-primary" id="companyCount">0</span>
+                                </h6>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-secondary" id="exportData">
+                                        <i class="fas fa-download"></i> Export
+                                    </button>
+                                    <button class="btn btn-outline-secondary" id="collapseTopPanel">
+                                        <i class="fas fa-chevron-up"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body p-0 table-container">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover mb-0" id="companiesTable">
+                                        <thead class="table-dark sticky-top">
+                                            <tr>
+                                                <th>Company Name</th>
+                                                <th>Country</th>
+                                                <th>Employees (Total)</th>
+                                                <th>Sales (USD)</th>
+                                                <th>UK SIC 2007 Code</th>
+                                                <th width="100">Old Accuracy</th>
+                                                <th width="100">New Accuracy</th>
+                                                <th>New SIC</th>
+                                                <th width="120">Predict SIC</th>
+                                                <th width="120">Update Revenue</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="companiesTableBody">
+                                            <!-- Data populated by JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- Pagination -->
+                                <div class="pagination-container p-3 bg-light border-top">
+                                    <div class="row align-items-center">
+                                        <div class="col-auto">
+                                            <span class="text-muted">Show</span>
+                                            <select class="form-select form-select-sm d-inline-block w-auto ms-1 me-1" id="perPageSelect">
+                                                <option value="25">25</option>
+                                                <option value="50" selected>50</option>
+                                                <option value="100">100</option>
+                                            </select>
+                                            <span class="text-muted">per page</span>
+                                        </div>
+                                        <div class="col">
+                                            <span class="text-muted" id="paginationInfo"></span>
+                                        </div>
+                                        <div class="col-auto">
+                                            <nav>
+                                                <ul class="pagination pagination-sm mb-0" id="pagination">
+                                                    <!-- Pagination populated by JavaScript -->
+                                                </ul>
+                                            </nav>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Panel - Agent Orchestration Dashboard -->
+                    <div class="bottom-panel" id="bottom-panel">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-robot"></i> Agent Orchestration Dashboard
+                                </h6>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-secondary" id="clearLogs">
+                                        <i class="fas fa-trash"></i> Clear
+                                    </button>
+                                    <button class="btn btn-outline-secondary" id="collapseBottomPanel">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <!-- Agent Dashboard Tabs -->
+                                <ul class="nav nav-tabs" id="agentTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="sic-tab" data-bs-toggle="tab" data-bs-target="#sic-panel" type="button" role="tab">
+                                            <i class="fas fa-search"></i> SIC Prediction
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="revenue-tab" data-bs-toggle="tab" data-bs-target="#revenue-panel" type="button" role="tab">
+                                            <i class="fas fa-dollar-sign"></i> Revenue Update
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logs-panel" type="button" role="tab">
+                                            <i class="fas fa-list"></i> Activity Logs
+                                        </button>
+                                    </li>
+                                </ul>
+
+                                <div class="tab-content" id="agentTabContent">
+                                    <!-- SIC Prediction Panel -->
+                                    <div class="tab-pane fade show active" id="sic-panel" role="tabpanel">
+                                        <div class="row h-100 g-0">
+                                            <div class="col-md-8 border-end">
+                                                <div class="agent-workflow-container p-3">
+                                                    <h6>Agent Workflow Visualization</h6>
+                                                    <div id="sicWorkflowChart" class="workflow-chart"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="agent-results p-3">
+                                                    <h6>Prediction Results</h6>
+                                                    <div id="sicResults" class="results-container">
+                                                        <p class="text-muted">No predictions yet. Click 'Predict' on a company to start.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Revenue Update Panel -->
+                                    <div class="tab-pane fade" id="revenue-panel" role="tabpanel">
+                                        <div class="row h-100 g-0">
+                                            <div class="col-md-8 border-end">
+                                                <div class="agent-workflow-container p-3">
+                                                    <h6>Revenue Update Workflow</h6>
+                                                    <div id="revenueWorkflowChart" class="workflow-chart"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="agent-results p-3">
+                                                    <h6>Update Results</h6>
+                                                    <div id="revenueResults" class="results-container">
+                                                        <p class="text-muted">No updates yet. Click 'Update Revenue' on a company to start.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Activity Logs Panel -->
+                                    <div class="tab-pane fade" id="logs-panel" role="tabpanel">
+                                        <div class="p-3">
+                                            <div id="activityLogs" class="logs-container">
+                                                <p class="text-muted">Activity logs will appear here...</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal (disabled for debugging) -->
+    <div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true" style="display: none !important;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h6 id="loadingMessage">Processing...</h6>
+                    <p class="text-muted mb-0" id="loadingDetails">Please wait while agents process your request.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/enhanced_app.js') }}"></script>
+    
+    <!-- Emergency fallback to hide loading modal -->
+    <script>
+        // Fallback: If loading modal is still showing after 15 seconds, force hide it
+        setTimeout(function() {
+            const loadingModal = document.getElementById('loadingModal');
+            if (loadingModal && loadingModal.classList.contains('show')) {
+                console.warn('Emergency: Forcing loading modal to hide');
+                const modal = new bootstrap.Modal(loadingModal);
+                modal.hide();
+            }
+        }, 15000);
+    </script>
+</body>
+</html>

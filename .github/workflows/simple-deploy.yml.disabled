@@ -1,0 +1,52 @@
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  AZURE_RESOURCE_GROUP: rg-credit-risk-analysis-prod
+  APP_SERVICE_NAME: credit-risk-analysis-prod-app-25h2ya
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Test application imports
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+        # Test imports
+        python -c "
+        import sys
+        sys.path.insert(0, '.')
+        from app.agents.sector_classification_agent import SectorClassificationAgent
+        from app.utils.config_manager import ConfigManager
+        print('✅ All imports successful')
+        "
+
+    - name: Deploy to Azure App Service
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.APP_SERVICE_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: .
+
+    - name: Verify deployment
+      run: |
+        APP_URL="https://${{ env.APP_SERVICE_NAME }}.azurewebsites.net"
+        echo "🚀 Deployment completed!"
+        echo "🌐 Application URL: $APP_URL"
+        echo "📊 Databricks: https://dbc-beccfe71-12b6.cloud.databricks.com"
