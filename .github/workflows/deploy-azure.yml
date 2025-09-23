@@ -7,6 +7,11 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+# Prevent concurrent deployments
+concurrency:
+  group: azure-deployment-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   AZURE_RESOURCE_GROUP: rg-credit-risk-analysis-prod-ukwest
   AZURE_LOCATION: ukwest
@@ -72,12 +77,43 @@ jobs:
         echo "🔧 Configuring Azure App Service for Python deployment..."
         # The deployment will use the repository root with main.py as entry point
 
-    - name: Deploy to Azure App Service
+    - name: Pre-deployment checks
+      run: |
+        echo "🔍 Checking deployment readiness..."
+        echo "App Service: ${{ env.APP_SERVICE_NAME }}"
+        echo "Resource Group: ${{ env.AZURE_RESOURCE_GROUP }}"
+        echo "⏳ Waiting to avoid deployment conflicts..."
+        sleep 10
+
+    - name: Deploy to Azure App Service (with retry)
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.APP_SERVICE_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: '.'
+      timeout-minutes: 20
+      continue-on-error: true
+      id: first_deploy
+      
+    - name: Retry deployment if failed
+      if: steps.first_deploy.outcome == 'failure'
+      run: |
+        echo "⚠️ First deployment attempt failed, retrying in 60 seconds..."
+        sleep 60
+        
+    - name: Second deployment attempt
+      if: steps.first_deploy.outcome == 'failure'
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.APP_SERVICE_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: '.'
+      timeout-minutes: 20
+      
+    - name: Wait for deployment completion
+      run: |
+        echo "⏳ Waiting for deployment to stabilize..."
+        sleep 30
 
     - name: Verify Deployment
       run: |
