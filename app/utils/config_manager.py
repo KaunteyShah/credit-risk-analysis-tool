@@ -4,8 +4,25 @@ Azure-ready with Key Vault integration.
 """
 import os
 import json
+import logging
 from typing import Dict, Any, Optional, List
 from pathlib import Path
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    # Load from .env file if it exists
+    env_path = Path(__file__).parent.parent.parent / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
+        print(f"🔧 Loaded environment variables from: {env_path}")
+    else:
+        print(f"⚠️  No .env file found at: {env_path}")
+except ImportError:
+    print("⚠️  python-dotenv not available - skipping .env file loading")
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 # Try to import Azure Key Vault client
 try:
@@ -32,6 +49,14 @@ class ConfigManager:
     
     def load_default_config(self) -> Dict[str, Any]:
         """Load default configuration with Azure Key Vault integration."""
+        # Track secrets loading for security audit
+        secrets_audit = {
+            "key_vault_available": AZURE_KEYVAULT_AVAILABLE,
+            "secrets_loaded": [],
+            "secrets_missing": [],
+            "secrets_using_fallback": []
+        }
+        
         self._config = {
             "companies_house": {
                 "api_key": get_secret_or_env("COMPANIES_HOUSE_API_KEY", default=""),
@@ -79,6 +104,10 @@ class ConfigManager:
                 "timeout": 30
             }
         }
+        
+        # Perform secrets security audit
+        self._audit_secrets_security(secrets_audit)
+        
         return self._config
     
     def get(self, key_path: str, default: Any = None) -> Any:
@@ -104,6 +133,52 @@ class ConfigManager:
             return value
         except (KeyError, TypeError):
             return default
+    
+    def _audit_secrets_security(self, secrets_audit: Dict[str, Any]) -> None:
+        """Perform security audit of secrets loading."""
+        critical_secrets = [
+            ("COMPANIES_HOUSE_API_KEY", "companies_house.api_key"),
+            ("OPENAI_API_KEY", "openai.api_key"), 
+            ("DATABRICKS_TOKEN", "databricks.token")
+        ]
+        
+        # Check each critical secret
+        for secret_name, config_path in critical_secrets:
+            value = self.get(config_path, "")
+            
+            if not value or value == "":
+                secrets_audit["secrets_missing"].append(secret_name)
+            elif value.startswith("your_") and value.endswith("_here"):
+                secrets_audit["secrets_using_fallback"].append(secret_name)
+            else:
+                secrets_audit["secrets_loaded"].append(secret_name)
+        
+        # Log security audit results
+        if not secrets_audit["key_vault_available"]:
+            logger.warning("🔑 Azure Key Vault is NOT available - falling back to environment variables")
+        else:
+            logger.info("🔑 Azure Key Vault is available and connected")
+            
+        if secrets_audit["secrets_missing"]:
+            logger.error(f"🚨 CRITICAL: Missing secrets: {secrets_audit['secrets_missing']}")
+            
+        if secrets_audit["secrets_using_fallback"]:
+            logger.warning(f"⚠️ Using fallback values: {secrets_audit['secrets_using_fallback']}")
+            
+        if secrets_audit["secrets_loaded"]:
+            logger.info(f"✅ Successfully loaded secrets: {secrets_audit['secrets_loaded']}")
+            
+        # Store audit for health check endpoint
+        self._secrets_audit = secrets_audit
+    
+    def get_secrets_audit(self) -> Dict[str, Any]:
+        """Get the last secrets security audit results."""
+        return getattr(self, '_secrets_audit', {
+            "key_vault_available": False,
+            "secrets_loaded": [],
+            "secrets_missing": [],
+            "secrets_using_fallback": []
+        })
     
     def get_api_config(self, service: str) -> Dict[str, Any]:
         """Get API configuration for a specific service."""

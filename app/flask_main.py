@@ -18,6 +18,7 @@ if project_root not in sys.path:
 
 from app.utils.logger import logger
 from app.utils.simulation import simulation_service, is_demo_mode, DEMO_SECRET_KEY
+from app.utils.input_validation import validate_api_input, validate_predict_sic_input, validate_update_revenue_input
 
 def clean_numeric_column(series):
     """Clean and convert a series to numeric values"""
@@ -427,14 +428,11 @@ def create_app():
         })
 
     @app.route('/api/predict_sic', methods=['POST'])
-    def predict_sic():
+    @validate_api_input(validate_predict_sic_input)
+    def predict_sic(validated_data):
         """Predict SIC code for a company"""
         try:
-            data = request.get_json()
-            company_index = data.get('company_index')
-            
-            if company_index is None:
-                return jsonify({'error': 'Company index is required'}), 400
+            company_index = validated_data['company_index']
                 
             # Ensure data is loaded and convert to dict if it's a DataFrame
             if app.company_data is None:
@@ -515,14 +513,12 @@ def create_app():
             return jsonify({'error': str(e)}), 500
 
     @app.route('/api/update_revenue', methods=['POST'])
-    def update_revenue():
+    @validate_api_input(validate_update_revenue_input)
+    def update_revenue(validated_data):
         """Update revenue for a company"""
         try:
-            data = request.get_json()
-            company_index = data.get('company_index')
-            
-            if company_index is None:
-                return jsonify({'error': 'Company index is required'}), 400
+            company_index = validated_data['company_index']
+            new_revenue = validated_data['new_revenue']
                 
             # Ensure data is loaded
             if app.company_data is None:
@@ -540,17 +536,14 @@ def create_app():
                 
             company_name = company.get('Company Name', 'Unknown')
             
-            # Only allow simulation in demo mode
+            # Only allow simulation in demo mode for auto-generation
+            # But allow manual updates in both modes
             if not is_demo_mode():
-                return jsonify({'error': 'Revenue update requires demo mode or real data source implementation'}), 400
-            
-            # Simulate revenue update logic using simulation service
-            simulation_service.simulate_workflow_processing(0.3, 1.0)
-            
-            # Simulate updated revenue using simulation service
-            current_revenue = company.get('Sales (USD)', 0)
-            revenue_result = simulation_service.generate_mock_revenue_update(current_revenue)
-            new_revenue = revenue_result['new_revenue']
+                # In production mode, use the provided revenue value directly
+                pass
+            else:
+                # In demo mode, we can still use the provided value but add some simulation logging
+                simulation_service.simulate_workflow_processing(0.3, 1.0)
             
             # Update the company data - handle both DataFrame and list cases
             if isinstance(app.company_data, pd.DataFrame):
