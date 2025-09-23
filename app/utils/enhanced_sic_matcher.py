@@ -266,8 +266,9 @@ class EnhancedSICMatcher:
         # STEP 1: Extract core business activity
         extracted_activity = self._extract_business_activity(business_desc)
         
-        print(f"Original: {business_desc}")
-        print(f"Extracted activity: {extracted_activity}")
+        # Debug logging only for development (removed print statements for production)
+        logger.debug(f"Original: {business_desc}")
+        logger.debug(f"Extracted activity: {extracted_activity}")
         
         # STEP 2: Basic fuzzy matching on extracted activity
         sic_descriptions_list = list(self.description_to_code.keys())

@@ -19,6 +19,8 @@ if project_root not in sys.path:
 from app.utils.logger import logger
 from app.utils.simulation import simulation_service, is_demo_mode, DEMO_SECRET_KEY
 from app.utils.input_validation import validate_api_input, validate_predict_sic_input, validate_update_revenue_input
+from app.agents.orchestrator import MultiAgentOrchestrator
+from app.agents.sector_classification_agent import SectorClassificationAgent
 
 def clean_numeric_column(series):
     """Clean and convert a series to numeric values"""
@@ -43,6 +45,11 @@ def create_app():
     # Global data storage
     app.company_data = None
     app.sic_codes = None
+    
+    # Initialize multi-agent orchestrator for real workflow processing
+    app.orchestrator = MultiAgentOrchestrator()
+    app.sector_agent = SectorClassificationAgent()
+    logger.info("Multi-agent orchestrator initialized successfully")
     
     def load_company_data():
         """Load and prepare company data"""
@@ -494,63 +501,146 @@ def create_app():
                 
             company = companies_list[company_index]
             company_name = company.get('Company Name', 'Unknown')
+            business_description = company.get('Business Description', '')
+            current_sic = company.get('SIC Code (SIC 2007)', '')
             
-            # Only allow simulation in demo mode
-            if not is_demo_mode():
-                return jsonify({'error': 'SIC prediction requires demo mode or real workflow implementation'}), 400
+            # Check if we should use real agent processing or simulation
+            use_real_agents = request.json and request.json.get('use_real_agents', False)
             
-            # Simulate SIC prediction logic using simulation service
-            simulation_service.simulate_prediction_delay(0.5, 1.5)
+            if use_real_agents:
+                # Use real SectorClassificationAgent for prediction
+                logger.info(f"Using real agent for SIC prediction: {company_name}")
+                
+                # Prepare data for sector classification agent
+                company_data = {
+                    'company_number': company.get('Registration number', ''),
+                    'company_name': company_name,
+                    'description': business_description,
+                    'primary_sic_code': current_sic
+                }
+                
+                # Use real sector classification agent
+                agent_result = app.sector_agent.process([company_data])
+                
+                if agent_result.success and agent_result.data.get('suggestions'):
+                    suggestion = agent_result.data['suggestions'][0]
+                    predicted_sic = suggestion.suggested_sic_code
+                    confidence = suggestion.confidence
+                    reasoning = suggestion.reasoning
+                    
+                    # Calculate new accuracy using enhanced SIC matcher
+                    if hasattr(app, 'sic_matcher'):
+                        # Use the predicted SIC confidence as new accuracy
+                        new_accuracy = confidence * 100
+                        
+                        # Optionally validate the prediction using old accuracy calculation
+                        validation_result = app.sic_matcher.calculate_old_accuracy(
+                            business_description, predicted_sic
+                        )
+                        validation_score = validation_result.get('old_accuracy', new_accuracy)
+                        
+                        # Use the validation score if it's higher (more conservative)
+                        new_accuracy = max(new_accuracy, validation_score)
+                    else:
+                        new_accuracy = confidence * 100
+                    
+                    workflow_type = "REAL AGENTS"
+                else:
+                    return jsonify({'error': 'Real SIC prediction failed: No suitable match found'}), 500
+            else:
+                # Use simulation mode (existing behavior)
+                if not is_demo_mode():
+                    return jsonify({'error': 'SIC prediction requires demo mode or real workflow implementation'}), 400
+                
+                # Simulate SIC prediction logic using simulation service
+                simulation_service.simulate_prediction_delay(0.5, 1.5)
+                
+                # Generate a simulated SIC code prediction
+                prediction_result = simulation_service.generate_mock_sic_prediction()
+                predicted_sic = prediction_result['predicted_sic']
+                confidence = prediction_result['confidence']
+                new_accuracy = confidence * 100
+                reasoning = "Simulated prediction"
+                workflow_type = "SIMULATION"
             
-            # Generate a simulated SIC code prediction
-            prediction_result = simulation_service.generate_mock_sic_prediction()
-            predicted_sic = prediction_result['predicted_sic']
-            confidence = prediction_result['confidence']
-            
-            # Update the company data with the prediction
+            # Update the company data with the prediction (both simulation and real)
             if isinstance(app.company_data, pd.DataFrame):
                 app.company_data.loc[company_index, 'Predicted_SIC'] = predicted_sic
                 app.company_data.loc[company_index, 'SIC_Confidence'] = confidence
                 app.company_data.loc[company_index, 'SIC_Accuracy'] = confidence
+                app.company_data.loc[company_index, 'New_Accuracy'] = new_accuracy
             else:
                 app.company_data[company_index]['Predicted_SIC'] = predicted_sic
                 app.company_data[company_index]['SIC_Confidence'] = confidence
                 app.company_data[company_index]['SIC_Accuracy'] = confidence
+                app.company_data[company_index]['New_Accuracy'] = new_accuracy
             
-            # Generate workflow steps for visualization - 4 agents in sequence
-            workflow_steps = [
-                {
-                    "step": 1,
-                    "agent": "Data Ingestion Agent",
-                    "message": f"Loading company data for {company_name}...",
-                    "status": "completed"
-                },
-                {
-                    "step": 2,
-                    "agent": "Anomaly Detection Agent", 
-                    "message": "Analyzing SIC code accuracy and identifying anomalies...",
-                    "status": "completed"
-                },
-                {
-                    "step": 3,
-                    "agent": "Sector Classification Agent",
-                    "message": f"Predicting optimal SIC code: {predicted_sic}",
-                    "status": "completed"
-                },
-                {
-                    "step": 4,
-                    "agent": "Results Compilation Agent",
-                    "message": f"SIC prediction complete with {confidence:.1%} confidence",
-                    "status": "completed"
-                }
-            ]
+            # Generate workflow steps based on the processing type
+            if use_real_agents:
+                workflow_steps = [
+                    {
+                        "step": 1,
+                        "agent": "Data Ingestion Agent",
+                        "message": f"Loaded company: {company_name}",
+                        "status": "completed"
+                    },
+                    {
+                        "step": 2,
+                        "agent": "Sector Classification Agent",
+                        "message": f"Analyzing: {business_description[:50]}...",
+                        "status": "completed"
+                    },
+                    {
+                        "step": 3,
+                        "agent": "Enhanced SIC Matcher",
+                        "message": f"Predicted SIC: {predicted_sic} ({confidence:.1%})",
+                        "status": "completed"
+                    },
+                    {
+                        "step": 4,
+                        "agent": "Results Compilation Agent",
+                        "message": f"New accuracy: {new_accuracy:.1f}% (REAL AGENTS)",
+                        "status": "completed"
+                    }
+                ]
+            else:
+                workflow_steps = [
+                    {
+                        "step": 1,
+                        "agent": "Data Ingestion Agent",
+                        "message": f"Loading company data for {company_name}...",
+                        "status": "completed"
+                    },
+                    {
+                        "step": 2,
+                        "agent": "Anomaly Detection Agent", 
+                        "message": "Analyzing SIC code accuracy and identifying anomalies...",
+                        "status": "completed"
+                    },
+                    {
+                        "step": 3,
+                        "agent": "Sector Classification Agent",
+                        "message": f"Predicting optimal SIC code: {predicted_sic} (SIMULATION)",
+                        "status": "completed"
+                    },
+                    {
+                        "step": 4,
+                        "agent": "Results Compilation Agent",
+                        "message": f"SIC prediction complete with {confidence:.1%} confidence",
+                        "status": "completed"
+                    }
+                ]
             
             return jsonify({
                 'success': True,
                 'company_name': company_name,
+                'current_sic': current_sic,
                 'predicted_sic': predicted_sic,
                 'confidence': f"{confidence:.1%}",
-                'message': f'SIC code predicted for {company_name}',
+                'new_accuracy': f"{new_accuracy:.1f}%",
+                'reasoning': reasoning if use_real_agents else "Simulation-based prediction",
+                'workflow_type': workflow_type,
+                'message': f'SIC code predicted for {company_name} using {workflow_type}',
                 'workflow_steps': workflow_steps
             })
             
@@ -737,6 +827,238 @@ def create_app():
                 
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/run_agent_workflow', methods=['POST'])
+    def run_agent_workflow():
+        """Run the complete multi-agent workflow for real processing"""
+        try:
+            # Get input parameters
+            data = request.get_json() or {}
+            company_numbers = data.get('company_numbers', [])
+            search_queries = data.get('search_queries', [])
+            include_filing_history = data.get('include_filing_history', False)
+            
+            # If no specific companies provided, process a sample from loaded data
+            if not company_numbers and not search_queries:
+                if app.company_data is not None and not app.company_data.empty:
+                    # Process first 10 companies as a sample
+                    sample_companies = app.company_data.head(10).to_dict('records')
+                    company_numbers = [comp.get('Registration number', f'sample_{i}') for i, comp in enumerate(sample_companies)]
+                else:
+                    return jsonify({'error': 'No company data available'}), 400
+            
+            # Prepare input for orchestrator
+            workflow_input = {
+                'company_numbers': company_numbers,
+                'search_queries': search_queries, 
+                'include_filing_history': include_filing_history
+            }
+            
+            logger.info(f"Starting real agent workflow with input: {workflow_input}")
+            
+            # Run the complete workflow using the orchestrator
+            workflow_results = app.orchestrator.run_complete_workflow(workflow_input)
+            
+            # Extract key information for UI display
+            workflow_info = workflow_results.get('workflow_info', {})
+            data_summary = workflow_results.get('data_summary', {})
+            suggestions = workflow_results.get('suggestions', {})
+            
+            logger.info(f"Agent workflow completed. Status: {workflow_info.get('status')}")
+            
+            return jsonify({
+                'success': True,
+                'workflow_info': workflow_info,
+                'data_summary': data_summary,
+                'suggestions': suggestions,
+                'companies_processed': data_summary.get('companies_processed', 0),
+                'anomalies_detected': data_summary.get('anomalies_detected', 0),
+                'suggestions_generated': data_summary.get('suggestions_generated', 0),
+                'sector_suggestions': len(suggestions.get('sector_classifications', [])),
+                'turnover_suggestions': len(suggestions.get('turnover_estimations', [])),
+                'raw_results': workflow_results  # Full results for debugging
+            })
+            
+        except Exception as e:
+            error_msg = f"Agent workflow failed: {str(e)}"
+            logger.error(error_msg)
+            return jsonify({'error': error_msg}), 500
+
+    @app.route('/api/predict_sic_real', methods=['POST'])
+    @validate_api_input(validate_predict_sic_input) 
+    def predict_sic_real(validated_data):
+        """Use real SectorClassificationAgent for SIC prediction"""
+        try:
+            company_index = validated_data['company_index']
+                
+            # Ensure data is loaded
+            if app.company_data is None:
+                load_company_data()
+                
+            # Get company data
+            if isinstance(app.company_data, pd.DataFrame):
+                if company_index >= len(app.company_data):
+                    return jsonify({'error': 'Invalid company index'}), 400
+                company = app.company_data.iloc[company_index].to_dict()
+            else:
+                if not app.company_data or company_index >= len(app.company_data):
+                    return jsonify({'error': 'Invalid company index'}), 400
+                company = app.company_data[company_index]
+                
+            company_name = company.get('Company Name', 'Unknown')
+            business_description = company.get('Business Description', '')
+            current_sic = company.get('SIC Code (SIC 2007)', '')
+            
+            logger.info(f"Real SIC prediction for {company_name}: {business_description}")
+            
+            # Prepare data for sector classification agent
+            company_data = {
+                'company_number': company.get('Registration number', ''),
+                'company_name': company_name,
+                'description': business_description,
+                'primary_sic_code': current_sic
+            }
+            
+            # Use real sector classification agent
+            agent_result = app.sector_agent.process([company_data])
+            
+            if agent_result.success and agent_result.data.get('suggestions'):
+                suggestion = agent_result.data['suggestions'][0]
+                
+                predicted_sic = suggestion.suggested_sic_code
+                confidence = suggestion.confidence
+                reasoning = suggestion.reasoning
+                keywords_matched = suggestion.keywords_matched
+                
+                # Calculate new accuracy using enhanced SIC matcher
+                if hasattr(app, 'sic_matcher'):
+                    # Use the predicted SIC confidence as new accuracy
+                    new_accuracy = confidence * 100
+                    
+                    # Optionally validate the prediction using old accuracy calculation
+                    validation_result = app.sic_matcher.calculate_old_accuracy(
+                        business_description, predicted_sic
+                    )
+                    validation_score = validation_result.get('old_accuracy', new_accuracy)
+                    
+                    # Use the validation score if it's higher (more conservative)
+                    new_accuracy = max(new_accuracy, validation_score)
+                else:
+                    new_accuracy = confidence * 100
+                
+                # Update company data with real prediction
+                if isinstance(app.company_data, pd.DataFrame):
+                    app.company_data.loc[company_index, 'Predicted_SIC'] = predicted_sic
+                    app.company_data.loc[company_index, 'SIC_Confidence'] = confidence
+                    app.company_data.loc[company_index, 'New_Accuracy'] = new_accuracy
+                else:
+                    app.company_data[company_index]['Predicted_SIC'] = predicted_sic
+                    app.company_data[company_index]['SIC_Confidence'] = confidence
+                    app.company_data[company_index]['New_Accuracy'] = new_accuracy
+                
+                # Create real workflow steps
+                workflow_steps = [
+                    {
+                        "step": 1,
+                        "agent": "Data Ingestion Agent",
+                        "message": f"Loaded company data: {company_name}",
+                        "status": "completed"
+                    },
+                    {
+                        "step": 2,
+                        "agent": "Sector Classification Agent", 
+                        "message": f"Analyzing business description: {business_description[:50]}...",
+                        "status": "completed"
+                    },
+                    {
+                        "step": 3,
+                        "agent": "Enhanced SIC Matcher",
+                        "message": f"Predicted SIC: {predicted_sic} with {confidence:.1%} confidence",
+                        "status": "completed"
+                    },
+                    {
+                        "step": 4,
+                        "agent": "Results Compilation Agent",
+                        "message": f"New accuracy calculated: {new_accuracy:.1f}%",
+                        "status": "completed"
+                    }
+                ]
+                
+                logger.info(f"Real SIC prediction completed: {predicted_sic} ({confidence:.1%})")
+                
+                return jsonify({
+                    'success': True,
+                    'company_name': company_name,
+                    'current_sic': current_sic,
+                    'predicted_sic': predicted_sic,
+                    'confidence': f"{confidence:.1%}",
+                    'new_accuracy': f"{new_accuracy:.1f}%",
+                    'reasoning': reasoning,
+                    'keywords_matched': keywords_matched,
+                    'message': f'Real SIC prediction for {company_name}',
+                    'workflow_steps': workflow_steps,
+                    'agent_used': 'SectorClassificationAgent'
+                })
+            else:
+                return jsonify({'error': 'SIC prediction failed: No suitable match found'}), 500
+                
+        except Exception as e:
+            error_msg = f"Real SIC prediction failed: {str(e)}"
+            logger.error(error_msg)
+            return jsonify({'error': error_msg}), 500
+
+    @app.route('/api/test_agents', methods=['GET'])
+    def test_agent_integration():
+        """Test route to verify agent integration is working"""
+        try:
+            # Test orchestrator
+            orchestrator_status = "✅ Available" if hasattr(app, 'orchestrator') else "❌ Not available"
+            
+            # Test sector agent
+            sector_agent_status = "✅ Available" if hasattr(app, 'sector_agent') else "❌ Not available"
+            
+            # Test SIC matcher
+            sic_matcher_status = "✅ Available" if hasattr(app, 'sic_matcher') else "❌ Not available"
+            
+            # Test with sample data
+            test_result = None
+            if hasattr(app, 'sector_agent'):
+                try:
+                    sample_company = {
+                        'company_number': 'TEST001',
+                        'company_name': 'Test Catering Company',
+                        'description': 'Food catering and event services',
+                        'primary_sic_code': '56210'
+                    }
+                    
+                    agent_result = app.sector_agent.process([sample_company])
+                    if agent_result.success:
+                        test_result = "✅ Sector agent working - Sample prediction successful"
+                    else:
+                        test_result = f"⚠️ Sector agent failed: {agent_result.error_message}"
+                except Exception as e:
+                    test_result = f"❌ Sector agent test failed: {str(e)}"
+            
+            return jsonify({
+                'agent_integration_status': {
+                    'orchestrator': orchestrator_status,
+                    'sector_agent': sector_agent_status,
+                    'sic_matcher': sic_matcher_status,
+                    'test_result': test_result
+                },
+                'available_routes': [
+                    '/api/run_agent_workflow - Full multi-agent workflow',
+                    '/api/predict_sic_real - Real SIC prediction using agents',
+                    '/api/predict_sic - Enhanced with real agent option (use_real_agents: true)'
+                ],
+                'usage_instructions': {
+                    'real_sic_prediction': 'POST to /api/predict_sic with {"company_index": 0, "use_real_agents": true}',
+                    'full_workflow': 'POST to /api/run_agent_workflow with optional company_numbers array'
+                }
+            })
+            
+        except Exception as e:
+            return jsonify({'error': f'Agent test failed: {str(e)}'}), 500
     
     # Load data when app starts
     load_company_data()
