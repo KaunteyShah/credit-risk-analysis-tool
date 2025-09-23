@@ -6,7 +6,7 @@ echo "📅 $(date)"
 # Install dependencies
 echo "📦 Installing Python dependencies..."
 python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+python -m pip install -r requirements-azure.txt
 
 # Set environment variables for Azure
 export PYTHONPATH="${PYTHONPATH}:/home/site/wwwroot"
