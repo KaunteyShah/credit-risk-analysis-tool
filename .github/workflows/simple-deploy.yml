@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_RESOURCE_GROUP: rg-credit-risk-analysis-prod
+  AZURE_RESOURCE_GROUP: rg-credit-risk-analysis-prod-ukwest
   APP_SERVICE_NAME: credit-risk-analysis-prod-app-25h2ya
   PYTHON_VERSION: '3.11'
 
