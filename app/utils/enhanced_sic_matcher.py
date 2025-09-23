@@ -169,8 +169,11 @@ class EnhancedSICMatcher:
         self.description_to_code = {}  # {description: code}
         self.updated_data_manager = UpdatedDataManager(updated_data_file)
         
-        if sic_codes_file:
-            self.load_sic_codes(sic_codes_file)
+        # If no SIC codes file provided, use default
+        if not sic_codes_file:
+            sic_codes_file = "data/SIC_codes.xlsx"
+            
+        self.load_sic_codes(sic_codes_file)
     
     def load_sic_codes(self, sic_codes_file: str) -> bool:
         """
@@ -218,6 +221,10 @@ class EnhancedSICMatcher:
                 self.sic_descriptions[sic_code] = description
                 self.description_to_code[description] = sic_code
             
+            # Also create sic_df with standardized column names for the new methods
+            self.sic_df = self.sic_codes_df.copy()
+            self.sic_df.columns = ['SIC_Code', 'Description']  # Standardize column names
+            
             logger.info(f"Loaded {len(self.sic_descriptions)} SIC codes")
             return True
             
@@ -239,7 +246,12 @@ class EnhancedSICMatcher:
     
     def find_best_match(self, business_desc: str, top_n: int = 3) -> List[Dict]:
         """
-        Find best matching SIC codes for a business description.
+        Find best matching SIC codes using SIMPLIFIED ACTIVITY EXTRACTION.
+        
+        NEW APPROACH:
+        1. Extract core business activities from complex descriptions
+        2. Match extracted activities against SIC descriptions
+        3. Apply industry-specific boosting for accuracy
         
         Args:
             business_desc: Business description to match
@@ -251,33 +263,113 @@ class EnhancedSICMatcher:
         if not business_desc or not self.sic_descriptions:
             return []
         
-        # Get list of all SIC descriptions for matching
-        sic_descriptions_list = list(self.description_to_code.keys())
+        # STEP 1: Extract core business activity
+        extracted_activity = self._extract_business_activity(business_desc)
         
-        # Use rapidfuzz to find best matches
+        print(f"Original: {business_desc}")
+        print(f"Extracted activity: {extracted_activity}")
+        
+        # STEP 2: Basic fuzzy matching on extracted activity
+        sic_descriptions_list = list(self.description_to_code.keys())
         matches = process.extract(
-            business_desc,
+            extracted_activity,
             sic_descriptions_list,
-            scorer=fuzz.WRatio,  # Weighted ratio for better matching
-            limit=top_n
+            scorer=fuzz.WRatio,
+            limit=top_n * 2  # Get extra candidates for boosting
         )
         
-        results = []
-        for match_desc, score, _ in matches:
-            sic_code = self.description_to_code.get(match_desc)
-            if sic_code:
-                results.append({
-                    'sic_code': sic_code,
-                    'sic_description': match_desc,
-                    'fuzzy_score': score,
-                    'accuracy_percentage': round(score, 1)
-                })
+        # STEP 3: Apply smart boosting
+        enhanced_results = []
         
-        return results
+        for match_desc, base_score, _ in matches:
+            sic_code = self.description_to_code.get(match_desc)
+            if not sic_code:
+                continue
+                
+            enhanced_score = base_score
+            boost_reason = []
+            
+            # Industry-specific boosting
+            if any(term in extracted_activity for term in ['catering', 'restaurant', 'food']):
+                if any(term in match_desc.lower() for term in ['catering', 'restaurant', 'food']):
+                    enhanced_score = min(100, enhanced_score + 15)
+                    boost_reason.append('+15 hospitality match')
+                    
+            if any(term in extracted_activity for term in ['retail', 'supermarket', 'grocery', 'store']):
+                if any(term in match_desc.lower() for term in ['retail', 'store', 'shop']):
+                    enhanced_score = min(100, enhanced_score + 15)
+                    boost_reason.append('+15 retail match')
+                    
+            if any(term in extracted_activity for term in ['bank', 'financial']):
+                if any(term in match_desc.lower() for term in ['bank', 'financial']):
+                    enhanced_score = min(100, enhanced_score + 15)
+                    boost_reason.append('+15 financial match')
+            
+            enhanced_results.append({
+                'sic_code': sic_code,
+                'sic_description': match_desc,
+                'fuzzy_score': round(enhanced_score, 1),
+                'base_score': base_score,
+                'accuracy_percentage': round(enhanced_score, 1),
+                'boost_applied': ', '.join(boost_reason) if boost_reason else 'none',
+                'extracted_activity': extracted_activity
+            })
+        
+        # Sort by enhanced score and return top N
+        enhanced_results.sort(key=lambda x: x['fuzzy_score'], reverse=True)
+        return enhanced_results[:top_n]
+    
+    def _extract_business_activity(self, description: str) -> str:
+        """
+        Extract core business activity from complex business descriptions.
+        
+        This removes corporate noise and focuses on actual business activities.
+        """
+        import re
+        
+        description = description.lower()
+        
+        # Remove corporate structure words
+        noise_words = [
+            'plc', 'ltd', 'limited', 'group', 'holdings', 'company', 'corporation', 
+            'corp', 'inc', 'the', 'and', 'through', 'its', 'subsidiaries', 'engaged',
+            'in', 'business', 'of', 'activities', 'services', 'operations'
+        ]
+        
+        # Remove noise words
+        for word in noise_words:
+            description = re.sub(r'\b' + word + r'\b', ' ', description)
+        
+        # Extract key activity phrases using patterns
+        activity_patterns = [
+            r'(food service|catering|restaurant|dining)',
+            r'(retail|supermarket|grocery|store|shop)',
+            r'(bank|banking|financial|lending|deposit)',
+            r'(software|technology|computing)',
+            r'(manufacturing|production|factory)'
+        ]
+        
+        key_activities = []
+        for pattern in activity_patterns:
+            matches = re.findall(pattern, description)
+            key_activities.extend(matches)
+        
+        # If no specific patterns found, take first few meaningful words
+        if not key_activities:
+            words = [w for w in description.split() if len(w) > 3][:3]
+            key_activities = words
+        
+        return ' '.join(key_activities)
     
     def calculate_old_accuracy(self, business_description: str, current_sic_code: str) -> Dict:
         """
-        Calculate old accuracy (fuzzy match between business description and current SIC).
+        Calculate old accuracy using proper SIC code lookup and similarity matching.
+        
+        CORRECT APPROACH: 
+        1. Look for exact SIC code match in Excel file
+        2. If found, get its description and calculate similarity with business description
+        3. If no exact code match, do fuzzy matching on descriptions
+        4. Use similarity scoring for accurate percentages
         
         Args:
             business_description: Company business description
@@ -289,27 +381,67 @@ class EnhancedSICMatcher:
         if not business_description or not current_sic_code:
             return {
                 'current_sic_code': current_sic_code,
-                'current_sic_description': self.get_sic_description(current_sic_code) if current_sic_code else '',
+                'current_sic_description': '',
                 'old_accuracy': 0.0,
-                'is_accurate': False
+                'is_accurate': False,
+                'best_match_description': '',
+                'best_match_sic': '',
+                'ai_reasoning': 'Missing business description or SIC code'
             }
         
-        # Get description of current SIC code
+        # STEP 1: Look for exact SIC code match
         current_sic_description = self.get_sic_description(current_sic_code)
         
-        # Calculate fuzzy match between business description and current SIC description
         if current_sic_description and current_sic_description != "Unknown SIC Code":
-            fuzzy_score = fuzz.WRatio(business_description, current_sic_description)
-            is_accurate = fuzzy_score >= 90.0
+            # STEP 2: Calculate similarity between business description and SIC description
+            # Clean the business description for better matching
+            clean_business_desc = business_description.lower().strip()
+            clean_sic_desc = current_sic_description.lower().strip()
+            
+            # Use multiple similarity metrics and take the BEST score (not minimum)
+            # This gives higher scores for good matches, lower for poor matches
+            ratio_score = fuzz.ratio(clean_business_desc, clean_sic_desc)
+            partial_score = fuzz.partial_ratio(clean_business_desc, clean_sic_desc)
+            token_sort_score = fuzz.token_sort_ratio(clean_business_desc, clean_sic_desc)
+            token_set_score = fuzz.token_set_ratio(clean_business_desc, clean_sic_desc)
+            
+            # Take the MAXIMUM score for intuitive scoring
+            # Good matches will score high, poor matches will score low
+            old_accuracy = max(ratio_score, partial_score, token_sort_score, token_set_score)
+            
+            ai_reasoning = f"Exact SIC code {current_sic_code} found. Best similarity score: {old_accuracy:.1f}%. Breakdown: ratio={ratio_score}, partial={partial_score}, token_sort={token_sort_score}, token_set={token_set_score}"
+            
         else:
-            fuzzy_score = 0.0
-            is_accurate = False
+            # STEP 3: No exact code match - do fuzzy matching on descriptions
+            best_matches = self.find_best_match(business_description, top_n=1)
+            
+            if best_matches:
+                best_match = best_matches[0]
+                # RIGOROUS: Apply penalty for not having exact code AND use conservative scoring
+                base_score = best_match['fuzzy_score']
+                old_accuracy = base_score * 0.6  # Heavy penalty for missing SIC code
+                ai_reasoning = f"SIC code {current_sic_code} not found in database. Best fuzzy match: {best_match['sic_code']} ({best_match['sic_description']}) with {base_score:.1f}% base similarity, penalized to {old_accuracy:.1f}%"
+                current_sic_description = f'[Not found: {current_sic_code}]'
+            else:
+                old_accuracy = 0.0
+                ai_reasoning = f'SIC code {current_sic_code} not found and no fuzzy matches available'
+                current_sic_description = f'[Unknown: {current_sic_code}]'
+        
+        # Find best match for comparison
+        best_matches = self.find_best_match(business_description, top_n=1)
+        best_match_sic = best_matches[0]['sic_code'] if best_matches else ''
+        best_match_description = best_matches[0]['sic_description'] if best_matches else ''
+        
+        is_accurate = old_accuracy >= 70.0
         
         return {
             'current_sic_code': current_sic_code,
             'current_sic_description': current_sic_description,
-            'old_accuracy': round(fuzzy_score, 1),
-            'is_accurate': is_accurate
+            'old_accuracy': round(old_accuracy, 1),
+            'is_accurate': is_accurate,
+            'best_match_description': best_match_description,
+            'best_match_sic': best_match_sic,
+            'ai_reasoning': ai_reasoning
         }
     
     def calculate_new_accuracy(self, business_description: str) -> Dict:

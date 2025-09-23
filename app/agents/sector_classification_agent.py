@@ -189,7 +189,7 @@ class SectorClassificationAgent(BaseAgent):
                 
                 if score > best_score:
                     best_score = score
-                    reasoning = f"Matched keywords: {', '.join(matched_keywords)}. Business description indicates {sic_info['category']} activities."
+                    reasoning = f"Matched keywords: {', '.join(matched_keywords)}. Business description indicates {sic_info['description'][:50]}... activities."
                     best_match = (sic_code, sic_info["description"], confidence, matched_keywords, reasoning)
         
         return best_match
@@ -248,174 +248,194 @@ class SectorClassificationAgent(BaseAgent):
         return "other"
     
     def _load_sic_mappings(self) -> Dict[str, Dict[str, Any]]:
-        """Load SIC code mappings with keywords and categories."""
-        # Enhanced SIC mappings with real UK SIC codes
+        """Load comprehensive SIC code mappings based on official UK SIC 2007 data."""
         return {
-            # Technology & IT Services
-            "62020": {
-                "description": "Information technology consultancy activities",
-                "category": "technology",
-                "keywords": ["software", "IT", "consultancy", "technology", "digital", "programming", "development"],
-                "secondary_keywords": ["tech", "computer", "systems", "solutions"],
-                "negative_keywords": []
+            # Hospitality (55xx-56xx) - KEY FOR COMPASS GROUP
+            "56101": {
+                "description": "Licenced restaurants", 
+                "keywords": ["restaurant", "dining", "food", "licensed", "alcohol", "catering"]
             },
-            "62090": {
-                "description": "Other information technology and computer service activities",
-                "category": "technology", 
-                "keywords": ["computer", "IT services", "technology", "software", "systems"],
-                "secondary_keywords": ["tech support", "maintenance", "hardware"],
-                "negative_keywords": []
+            "56102": {
+                "description": "Unlicenced restaurants and cafes",
+                "keywords": ["restaurant", "cafe", "food", "dining", "unlicensed", "catering"]
+            },
+            "56210": {
+                "description": "Event catering activities",
+                "keywords": ["catering", "events", "food", "service", "hospitality"]
+            },
+            
+            # Financial Services (64xx-66xx) - KEY FOR HSBC
+            "64191": {
+                "description": "Banks",
+                "keywords": ["bank", "banking", "financial", "services", "lending", "deposit"]
+            },
+            "64192": {
+                "description": "Building societies",
+                "keywords": ["building", "society", "mortgage", "savings", "financial"]
+            },
+            "65110": {
+                "description": "Life insurance",
+                "keywords": ["insurance", "life", "assurance", "coverage"]
+            },
+            "65120": {
+                "description": "Non-life insurance",
+                "keywords": ["insurance", "general", "coverage", "protection"]
+            },
+            
+            # Retail and Wholesale (45xx-47xx) - KEY FOR TESCO, M&S
+            "47110": {
+                "description": "Retail sale in non-specialised stores with food, beverages or tobacco predominating",
+                "keywords": ["retail", "supermarket", "grocery", "food", "general"]
+            },
+            "47190": {
+                "description": "Other retail sale in non-specialised stores",
+                "keywords": ["retail", "department", "general", "variety"]
+            },
+            "47710": {
+                "description": "Retail sale of clothing in specialised stores",
+                "keywords": ["retail", "clothing", "fashion", "apparel", "garments"]
+            },
+            "47730": {
+                "description": "Dispensing chemist in specialised stores",
+                "keywords": ["pharmacy", "chemist", "medicine", "healthcare", "drugs"]
+            },
+            
+            # Information and Communication (58xx-63xx) - KEY FOR BT
+            "61100": {
+                "description": "Wired telecommunications activities",
+                "keywords": ["telecommunications", "wired", "internet", "broadband"]
+            },
+            "61200": {
+                "description": "Wireless telecommunications activities",
+                "keywords": ["mobile", "wireless", "telecommunications", "cellular"]
+            },
+            "62010": {
+                "description": "Computer programming activities",
+                "keywords": ["programming", "software", "development", "coding", "IT"]
+            },
+            "62020": {
+                "description": "Computer consultancy activities",
+                "keywords": ["consulting", "IT", "technology", "advice", "systems"]
             },
             "63110": {
                 "description": "Data processing, hosting and related activities",
-                "category": "technology",
-                "keywords": ["data", "hosting", "cloud", "server", "database"],
-                "secondary_keywords": ["processing", "storage", "analytics"],
-                "negative_keywords": []
+                "keywords": ["data", "hosting", "processing", "cloud", "IT"]
             },
             
-            # Professional Services
-            "70220": {
-                "description": "Business and other management consultancy activities",
-                "category": "consulting",
-                "keywords": ["consulting", "management", "advisory", "business", "strategy"],
-                "secondary_keywords": ["consultancy", "advice", "planning"],
-                "negative_keywords": []
+            # Manufacturing - KEY FOR ROLLS-ROYCE
+            "30300": {
+                "description": "Manufacture of air and spacecraft and related machinery",
+                "keywords": ["aircraft", "aerospace", "aviation", "manufacturing", "aerospace engineering"]
+            },
+            "10110": {
+                "description": "Processing and preserving of meat",
+                "keywords": ["food", "meat", "processing", "manufacturing"]
+            },
+            "20110": {
+                "description": "Manufacture of industrial gases", 
+                "keywords": ["chemicals", "gases", "industrial", "manufacturing"]
+            },
+            "26110": {
+                "description": "Manufacture of electronic components",
+                "keywords": ["electronics", "components", "technology", "manufacturing"]
+            },
+            
+            # Professional Services (69xx-75xx)
+            "69101": {
+                "description": "Barristers at law",
+                "keywords": ["legal", "barrister", "law", "advocate", "court"]
+            },
+            "69102": {
+                "description": "Solicitors",
+                "keywords": ["legal", "solicitor", "law", "attorney", "advice"]
             },
             "69201": {
                 "description": "Accounting and auditing activities",
-                "category": "finance",
-                "keywords": ["accounting", "audit", "bookkeeping", "finance", "tax"],
-                "secondary_keywords": ["accounts", "financial", "taxation"],
-                "negative_keywords": []
+                "keywords": ["accounting", "audit", "financial", "bookkeeping", "tax"]
             },
-            "69202": {
-                "description": "Tax consultancy",
-                "category": "finance",
-                "keywords": ["tax", "taxation", "VAT", "PAYE", "consultancy"],
-                "secondary_keywords": ["advice", "compliance", "returns"],
-                "negative_keywords": []
+            "70220": {
+                "description": "Business and other management consultancy activities",
+                "keywords": ["consulting", "management", "business", "advisory", "strategy"]
+            },
+            "71111": {
+                "description": "Architectural activities",
+                "keywords": ["architecture", "design", "building", "construction", "planning"]
             },
             
-            # Retail & Commerce
-            "47190": {
-                "description": "Other retail sale in non-specialised stores",
-                "category": "retail",
-                "keywords": ["retail", "shop", "store", "selling", "sales", "merchandise"],
-                "secondary_keywords": ["goods", "products", "consumer"],
-                "negative_keywords": ["wholesale", "manufacturing"]
+            # Transportation (49xx-53xx)
+            "49100": {
+                "description": "Passenger rail transport, interurban",
+                "keywords": ["rail", "passenger", "transport", "railway", "train"]
             },
-            "47910": {
-                "description": "Retail sale via mail order houses or via Internet",
-                "category": "retail",
-                "keywords": ["online", "e-commerce", "internet", "mail order", "retail"],
-                "secondary_keywords": ["website", "digital", "web"],
-                "negative_keywords": []
-            },
-            
-            # Manufacturing
-            "32990": {
-                "description": "Other manufacturing n.e.c.",
-                "category": "manufacturing",
-                "keywords": ["manufacturing", "production", "factory", "industrial", "maker"],
-                "secondary_keywords": ["assembly", "fabrication", "goods"],
-                "negative_keywords": ["service", "consulting"]
-            },
-            "10890": {
-                "description": "Manufacture of other food products n.e.c.",
-                "category": "manufacturing",
-                "keywords": ["food", "manufacturing", "production", "processing"],
-                "secondary_keywords": ["edible", "consumable", "nutrition"],
-                "negative_keywords": ["restaurant", "catering"]
-            },
-            
-            # Construction
-            "41202": {
-                "description": "Construction of domestic buildings",
-                "category": "construction",
-                "keywords": ["construction", "building", "homes", "residential", "houses"],
-                "secondary_keywords": ["property", "development", "contractor"],
-                "negative_keywords": []
-            },
-            "43999": {
-                "description": "Other specialised construction activities n.e.c.",
-                "category": "construction",
-                "keywords": ["construction", "building", "contractor", "specialist"],
-                "secondary_keywords": ["installation", "maintenance", "repair"],
-                "negative_keywords": []
-            },
-            
-            # Energy & Environment
-            "35110": {
-                "description": "Production of electricity",
-                "category": "energy",
-                "keywords": ["electricity", "power", "energy", "generation"],
-                "secondary_keywords": ["renewable", "solar", "wind"],
-                "negative_keywords": []
-            },
-            "35300": {
-                "description": "Steam and air conditioning supply",
-                "category": "energy",
-                "keywords": ["heating", "cooling", "HVAC", "air conditioning", "steam"],
-                "secondary_keywords": ["climate", "temperature"],
-                "negative_keywords": []
-            },
-            
-            # Transport & Logistics
             "49410": {
                 "description": "Freight transport by road",
-                "category": "transport",
-                "keywords": ["transport", "freight", "logistics", "delivery", "haulage"],
-                "secondary_keywords": ["shipping", "cargo", "goods"],
-                "negative_keywords": ["passenger"]
+                "keywords": ["freight", "road", "transport", "trucking", "logistics"]
             },
-            "52290": {
-                "description": "Other transportation support activities",
-                "category": "transport",
-                "keywords": ["transport", "logistics", "warehousing", "storage"],
-                "secondary_keywords": ["distribution", "supply chain"],
-                "negative_keywords": []
+            "51100": {
+                "description": "Passenger air transport",
+                "keywords": ["airline", "passenger", "aviation", "air", "transport"]
+            },
+            "52100": {
+                "description": "Warehousing and storage",
+                "keywords": ["warehousing", "storage", "logistics", "distribution"]
             },
             
-            # Healthcare
-            "86900": {
-                "description": "Other human health activities",
-                "category": "healthcare",
-                "keywords": ["health", "medical", "healthcare", "treatment", "therapy"],
-                "secondary_keywords": ["wellness", "care", "clinical"],
-                "negative_keywords": []
+            # Real Estate (68xx)
+            "68100": {
+                "description": "Buying and selling of own real estate",
+                "keywords": ["real estate", "property", "buying", "selling", "development"]
             },
-            "75000": {
-                "description": "Veterinary activities",
-                "category": "healthcare",
-                "keywords": ["veterinary", "animal", "pet", "vet"],
-                "secondary_keywords": ["care", "medical", "treatment"],
-                "negative_keywords": ["human"]
+            "68310": {
+                "description": "Real estate agencies",
+                "keywords": ["estate", "agent", "property", "real estate", "sales"]
             },
             
-            # Education & Training
-            "85590": {
-                "description": "Other education n.e.c.",
-                "category": "education",
-                "keywords": ["education", "training", "teaching", "learning", "course"],
-                "secondary_keywords": ["school", "academy", "tuition"],
-                "negative_keywords": []
+            # Construction (41xx-43xx)
+            "41200": {
+                "description": "Construction of residential and non-residential buildings",
+                "keywords": ["construction", "building", "residential", "commercial"]
+            },
+            "42110": {
+                "description": "Construction of roads and motorways", 
+                "keywords": ["construction", "roads", "infrastructure", "civil"]
             },
             
-            # Finance & Insurance
-            "64209": {
-                "description": "Other activities of credit granting",
-                "category": "finance",
-                "keywords": ["finance", "credit", "lending", "loan", "financial"],
-                "secondary_keywords": ["investment", "funding", "capital"],
-                "negative_keywords": []
+            # Energy and Utilities (35xx-39xx)
+            "35110": {
+                "description": "Production of electricity",
+                "keywords": ["electricity", "power", "energy", "generation"]
             },
-            "66190": {
-                "description": "Other activities auxiliary to financial services",
-                "category": "finance",
-                "keywords": ["financial", "insurance", "investment", "advisory"],
-                "secondary_keywords": ["wealth", "portfolio", "broker"],
-                "negative_keywords": []
+            "36000": {
+                "description": "Water collection, treatment and supply",
+                "keywords": ["water", "treatment", "supply", "utility"]
+            },
+            
+            # Education and Healthcare
+            "85200": {
+                "description": "Primary education",
+                "keywords": ["education", "primary", "school", "teaching"]
+            },
+            "86101": {
+                "description": "Hospital activities",
+                "keywords": ["hospital", "medical", "healthcare", "treatment"]
+            },
+            "86210": {
+                "description": "General medical practice activities",
+                "keywords": ["medical", "GP", "healthcare", "practice", "doctor"]
+            },
+            
+            # Agriculture (01xx-03xx)
+            "01110": {
+                "description": "Growing of cereals (except rice), leguminous crops and oil seeds",
+                "keywords": ["farming", "agriculture", "cereals", "crops", "growing", "grain"]
+            },
+            "01410": {
+                "description": "Raising of dairy cattle", 
+                "keywords": ["dairy", "cattle", "milk", "farming", "livestock"]
+            },
+            "03110": {
+                "description": "Marine fishing",
+                "keywords": ["fishing", "marine", "seafood", "commercial"]
             }
         }
     
