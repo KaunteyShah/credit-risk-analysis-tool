@@ -138,7 +138,7 @@ jobs:
         app-name: ${{ env.APP_SERVICE_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: '.'
-      timeout-minutes: 20
+      timeout-minutes: 25
       continue-on-error: true
       id: first_deploy
       env:
@@ -146,6 +146,7 @@ jobs:
         ENABLE_ORYX_BUILD: true
         PYTHON_ENABLE_GUNICORN_MULTIWORKERS: false
         WEBSITES_ENABLE_APP_SERVICE_STORAGE: true
+        WEBSITES_CONTAINER_START_TIME_LIMIT: 600
         PYTHONPATH: '/home/site/wwwroot'
       
     - name: Retry deployment if failed
@@ -161,12 +162,13 @@ jobs:
         app-name: ${{ env.APP_SERVICE_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: '.'
-      timeout-minutes: 20
+      timeout-minutes: 25
       env:
         SCM_DO_BUILD_DURING_DEPLOYMENT: true
         ENABLE_ORYX_BUILD: true
         PYTHON_ENABLE_GUNICORN_MULTIWORKERS: false
         WEBSITES_ENABLE_APP_SERVICE_STORAGE: true
+        WEBSITES_CONTAINER_START_TIME_LIMIT: 600
         PYTHONPATH: '/home/site/wwwroot'
       
     - name: Wait for deployment completion

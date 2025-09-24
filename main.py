@@ -39,8 +39,30 @@ logger.info("✅ Flask application created successfully")
 # For Azure App Service with Gunicorn
 application = app
 
+# Add a health check endpoint for Azure App Service
+@app.route('/health')
+def health_check():
+    return {'status': 'healthy', 'message': 'Flask app is running'}, 200
+
+@app.route('/')
+def home():
+    return {'status': 'running', 'message': 'Credit Risk Analysis Tool - Flask API is operational'}, 200
+
 if __name__ == '__main__':
-    # For local development and Azure App Service
-    port = int(os.environ.get('PORT', 8001))
-    logger.info(f"🚀 Starting Flask application on port {port}")
-    app.run(host='0.0.0.0', port=port, debug=False)
+    # Azure App Service uses the PORT environment variable
+    # Default to 8000 for Azure, 8001 for local development
+    port = int(os.environ.get('PORT', os.environ.get('WEBSITES_PORT', 8001)))
+    
+    logger.info(f"🌐 Environment variables:")
+    logger.info(f"   PORT: {os.environ.get('PORT', 'not set')}")
+    logger.info(f"   WEBSITES_PORT: {os.environ.get('WEBSITES_PORT', 'not set')}")
+    logger.info(f"   Using port: {port}")
+    
+    logger.info(f"🚀 Starting Flask application on 0.0.0.0:{port}")
+    logger.info(f"✅ Health check available at /health")
+    
+    try:
+        app.run(host='0.0.0.0', port=port, debug=False, threaded=True)
+    except Exception as e:
+        logger.error(f"❌ Failed to start Flask app: {e}")
+        raise
