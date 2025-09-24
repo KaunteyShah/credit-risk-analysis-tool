@@ -159,6 +159,10 @@ models/
 *.json.gz
 *.xlsx
 
+# Exceptions for essential data files needed in production
+!data/SIC_codes.xlsx
+!data/Sample_data2.csv
+
 # OS generated files
 .DS_Store
 .DS_Store?
