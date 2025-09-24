@@ -1,0 +1,1 @@
+web: python minimal_startup.py

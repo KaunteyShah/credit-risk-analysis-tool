@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
 """
 ULTRA-FAST Azure startup script - immediate health checks, graceful dependency handling.
 This script ensures Azure health checks pass even if some optional dependencies are missing.
+Optimized for Azure App Service Windows containers.
 """
 
 import os
@@ -229,8 +229,17 @@ try:
     print("AZURE_LOG: Ultra-fast startup initialization completed successfully")
     
     if __name__ == '__main__':
-        # Get port from environment
-        port = int(os.environ.get('PORT', os.environ.get('WEBSITES_PORT', 8000)))
+        # Enhanced port detection for Azure App Service
+        try:
+            port = int(os.environ.get('PORT', 
+                      os.environ.get('WEBSITES_PORT', 
+                      os.environ.get('HTTP_PLATFORM_PORT', '8000'))))
+            logger.info(f"🌐 AZURE: Port detected: {port}")
+            print(f"AZURE_LOG: Detected port: {port}")
+        except (ValueError, TypeError) as e:
+            port = 8000
+            logger.warning(f"⚠️ AZURE: Port detection failed, using default: {e}")
+            print(f"AZURE_LOG: Using default port 8000 due to: {e}")
         
         logger.info(f"🚀 AZURE: Starting ULTRA-FAST Flask app on 0.0.0.0:{port}")
         logger.info(f"🌐 AZURE: Health check endpoints ready immediately")

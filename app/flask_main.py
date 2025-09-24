@@ -6,7 +6,15 @@ Clean version without duplications
 import os
 import sys
 from flask import Flask, render_template, request, jsonify
-from flask_cors import CORS
+
+# Optional CORS import with fallback
+try:
+    from flask_cors import CORS
+    CORS_AVAILABLE = True
+except ImportError:
+    CORS_AVAILABLE = False
+    print("⚠️ flask-cors not available, continuing without CORS")
+
 import pandas as pd
 import numpy as np
 import json
@@ -39,8 +47,12 @@ def create_app():
     else:
         app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'your-secure-key-here')
     
-    # Enable CORS for all routes
-    CORS(app)
+    # Enable CORS for all routes (if available)
+    if CORS_AVAILABLE:
+        CORS(app)
+        print("✅ CORS enabled")
+    else:
+        print("⚠️ CORS disabled (flask-cors not available)")
     
     # Global data storage
     app.company_data = None
@@ -128,7 +140,7 @@ def create_app():
                 'timestamp': pd.Timestamp.now().isoformat(),
                 'python_version': sys.version,
                 'flask_available': True,
-                'cors_available': True,
+                'cors_available': CORS_AVAILABLE,
                 'data_loaded': app.company_data is not None,
                 'config_loaded': True
             }

@@ -66,5 +66,5 @@ except Exception as e:
     exit(1)
 "
 
-echo "Starting the application with ULTRA-FAST startup..."
-exec python ultra_fast_startup.py
+echo "Starting the application with MINIMAL startup for container stability..."
+exec python minimal_startup.py

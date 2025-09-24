@@ -28,16 +28,24 @@ logger = logging.getLogger(__name__)
 try:
     from app.flask_main import create_app
     logger.info("✅ Successfully imported create_app from app.flask_main")
+    
+    # Create the Flask application instance
+    app = create_app()
+    logger.info("✅ Flask application created successfully")
+    
+    # For Azure App Service with Gunicorn
+    application = app
+    
 except ImportError as e:
     logger.error(f"❌ Failed to import create_app: {e}")
-    sys.exit(1)
-
-# Create the Flask application instance
-app = create_app()
-logger.info("✅ Flask application created successfully")
-
-# For Azure App Service with Gunicorn
-application = app
+    logger.info("🔄 Falling back to minimal startup mode...")
+    
+    # Import minimal startup as fallback
+    try:
+        exec(open('minimal_startup.py').read())
+    except Exception as fallback_error:
+        logger.error(f"❌ Fallback to minimal startup failed: {fallback_error}")
+        sys.exit(1)
 
 # Add a health check endpoint for Azure App Service
 @app.route('/health')
