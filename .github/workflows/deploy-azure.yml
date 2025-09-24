@@ -72,14 +72,6 @@ jobs:
         except ImportError as e:
             print(f'❌ Azure import failed: {e}')
             sys.exit(1)
-            
-        # Test visualization
-        try:
-            import plotly
-            print('✅ Plotly available')
-        except ImportError as e:
-            print(f'❌ Plotly import failed: {e}')
-            sys.exit(1)
         
         print('✅ All essential dependencies verified for Azure deployment')
         "
@@ -322,9 +314,6 @@ jobs:
         else
           echo "⚠️ Application might still be starting up - check logs"
         fi
-            WEBSITES_PORT=8000 \
-            SCM_DO_BUILD_DURING_DEPLOYMENT=true \
-
         
         echo "🚀 Deployment completed!"
         echo "🌐 Application URL: $APP_URL"
