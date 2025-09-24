@@ -42,7 +42,7 @@ if [ $? -eq 0 ]; then
     echo "🎉 Setup complete! Starting the application..."
     echo "🌐 The app will be available at: http://localhost:8000"
     echo ""
-    python main.py
+    python3 main.py
 else
     echo "❌ Setup verification failed. Please check the errors above."
     exit 1

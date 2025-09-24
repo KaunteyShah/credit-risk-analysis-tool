@@ -1,1 +1,1 @@
-web: python minimal_startup.py
+web: python3 minimal_startup.py

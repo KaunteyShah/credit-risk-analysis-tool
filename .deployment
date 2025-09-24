@@ -3,4 +3,4 @@ SCM_DO_BUILD_DURING_DEPLOYMENT=true
 ENABLE_ORYX_BUILD=true
 PYTHON_ENABLE_GUNICORN_MULTIWORKERS=false
 WEBSITES_ENABLE_APP_SERVICE_STORAGE=true
-command = python minimal_startup.py
+command = python3 minimal_startup.py

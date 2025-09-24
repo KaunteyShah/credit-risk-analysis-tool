@@ -1,1 +1,1 @@
-python minimal_startup.py
+python3 minimal_startup.py
