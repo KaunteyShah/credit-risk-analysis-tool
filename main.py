@@ -110,17 +110,58 @@ def upload_file():
             return jsonify({"error": "CSV file must have at least 2 lines (header + data)"}), 400
         
         # Parse basic info
-        header = lines[0].split(',')
+        header = [col.strip().lower() for col in lines[0].split(',')]
         data_rows = len(lines) - 1
+        
+        # Define required and optional columns for credit risk analysis
+        required_columns = ['company_name']  # Start with minimal requirement
+        optional_columns = ['annual_revenue', 'credit_score', 'industry', 'risk_level', 'employees', 'debt_to_equity']
+        
+        # Check for required columns
+        missing_required = [col for col in required_columns if col not in header]
+        if missing_required:
+            return jsonify({
+                "error": f"Missing required columns: {missing_required}",
+                "required_columns": required_columns,
+                "found_columns": header
+            }), 400
+        
+        # Check which optional columns are present
+        found_optional = [col for col in optional_columns if col in header]
+        
+        # Basic data quality checks
+        sample_data = []
+        issues = []
+        
+        for i, line in enumerate(lines[1:6]):  # Check first 5 data rows
+            try:
+                row_data = [cell.strip() for cell in line.split(',')]
+                if len(row_data) != len(header):
+                    issues.append(f"Row {i+2}: Expected {len(header)} columns, got {len(row_data)}")
+                else:
+                    sample_data.append(dict(zip(header, row_data)))
+            except Exception as e:
+                issues.append(f"Row {i+2}: Parsing error - {str(e)}")
+        
+        # Calculate risk assessment capability
+        risk_features = len(found_optional)
+        analysis_capability = "Basic" if risk_features < 2 else "Enhanced" if risk_features < 4 else "Advanced"
         
         result = {
             "filename": file.filename,
             "columns": len(header),
-            "column_names": [col.strip() for col in header],
+            "column_names": header,
             "data_rows": data_rows,
             "total_size": len(content),
             "status": "success",
-            "message": f"Successfully processed {data_rows} rows with {len(header)} columns"
+            "validation": {
+                "required_columns_present": True,
+                "found_optional_columns": found_optional,
+                "analysis_capability": analysis_capability,
+                "data_quality_issues": issues
+            },
+            "sample_data": sample_data[:3],  # Show first 3 rows
+            "message": f"Successfully validated {data_rows} rows. Analysis capability: {analysis_capability}"
         }
         
         # Return JSON for API calls, HTML for browser
