@@ -373,30 +373,60 @@ def create_app():
     def get_filter_options():
         """Get available filter options"""
         try:
-            if app.company_data is None:
+            if app.company_data is None or len(app.company_data) == 0:
                 load_company_data()
             
+            # Check if data is still empty after loading
+            if app.company_data is None or len(app.company_data) == 0:
+                return jsonify({
+                    'countries': ['all'],
+                    'employee_range': {'min': 0.0, 'max': 100000.0},
+                    'revenue_range': {'min': 0.0, 'max': 1000000000.0},
+                    'accuracy_range': {'min': 0.0, 'max': 1.0}
+                })
+            
+            # Safely get countries
+            try:
+                countries = app.company_data['Country'].dropna().unique().tolist()
+                countries_list = ['all'] + sorted([str(c) for c in countries if c])
+            except:
+                countries_list = ['all']
+            
+            # Safely get employee range
+            try:
+                emp_series = pd.to_numeric(app.company_data['Employees (Total)'], errors='coerce').dropna()
+                emp_min = float(emp_series.min()) if len(emp_series) > 0 else 0.0
+                emp_max = float(emp_series.max()) if len(emp_series) > 0 else 100000.0
+            except:
+                emp_min, emp_max = 0.0, 100000.0
+            
+            # Safely get revenue range
+            try:
+                sales_series = pd.to_numeric(app.company_data['Sales (USD)'], errors='coerce').dropna()
+                sales_min = float(sales_series.min()) if len(sales_series) > 0 else 0.0
+                sales_max = float(sales_series.max()) if len(sales_series) > 0 else 1000000000.0
+            except:
+                sales_min, sales_max = 0.0, 1000000000.0
+            
             options = {
-                'countries': ['all'] + sorted(app.company_data['Country'].dropna().unique().tolist()),
-                'employee_range': {
-                    'min': float(app.company_data['Employees (Total)'].min()),
-                    'max': float(app.company_data['Employees (Total)'].max())
-                },
-                'revenue_range': {
-                    'min': float(app.company_data['Sales (USD)'].min()),
-                    'max': float(app.company_data['Sales (USD)'].max())
-                },
-                'accuracy_range': {
-                    'min': 0.0,
-                    'max': 1.0
-                }
+                'countries': countries_list,
+                'employee_range': {'min': emp_min, 'max': emp_max},
+                'revenue_range': {'min': sales_min, 'max': sales_max},
+                'accuracy_range': {'min': 0.0, 'max': 1.0}
             }
             
             return jsonify(options)
             
         except Exception as e:
             logger.error(f"Error in /api/filter_options: {str(e)}")
-            return jsonify({'error': str(e)}), 500
+            # Return safe defaults on any error
+            return jsonify({
+                'countries': ['all'],
+                'employee_range': {'min': 0.0, 'max': 100000.0},
+                'revenue_range': {'min': 0.0, 'max': 1000000000.0},
+                'accuracy_range': {'min': 0.0, 'max': 1.0},
+                'error': 'Using default values due to data loading error'
+            }), 200  # Return 200, not 500, with defaults
     
     @app.route('/api/stats')
     def get_stats():
