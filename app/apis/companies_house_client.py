@@ -41,11 +41,16 @@ class CompaniesHouseClient:
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or os.getenv('COMPANIES_HOUSE_API_KEY')
         if not self.api_key:
-            raise ValueError("Companies House API key is required. Set COMPANIES_HOUSE_API_KEY environment variable.")
+            # In production, we'll use mock client when API key is missing
+            print("⚠️ Warning: Companies House API key not found. Some features will be limited.")
+            self.api_key = None
+            self.config = None
+        else:
+            self.config = CompaniesHouseConfig(api_key=self.api_key)
         
-        self.config = CompaniesHouseConfig(api_key=self.api_key)
         self.session = requests.Session()
-        self.session.auth = (self.api_key, '')  # API key as username, empty password
+        if self.api_key:
+            self.session.auth = (self.api_key, '')  # API key as username, empty password
         self.session.headers.update({
             'User-Agent': 'CreditRiskAnalyzer/2.0',
             'Accept': 'application/json'

@@ -175,5 +175,16 @@ class CompaniesHouseClient:
             address=data.get("address", {})
         )
 
-# Global client instance
-companies_house_client = CompaniesHouseClient()
+# Global client instance - will be created on first use
+companies_house_client = None
+
+def get_companies_house_client():
+    """Get or create a global Companies House client instance"""
+    global companies_house_client
+    if companies_house_client is None:
+        try:
+            companies_house_client = CompaniesHouseClient()
+        except Exception as e:
+            print(f"⚠️ Warning: Could not initialize Companies House client: {e}")
+            companies_house_client = None
+    return companies_house_client

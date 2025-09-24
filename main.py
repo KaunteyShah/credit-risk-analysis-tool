@@ -15,12 +15,14 @@ def main():
     os.environ['PYTHONPATH'] = '/home/site/wwwroot'
     port = os.environ.get('WEBSITES_PORT', '8000')
     
-    # Install dependencies if needed
+    # Install dependencies if needed - check for pandas specifically
     try:
+        import pandas
         import flask
-        print("✅ Flask already installed")
-    except ImportError:
-        print("📦 Installing dependencies...")
+        import numpy
+        print("✅ Core dependencies already installed")
+    except ImportError as e:
+        print(f"📦 Installing dependencies... Missing: {e}")
         subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt'])
     
     # Start Flask app
