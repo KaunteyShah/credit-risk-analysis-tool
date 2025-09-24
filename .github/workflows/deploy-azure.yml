@@ -93,14 +93,25 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install basic dependencies for validation
+      run: |
+        python -m pip install --upgrade pip
+        pip install flask flask-cors
+        echo "✅ Basic Flask dependencies installed for validation"
+
     - name: Prepare deployment package
       run: |
         echo "📦 Preparing full application deployment package..."
         echo "🧹 Force clean deployment - no cache"
         
-        # Comprehensive syntax validation
+        # Comprehensive syntax validation (with dependencies now available)
         echo "🔍 Comprehensive syntax and import validation..."
-        python3 -c "
+        python -c "
         import ast
         import sys
         import os
@@ -148,19 +159,14 @@ jobs:
         # Ensure data directory is included in deployment
         ls -la data/ || echo "No data directory found"
         
-        echo "✅ Ultra-minimal deployment package prepared"
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+        echo "✅ Full application deployment package prepared"
 
     - name: Configure Azure App Service for Python
       run: |
         echo "🔧 Configuring Azure App Service for Python deployment..."
         echo "✅ Python version: ${{ env.PYTHON_VERSION }}"
-        echo "✅ Entry point: main.py (minimal version)"
-        echo "✅ Dependencies: requirements-minimal.txt for faster builds"
+        echo "✅ Entry point: main.py (full application version)"
+        echo "✅ Dependencies: requirements-azure.txt for complete functionality"
         
         # Use full requirements for complete application deployment
         echo "📦 Using full requirements for complete application..."
