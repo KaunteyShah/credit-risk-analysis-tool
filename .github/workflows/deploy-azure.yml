@@ -284,11 +284,39 @@ jobs:
         echo "⏳ Waiting for application to start..."
         sleep 60
         
-        # Basic health check
-        if curl -f --connect-timeout 30 --max-time 60 $APP_URL; then
-          echo "✅ Application is responding"
+        # Comprehensive health check with multiple endpoints
+        echo "🔍 Testing health endpoints..."
+        
+        # Test main health endpoint
+        echo "Testing /health endpoint..."
+        if curl -f --connect-timeout 30 --max-time 60 -H "Accept: application/json" "$APP_URL/health"; then
+          echo "✅ /health endpoint is responding"
+          HEALTH_OK=true
         else
-          echo "⚠️ Application might still be starting up"
+          echo "❌ /health endpoint failed"
+          HEALTH_OK=false
+        fi
+        
+        # Test readiness endpoint
+        echo "Testing /health/ready endpoint..."
+        if curl -f --connect-timeout 30 --max-time 60 -H "Accept: application/json" "$APP_URL/health/ready"; then
+          echo "✅ /health/ready endpoint is responding"
+        else
+          echo "⚠️ /health/ready endpoint not ready"
+        fi
+        
+        # Test home page as fallback
+        echo "Testing home page..."
+        if curl -f --connect-timeout 30 --max-time 60 "$APP_URL"; then
+          echo "✅ Home page is responding"
+        else
+          echo "⚠️ Home page not responding"
+        fi
+        
+        if [ "$HEALTH_OK" = true ]; then
+          echo "🎉 Application health checks passed!"
+        else
+          echo "⚠️ Application might still be starting up - check logs"
         fi
             WEBSITES_PORT=8000 \
             SCM_DO_BUILD_DURING_DEPLOYMENT=true \

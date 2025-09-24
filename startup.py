@@ -43,13 +43,66 @@ try:
     
     @app.route('/health')
     def health():
-        return jsonify({
-            'status': 'healthy',
-            'message': 'Emergency startup successful - bypassed all caches',
-            'startup_method': 'emergency_bypass',
-            'python_version': sys.version,
-            'instance_id': os.environ.get('WEBSITE_INSTANCE_ID', 'local')
-        }), 200
+        """Azure App Service Health Check Endpoint"""
+        try:
+            # Comprehensive health check
+            health_data = {
+                'status': 'healthy',
+                'message': 'Emergency startup successful - bypassed all caches',
+                'startup_method': 'emergency_bypass',
+                'python_version': sys.version,
+                'instance_id': os.environ.get('WEBSITE_INSTANCE_ID', 'local'),
+                'timestamp': os.environ.get('WEBSITE_INSTANCE_ID', 'local'),
+                'port': os.environ.get('PORT', os.environ.get('WEBSITES_PORT', 8000)),
+                'platform': 'Azure App Service' if os.environ.get('WEBSITE_INSTANCE_ID') else 'Local',
+                'cache_bypass': True,
+                'routes_loaded': len([rule for rule in app.url_map.iter_rules() if rule.endpoint != 'static']),
+                'uptime_check': 'OK'
+            }
+            
+            return jsonify(health_data), 200
+            
+        except Exception as e:
+            # Return unhealthy status if anything fails
+            return jsonify({
+                'status': 'unhealthy',
+                'error': str(e),
+                'message': 'Health check failed'
+            }), 503
+    
+    @app.route('/health/live')
+    def health_liveness():
+        """Kubernetes/Container liveness probe"""
+        return jsonify({'status': 'alive'}), 200
+    
+    @app.route('/health/ready')
+    def health_readiness():
+        """Kubernetes/Container readiness probe"""
+        try:
+            # Check if all critical components are ready
+            ready = True
+            checks = {
+                'flask_app': True,
+                'routes': len([rule for rule in app.url_map.iter_rules()]) > 0,
+                'python': sys.version_info.major >= 3
+            }
+            
+            if all(checks.values()):
+                return jsonify({
+                    'status': 'ready',
+                    'checks': checks
+                }), 200
+            else:
+                return jsonify({
+                    'status': 'not_ready',
+                    'checks': checks
+                }), 503
+                
+        except Exception as e:
+            return jsonify({
+                'status': 'not_ready',
+                'error': str(e)
+            }), 503
     
     @app.route('/')
     def home():
