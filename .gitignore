@@ -157,7 +157,6 @@ models/
 # Large data files
 *.csv.gz
 *.json.gz
-*.xlsx
 
 # Exceptions for essential data files needed in production
 !data/SIC_codes.xlsx

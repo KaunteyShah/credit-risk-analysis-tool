@@ -523,6 +523,76 @@ def create_app():
             'total_companies': len(app.company_data) if app.company_data is not None else 0
         })
 
+    @app.route('/api/companies')
+    def get_companies():
+        """API endpoint to get filtered company data - matches frontend expectation"""
+        try:
+            if app.company_data is None:
+                load_company_data()
+            
+            # Get query parameters for filtering
+            page = request.args.get('page', 1, type=int)
+            limit = request.args.get('limit', 50, type=int)
+            country = request.args.get('country', 'all')
+            search = request.args.get('search', '')
+            
+            # Start with full dataset
+            filtered_data = app.company_data.copy() if app.company_data is not None else pd.DataFrame()
+            
+            if len(filtered_data) == 0:
+                return jsonify({
+                    'data': [],
+                    'total': 0,
+                    'page': page,
+                    'limit': limit,
+                    'total_pages': 0
+                })
+            
+            # Apply country filter
+            if country and country != 'all' and 'Country' in filtered_data.columns:
+                filtered_data = filtered_data[filtered_data['Country'] == country]
+            
+            # Apply search filter if provided
+            if search and 'Company Name' in filtered_data.columns:
+                filtered_data = filtered_data[
+                    filtered_data['Company Name'].str.contains(search, case=False, na=False)
+                ]
+            
+            # Calculate pagination
+            total = len(filtered_data)
+            start_idx = (page - 1) * limit
+            end_idx = start_idx + limit
+            
+            # Get paginated data
+            data_subset = filtered_data.iloc[start_idx:end_idx]
+            
+            # Convert to JSON-compatible format
+            records = []
+            for _, row in data_subset.iterrows():
+                record = {
+                    'Company Name': str(row.get('Company Name', '')),
+                    'Country': str(row.get('Country', '')),
+                    'Employees (Total)': float(row['Employees (Total)']) if pd.notna(row.get('Employees (Total)')) else None,
+                    'Sales (USD)': float(row['Sales (USD)']) if pd.notna(row.get('Sales (USD)')) else None,
+                    'UK SIC 2007 Code': str(row.get('UK SIC 2007 Code', '')),
+                    'SIC_Accuracy': float(row.get('SIC_Accuracy', 0)) if pd.notna(row.get('SIC_Accuracy')) else 0,
+                    'Old_Accuracy': float(row.get('Old_Accuracy', 0)) if pd.notna(row.get('Old_Accuracy')) else 0,
+                    'New_Accuracy': float(row.get('New_Accuracy', 0)) if pd.notna(row.get('New_Accuracy')) else 0
+                }
+                records.append(record)
+            
+            return jsonify({
+                'data': records,
+                'total': total,
+                'page': page,
+                'limit': limit,
+                'total_pages': (total + limit - 1) // limit
+            })
+            
+        except Exception as e:
+            logger.error(f"Error in /api/companies: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+
     @app.route('/api/data/debug')
     def debug_data_status():
         """Detailed data debugging endpoint for production troubleshooting"""
