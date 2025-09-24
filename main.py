@@ -25,16 +25,61 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Create a simple Flask application for Azure deployment
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, render_template_string
+import json
+import io
 
 app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+# Simple HTML template for file upload
+UPLOAD_TEMPLATE = '''
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Credit Risk Analysis Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .upload-box { border: 2px dashed #ccc; padding: 40px; text-align: center; margin: 20px 0; }
+        .result { background: #f0f0f0; padding: 20px; margin: 20px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Credit Risk Analysis Tool</h1>
+        <p>Upload a CSV file to analyze credit risk data</p>
+        
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <div class="upload-box">
+                <input type="file" name="file" accept=".csv" required>
+                <br><br>
+                <button type="submit">Upload and Analyze</button>
+            </div>
+        </form>
+        
+        {% if result %}
+        <div class="result">
+            <h3>Analysis Result:</h3>
+            <pre>{{ result }}</pre>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
+'''
 
 @app.route('/')
 def home():
+    return render_template_string(UPLOAD_TEMPLATE)
+
+@app.route('/api')
+def api_info():
     return jsonify({
         "status": "healthy",
-        "message": "Credit Risk Analysis Tool - Basic Version",
-        "version": "1.0.0"
+        "message": "Credit Risk Analysis Tool - API",
+        "version": "1.0.0",
+        "endpoints": ["/", "/api", "/health", "/upload"]
     })
 
 @app.route('/health')
@@ -43,6 +88,53 @@ def health():
         "status": "healthy",
         "timestamp": "2024-09-24"
     })
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error": "No file provided"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
+        
+        if not file.filename.lower().endswith('.csv'):
+            return jsonify({"error": "Please upload a CSV file"}), 400
+        
+        # Read file content
+        content = file.read().decode('utf-8')
+        lines = content.strip().split('\n')
+        
+        if len(lines) < 2:
+            return jsonify({"error": "CSV file must have at least 2 lines (header + data)"}), 400
+        
+        # Parse basic info
+        header = lines[0].split(',')
+        data_rows = len(lines) - 1
+        
+        result = {
+            "filename": file.filename,
+            "columns": len(header),
+            "column_names": [col.strip() for col in header],
+            "data_rows": data_rows,
+            "total_size": len(content),
+            "status": "success",
+            "message": f"Successfully processed {data_rows} rows with {len(header)} columns"
+        }
+        
+        # Return JSON for API calls, HTML for browser
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify(result)
+        else:
+            return render_template_string(UPLOAD_TEMPLATE, result=json.dumps(result, indent=2))
+            
+    except Exception as e:
+        error_result = {"error": str(e), "status": "failed"}
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify(error_result), 500
+        else:
+            return render_template_string(UPLOAD_TEMPLATE, result=json.dumps(error_result, indent=2))
 
 # For Azure App Service with Gunicorn
 application = app
