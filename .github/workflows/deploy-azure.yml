@@ -165,8 +165,13 @@ jobs:
       run: |
         echo "🔧 Configuring Azure App Service for Python deployment..."
         echo "✅ Python version: ${{ env.PYTHON_VERSION }}"
-        echo "✅ Entry point: main.py (full application version)"
+        echo "✅ Entry point: startup.py (EMERGENCY CACHE BYPASS)"
         echo "✅ Dependencies: requirements-azure.txt for complete functionality"
+        
+        # 🆘 EMERGENCY: Use startup.py to bypass ALL Azure main.py caching
+        echo "🆘 EMERGENCY DEPLOYMENT: Using startup.py to bypass corrupted main.py cache"
+        echo "WEBSITES_PORT=8000" >> .env
+        echo "startup_command=startup.py" >> deployment_marker.txt
         
         # Use full requirements for complete application deployment
         echo "📦 Using full requirements for complete application..."
