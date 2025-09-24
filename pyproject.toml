@@ -1,9 +1,0 @@
-[build-system]
-requires = ["setuptools", "wheel"]
-
-[tool.azure]
-runtime = "python|3.12"
-startup_file = "main.py"
-
-# Azure App Service Python Configuration
-# This ensures dependencies are installed correctly

@@ -140,6 +140,14 @@ def get_secret_or_env(secret_name: str, env_name: Optional[str] = None, default:
     if env_name is None:
         env_name = secret_name
     
+    # Check if we're bypassing Azure Key Vault for local development
+    if os.getenv('BYPASS_AZURE_KEYVAULT', '').lower() in ('true', '1', 'yes'):
+        logger.info(f"Bypassing Azure Key Vault for local development - checking environment variable {env_name}")
+        value = os.getenv(env_name)
+        if value and value != f"your_{secret_name.lower()}_here":
+            return value
+        return default
+    
     # Try Key Vault first
     kv_client = get_key_vault_client()
     if kv_client.is_available():

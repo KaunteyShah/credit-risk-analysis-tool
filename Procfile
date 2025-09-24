@@ -1,1 +1,0 @@
-web: python3 app/flask_main.py

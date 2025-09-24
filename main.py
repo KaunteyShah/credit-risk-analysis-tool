@@ -39,39 +39,8 @@ logger.info("✅ Flask application created successfully")
 # For Azure App Service with Gunicorn
 application = app
 
-# Add a health check endpoint for Azure App Service
-@app.route('/health')
-def health_check():
-    """
-    Azure App Service health check endpoint
-    This provides a quick health status without full orchestrator initialization
-    """
-    try:
-        health_status = {
-            'status': 'healthy',
-            'message': 'Credit Risk Analysis Tool - Main entry point is operational',
-            'timestamp': os.environ.get('WEBSITE_INSTANCE_ID', 'local'),
-            'app_service': True,
-            'main_py_version': 'full',
-            'endpoints_available': ['/health', '/', '/api/...']
-        }
-        return health_status, 200
-    except Exception as e:
-        return {
-            'status': 'unhealthy', 
-            'message': f'Health check failed: {str(e)}',
-            'app_service': True
-        }, 503
-
-@app.route('/')
-def home():
-    """Home endpoint showing service status"""
-    return {
-        'status': 'running', 
-        'message': 'Credit Risk Analysis Tool - Flask API is operational',
-        'version': 'full_application',
-        'health_check': '/health'
-    }, 200
+# Note: Health check endpoints are already provided by the Flask app
+# The main Flask app (app.flask_main) includes comprehensive health checks
 
 if __name__ == '__main__':
     # Azure App Service uses the PORT environment variable
