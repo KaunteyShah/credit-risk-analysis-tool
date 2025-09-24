@@ -1266,9 +1266,12 @@ def create_app():
 if __name__ == '__main__':
     app = create_app()
     
-    # Use dynamic port configuration like all other files
-    import os
-    port = int(os.environ.get('PORT', os.environ.get('WEBSITES_PORT', 8000)))
-    
-    logger.info(f"Starting Enhanced Flask App on http://0.0.0.0:{port}")
-    app.run(host='0.0.0.0', port=port, debug=True)
+    # This code should only run when flask_main.py is executed directly
+    # When imported by main.py, main.py handles the app.run()
+    if __name__ == '__main__':
+        # Use dynamic port configuration like all other files
+        import os
+        port = int(os.environ.get('PORT', os.environ.get('WEBSITES_PORT', 8000)))
+        
+        logger.info(f"Starting Enhanced Flask App on http://0.0.0.0:{port}")
+        app.run(host='0.0.0.0', port=port, debug=True)
