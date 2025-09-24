@@ -1,83 +1,30 @@
 """
-ULTRA-FAST Azure startup script - immediate health response.
-This script starts Flask server instantly for Azure health checks.
+ERROR: This script should NOT be running!
+Azure should be executing app/flask_main.py instead.
 """
 
 import os
-import sys
+from flask import Flask, jsonify
 
-# Immediate startup logging
-print("🚀 ULTRA-FAST STARTUP: Starting immediately for Azure health checks")
+print("🚨 ERROR: minimal_startup.py is still being executed!")
+print("🚨 Azure should be running app/flask_main.py instead")
+print("🚨 Check startup.txt, Procfile, and Azure App Service configuration")
+app = Flask(__name__)
 
-# Quick CORS check without installation delay
-flask_cors_available = False
-try:
-    import flask_cors
-    flask_cors_available = True
-    print("✅ flask-cors available")
-except ImportError:
-    print("⚠️ flask-cors not available, will run without CORS")
+@app.route('/')
+def error_message():
+    return {
+        "ERROR": "WRONG STARTUP SCRIPT RUNNING",
+        "message": "minimal_startup.py should not be running",
+        "expected": "app/flask_main.py should be running",
+        "check": "Azure App Service startup configuration"
+    }
 
-try:
-    # Essential imports only
-    from flask import Flask, jsonify
-    print("✅ Flask imported")
-    
-    # Create Flask app immediately
-    app = Flask(__name__)
-    print("✅ Flask app created")
-    
-    # Optional CORS setup if available (no delays)
-    if flask_cors_available:
-        try:
-            from flask_cors import CORS
-            CORS(app)
-            print("✅ CORS enabled")
-        except Exception:
-            print("⚠️ CORS setup skipped")
-    
-    # IMMEDIATE health endpoint - critical for Azure
-    @app.route('/health')
-    def health():
-        """Immediate health response for Azure"""
-        return jsonify({
-            'status': 'healthy',
-            'message': 'Ultra-fast startup active'
-        }), 200
-    
-    @app.route('/')
-    def home():
-        """Root endpoint"""
-        return jsonify({
-            'status': 'running',
-            'message': 'Credit Risk Analysis - Ultra Fast Startup',
-            'health_endpoint': '/health'
-        }), 200
-    
-    # Quick port detection
-    def get_port():
-        """Fast port detection for Azure"""
-        return int(os.environ.get('PORT', 
-                  os.environ.get('WEBSITES_PORT', 
-                  os.environ.get('HTTP_PLATFORM_PORT', '8000'))))
-    
-    if __name__ == '__main__':
-        port = get_port()
-        print(f"🚀 Starting Flask on port {port}")
-        
-        # Start Flask immediately
-        app.run(
-            host='0.0.0.0',
-            port=port,
-            debug=False,
-            threaded=True,
-            use_reloader=False  # Critical for Azure containers
-        )
+@app.route('/health')
+def health():
+    return {"status": "ERROR", "message": "Wrong script running"}
 
-except ImportError as e:
-    print(f"❌ Import error: {e}")
-    print("⚠️ Exiting - Flask not available")
-    sys.exit(1)
-except Exception as e:
-    print(f"❌ Startup failed: {e}")
-    sys.exit(1)
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', os.environ.get('WEBSITES_PORT', 8000)))
+    print(f"🚨 WRONG SCRIPT RUNNING ON PORT {port}")
+    app.run(host='0.0.0.0', port=port, debug=False)
