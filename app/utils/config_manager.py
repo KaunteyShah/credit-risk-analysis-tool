@@ -139,8 +139,8 @@ class ConfigManager:
         """Perform security audit of secrets loading."""
         critical_secrets = [
             ("COMPANIES_HOUSE_API_KEY", "companies_house.api_key"),
-            ("OPENAI_API_KEY", "openai.api_key"), 
-            ("DATABRICKS_TOKEN", "databricks.token")
+            ("OPENAI_API_KEY", "openai.api_key")
+            # Note: DATABRICKS_TOKEN removed as it's not required for this deployment
         ]
         
         # Check each critical secret
