@@ -1,1 +1,1 @@
-web: python3 minimal_startup.py
+web: python3 app/flask_main.py

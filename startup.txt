@@ -1,1 +1,1 @@
-python3 minimal_startup.py
+python3 app/flask_main.py
