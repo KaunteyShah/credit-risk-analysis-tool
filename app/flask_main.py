@@ -1253,5 +1253,10 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    logger.info("Starting Enhanced Flask App on http://127.0.0.1:8001")
-    app.run(host='0.0.0.0', port=8001, debug=True)
+    
+    # Use dynamic port configuration like all other files
+    import os
+    port = int(os.environ.get('PORT', os.environ.get('WEBSITES_PORT', 8000)))
+    
+    logger.info(f"Starting Enhanced Flask App on http://0.0.0.0:{port}")
+    app.run(host='0.0.0.0', port=port, debug=True)

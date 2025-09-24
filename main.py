@@ -75,8 +75,8 @@ def home():
 
 if __name__ == '__main__':
     # Azure App Service uses the PORT environment variable
-    # Default to 8000 for Azure, 8001 for local development
-    port = int(os.environ.get('PORT', os.environ.get('WEBSITES_PORT', 8001)))
+    # Default to 8000 for consistency with other files and Azure config
+    port = int(os.environ.get('PORT', os.environ.get('WEBSITES_PORT', 8000)))
     
     logger.info(f"🌐 Environment variables:")
     logger.info(f"   PORT: {os.environ.get('PORT', 'not set')}")
