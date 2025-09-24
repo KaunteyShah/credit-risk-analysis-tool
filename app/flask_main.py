@@ -15,18 +15,8 @@ except ImportError:
     CORS_AVAILABLE = False
     print("⚠️ flask-cors not available, continuing without CORS")
 
-# Optional pandas import with fallback
-try:
-    import pandas as pd
-    import numpy as np
-    PANDAS_AVAILABLE = True
-    print("✅ pandas and numpy loaded successfully")
-except ImportError as e:
-    PANDAS_AVAILABLE = False
-    print(f"⚠️ pandas/numpy not available: {e}")
-    pd = None
-    np = None
-
+import pandas as pd
+import numpy as np
 import json
 
 # Add the project root to Python path for imports
