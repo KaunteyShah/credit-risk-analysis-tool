@@ -95,12 +95,21 @@ jobs:
 
     - name: Prepare deployment package
       run: |
-        echo "📦 Preparing deployment package with data files..."
+        echo "📦 Preparing ultra-minimal deployment package..."
+        echo "🧹 Force clean deployment - no cache"
+        
+        # Verify main.py syntax before deployment
+        python -m py_compile main.py
+        echo "✅ main.py syntax verified"
+        
+        # Show main.py content for debugging
+        echo "📄 main.py content:"
+        cat main.py
+        
         # Ensure data directory is included in deployment
-        ls -la data/
-        # Copy data to root level as backup for Azure
-        cp -r data ./deployment-data
-        echo "✅ Data files prepared for deployment"
+        ls -la data/ || echo "No data directory found"
+        
+        echo "✅ Ultra-minimal deployment package prepared"
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -111,8 +120,16 @@ jobs:
       run: |
         echo "🔧 Configuring Azure App Service for Python deployment..."
         echo "✅ Python version: ${{ env.PYTHON_VERSION }}"
-        echo "✅ Entry point: main.py"
-        echo "✅ Dependencies: requirements.txt"
+        echo "✅ Entry point: main.py (minimal version)"
+        echo "✅ Dependencies: requirements-minimal.txt for faster builds"
+        
+        # Use minimal requirements for faster Azure builds
+        echo "📦 Using minimal requirements for faster deployment..."
+        cp requirements-minimal.txt requirements.txt
+        
+        # Verify minimal requirements
+        echo "📋 Minimal requirements:"
+        cat requirements.txt
         
         # Create application settings for Azure
         echo "Creating Azure-specific configuration..."
@@ -147,6 +164,8 @@ jobs:
         PYTHON_ENABLE_GUNICORN_MULTIWORKERS: false
         WEBSITES_ENABLE_APP_SERVICE_STORAGE: true
         WEBSITES_CONTAINER_START_TIME_LIMIT: 600
+        WEBSITE_RUN_FROM_PACKAGE: 0
+        SCM_CACHE_CLEAR: true
         PYTHONPATH: '/home/site/wwwroot'
       
     - name: Retry deployment if failed

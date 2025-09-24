@@ -1,0 +1,3 @@
+# Minimal Azure requirements for fast startup
+flask>=3.0.3
+flask-cors>=4.0.1
