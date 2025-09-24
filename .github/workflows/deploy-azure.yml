@@ -48,10 +48,13 @@ jobs:
         pip install azure-keyvault-secrets==4.7.0 azure-identity==1.15.0
         pip install gunicorn==21.2.0
         
-        # Install data science packages (these might cause build issues)
-        echo "Installing data science packages..."
-        pip install pandas==2.1.4 numpy==1.25.0 openpyxl==3.1.2
-        pip install scikit-learn==1.3.0 fuzzywuzzy==0.18.0 python-Levenshtein==0.21.1
+        # Install compatible data science packages (fix numpy/pandas compatibility)
+        echo "Installing compatible numpy and pandas versions..."
+        pip install numpy==1.26.4  # Updated for Python 3.11 compatibility
+        pip install pandas==2.1.4  # Keep same version but install after compatible numpy
+        pip install openpyxl==3.1.2
+        pip install scikit-learn==1.3.0 
+        pip install fuzzywuzzy==0.18.0 python-Levenshtein==0.21.1
         pip install beautifulsoup4==4.12.2 lxml==4.9.3
         
     - name: Run tests
@@ -72,10 +75,23 @@ jobs:
         
         # Test data processing dependencies  
         try:
-            import pandas
+            print('Testing numpy import...')
             import numpy
+            print(f'✅ Numpy {numpy.__version__} available')
+            
+            print('Testing pandas import...')
+            import pandas
+            print(f'✅ Pandas {pandas.__version__} available')
+            
             import openpyxl
             print('✅ Data processing libraries available')
+        except ValueError as e:
+            if 'numpy.dtype size changed' in str(e):
+                print(f'❌ Numpy/Pandas compatibility error: {e}')
+                print('This indicates binary incompatibility between numpy and pandas versions')
+                sys.exit(1)
+            else:
+                raise e
         except ImportError as e:
             print(f'❌ Data processing import failed: {e}')
             sys.exit(1)
@@ -133,14 +149,14 @@ jobs:
         print('🔍 Validating full application before deployment...')
         
         try:
-            # Test main.py syntax
+            # Test main.py syntax only - do not try to import/execute
             with open('main.py', 'r') as f:
                 content = f.read()
             ast.parse(content)
             print('✅ main.py syntax is valid')
             print(f'📊 Lines in main.py: {len(content.splitlines())}')
             
-            # Test core imports
+            # Test core imports (but not application imports)
             import flask
             import logging
             import json
@@ -151,6 +167,7 @@ jobs:
             print('✅ Flask imports successful')
             
             print('✅ All syntax validation passed - ready for deployment')
+            print('⚠️ Skipping main.py execution test to avoid import errors during build')
             
         except SyntaxError as e:
             print(f'❌ SYNTAX ERROR - Stopping deployment: {e}')
