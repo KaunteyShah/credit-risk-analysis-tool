@@ -15,7 +15,7 @@ concurrency:
 env:
   AZURE_RESOURCE_GROUP: rg-credit-risk-analysis-prod-ukwest
   AZURE_LOCATION: ukwest
-  PYTHON_VERSION: '3.12'
+  PYTHON_VERSION: '3.11'
   APP_SERVICE_NAME: credit-risk-analysis-prod-app-25h2ya
 
 jobs:
@@ -34,7 +34,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip setuptools wheel
+        python -c "import setuptools; print('setuptools version:', setuptools.__version__)"
         pip install -r requirements.txt
         
     - name: Run tests
