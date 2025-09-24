@@ -464,6 +464,79 @@ def create_app():
             'total_companies': len(app.company_data) if app.company_data is not None else 0
         })
 
+    @app.route('/api/data/debug')
+    def debug_data_status():
+        """Detailed data debugging endpoint for production troubleshooting"""
+        try:
+            debug_info = {
+                'timestamp': pd.Timestamp.now().isoformat(),
+                'environment': os.environ.get('ENVIRONMENT', 'development'),
+                'project_root': project_root,
+                'working_directory': os.getcwd(),
+            }
+            
+            # Check data files existence
+            data_files = {
+                'company_file': os.path.join(project_root, 'data', 'Sample_data2.csv'),
+                'sic_file': os.path.join(project_root, 'data', 'SIC_codes.xlsx')
+            }
+            
+            for key, filepath in data_files.items():
+                debug_info[f'{key}_path'] = filepath
+                debug_info[f'{key}_exists'] = os.path.exists(filepath)
+                if os.path.exists(filepath):
+                    debug_info[f'{key}_size'] = os.path.getsize(filepath)
+                    debug_info[f'{key}_modified'] = pd.Timestamp.fromtimestamp(os.path.getmtime(filepath)).isoformat()
+            
+            # Check app data status
+            debug_info['app_company_data_loaded'] = hasattr(app, 'company_data')
+            debug_info['app_company_data_is_none'] = app.company_data is None if hasattr(app, 'company_data') else True
+            
+            if hasattr(app, 'company_data') and app.company_data is not None:
+                debug_info['company_data_length'] = len(app.company_data)
+                debug_info['company_data_columns'] = list(app.company_data.columns)
+                debug_info['company_data_memory_usage'] = app.company_data.memory_usage(deep=True).sum()
+            
+            # Check if data directory exists
+            data_dir = os.path.join(project_root, 'data')
+            debug_info['data_directory_exists'] = os.path.exists(data_dir)
+            if os.path.exists(data_dir):
+                debug_info['data_directory_contents'] = os.listdir(data_dir)
+            
+            # Check API keys (without revealing values)
+            debug_info['api_keys'] = {
+                'COMPANIES_HOUSE_API_KEY': 'SET' if os.environ.get('COMPANIES_HOUSE_API_KEY') else 'MISSING',
+                'OPENAI_API_KEY': 'SET' if os.environ.get('OPENAI_API_KEY') else 'MISSING'
+            }
+            
+            return jsonify(debug_info)
+            
+        except Exception as e:
+            return jsonify({'error': str(e), 'traceback': str(e.__traceback__)}), 500
+
+    @app.route('/api/data/reload', methods=['POST'])
+    def force_reload_data():
+        """Force reload company data - useful for production debugging"""
+        try:
+            logger.info("🔄 Force reloading company data via API...")
+            load_company_data()
+            
+            return jsonify({
+                'status': 'success',
+                'message': 'Data reloaded successfully',
+                'company_data_loaded': app.company_data is not None,
+                'total_companies': len(app.company_data) if app.company_data is not None else 0,
+                'timestamp': pd.Timestamp.now().isoformat()
+            })
+            
+        except Exception as e:
+            logger.error(f"Error reloading data: {str(e)}")
+            return jsonify({
+                'status': 'error', 
+                'error': str(e),
+                'timestamp': pd.Timestamp.now().isoformat()
+            }), 500
+
     @app.route('/api/agents/status')
     def get_agent_status():
         """Get agent workflow status for simulation"""
