@@ -144,7 +144,9 @@ jobs:
       env:
         SCM_DO_BUILD_DURING_DEPLOYMENT: true
         ENABLE_ORYX_BUILD: true
-        PYTHON_ENABLE_GUNICORN_MULTIWORKERS: true
+        PYTHON_ENABLE_GUNICORN_MULTIWORKERS: false
+        WEBSITES_ENABLE_APP_SERVICE_STORAGE: true
+        PYTHONPATH: '/home/site/wwwroot'
       
     - name: Retry deployment if failed
       if: steps.first_deploy.outcome == 'failure'
@@ -163,7 +165,9 @@ jobs:
       env:
         SCM_DO_BUILD_DURING_DEPLOYMENT: true
         ENABLE_ORYX_BUILD: true
-        PYTHON_ENABLE_GUNICORN_MULTIWORKERS: true
+        PYTHON_ENABLE_GUNICORN_MULTIWORKERS: false
+        WEBSITES_ENABLE_APP_SERVICE_STORAGE: true
+        PYTHONPATH: '/home/site/wwwroot'
       
     - name: Wait for deployment completion
       run: |
