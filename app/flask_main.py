@@ -786,6 +786,7 @@ def create_app():
             data = request.get_json()
             company_index = data.get('company_index', 0)
             new_sic = data.get('new_sic', '')
+            confidence = data.get('confidence')  # Confidence from Real Agent Prediction
             
             if app.company_data is None or app.company_data.empty:
                 return jsonify({'error': 'No company data available'}), 400
@@ -804,16 +805,21 @@ def create_app():
             current_sic = str(company_row.get('UK SIC 2007 Code', ''))
             old_accuracy = float(company_row.get('Old_Accuracy', 0.0))
             
-            # Calculate new accuracy for the new SIC
-            if hasattr(app, 'sic_matcher') and new_sic:
-                new_accuracy_result = app.sic_matcher.calculate_old_accuracy(business_description, new_sic)
-                calculated_accuracy = new_accuracy_result['old_accuracy']
-                
-                # Apply max condition: ensure new accuracy is not lower than old accuracy
-                new_accuracy = max(calculated_accuracy, old_accuracy)
+            # Use confidence from Real Agent Prediction if provided, otherwise calculate new accuracy
+            if confidence is not None:
+                # Use the confidence score from the prediction as the new accuracy
+                new_accuracy = float(confidence)
             else:
-                # If no SIC matcher, use old accuracy as fallback
-                new_accuracy = old_accuracy
+                # Calculate new accuracy for the new SIC (fallback for non-prediction updates)
+                if hasattr(app, 'sic_matcher') and new_sic:
+                    new_accuracy_result = app.sic_matcher.calculate_old_accuracy(business_description, new_sic)
+                    calculated_accuracy = new_accuracy_result['old_accuracy']
+                    
+                    # Apply max condition: ensure new accuracy is not lower than old accuracy
+                    new_accuracy = max(calculated_accuracy, old_accuracy)
+                else:
+                    # If no SIC matcher, use old accuracy as fallback
+                    new_accuracy = old_accuracy
             
             # Save to updated CSV
             if hasattr(app, 'sic_matcher'):

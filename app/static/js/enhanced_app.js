@@ -1084,7 +1084,8 @@ class SICPredictionApp {
                 },
                 body: JSON.stringify({
                     company_index: companyIndex,
-                    new_sic: predictedSic
+                    new_sic: predictedSic,
+                    confidence: confidence
                 })
             });
             
