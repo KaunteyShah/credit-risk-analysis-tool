@@ -1,4 +1,2 @@
 # Azure App Service Linux - Oryx Build Configuration
-# This ensures Azure uses the correct startup command
-
-startupCommand: python3 minimal_startup.py
+# Runtime startup is handled by startup.txt, not here
