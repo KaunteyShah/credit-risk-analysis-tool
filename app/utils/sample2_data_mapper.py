@@ -5,7 +5,8 @@ Maps columns from Sample_data2.csv to standardized database schema
 
 import pandas as pd
 from typing import Dict, List
-from .logger import logger
+from app.utils.centralized_logging import get_logger
+logger = get_logger(__name__)
 
 class Sample2DataMapper:
     """

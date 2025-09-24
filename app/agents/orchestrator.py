@@ -8,18 +8,19 @@ from datetime import datetime
 import json
 
 # Add the parent directory to sys.path to import modules
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.agents.base_agent import BaseAgent, AgentResult
-from app.agents.data_ingestion_agent import DataIngestionAgent
-from app.agents.anomaly_detection_agent import AnomalyDetectionAgent
-from app.agents.sector_classification_agent import SectorClassificationAgent
-from app.agents.turnover_estimation_agent import TurnoverEstimationAgent
-from app.agents.document_download_agent import DocumentDownloadAgent
-from app.agents.smart_financial_extraction_agent import SmartFinancialExtractionAgent
-from app.agents.rag_document_agent import RAGDocumentAgent, SemanticQuery
-from app.utils.config_manager import config
-from app.utils.logger import logger
+from ..agents.base_agent import BaseAgent, AgentResult
+from ..agents.data_ingestion_agent import DataIngestionAgent
+from ..agents.anomaly_detection_agent import AnomalyDetectionAgent
+from ..agents.sector_classification_agent import SectorClassificationAgent
+from ..agents.turnover_estimation_agent import TurnoverEstimationAgent
+from ..agents.document_download_agent import DocumentDownloadAgent
+from ..agents.smart_financial_extraction_agent import SmartFinancialExtractionAgent
+from ..agents.rag_document_agent import RAGDocumentAgent, SemanticQuery
+from ..utils.config_manager import config
+from ..utils.logger import logger
+from app.utils.centralized_logging import get_logger
+logger = get_logger(__name__)
 
 class MultiAgentOrchestrator:
     """Orchestrates the multi-agent anomaly detection and correction workflow."""

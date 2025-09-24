@@ -9,8 +9,9 @@ $(document).ready(function() {
     $('.modal-backdrop').remove();
     $('body').removeClass('modal-open');
     
-    // Initialize the app
+    // Initialize the app and make it globally accessible
     const app = new SICPredictionApp();
+    window.sicApp = app;
 });
 
 class SICPredictionApp {
@@ -938,12 +939,16 @@ class SICPredictionApp {
                 },
                 body: JSON.stringify({ 
                     company_index: companyIndex,
-                    use_real_agents: true
+                    use_real_agents: false  // Use simulation mode for stability
                 })
             });
             
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
             const result = await response.json();
-            console.log('🚀 Real Agent API Response:', result);
+            console.log('🚀 API Response:', result);
             
             if (result.error) {
                 throw new Error(result.error);
@@ -991,6 +996,10 @@ class SICPredictionApp {
                 })
             });
             
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
             const result = await response.json();
             console.log('Update SIC API Response:', result);
             
@@ -998,12 +1007,11 @@ class SICPredictionApp {
                 throw new Error(result.error);
             }
             
-            // Update the local data
-            this.currentData[companyIndex].New_SIC = result.new_sic;
-            this.currentData[companyIndex].New_Accuracy = result.new_accuracy;
-            
             // Start update workflow visualization
             this.startUpdateWorkflow(result);
+            
+            // Fetch fresh data from server to ensure we have the latest merged data
+            await this.loadCompanyData();
             
             // Refresh the table to show updated data
             this.renderTableSimple();
@@ -1053,16 +1061,19 @@ class SICPredictionApp {
 
     async updateScoreFromPrediction(predictedSic, confidence) {
         console.log('💾 Update Score from prediction:', predictedSic, 'confidence:', confidence);
+        console.log('💾 Current prediction index:', this.currentPredictionIndex);
         
         try {
             // Find the currently selected company index
             const companyIndex = this.currentPredictionIndex;
             
             if (companyIndex === undefined || companyIndex === null) {
+                console.error('❌ No company index found. currentPredictionIndex:', this.currentPredictionIndex);
                 this.showError('No company selected for update. Please select a company first.');
                 return;
             }
             
+            console.log('📤 Making API call to update SIC for company index:', companyIndex);
             this.showLoading('Saving prediction results...');
             
             // Call backend API to save to CSV and update table
@@ -1077,21 +1088,23 @@ class SICPredictionApp {
                 })
             });
             
+            console.log('📥 Response status:', response.status, response.statusText);
+            
             if (!response.ok) {
                 throw new Error(`Server error: ${response.status}`);
             }
             
             const result = await response.json();
+            console.log('📥 Update SIC API Response:', result);
             
             if (result.success) {
-                // Update the local data with the response values
-                if (this.currentData && this.currentData[companyIndex]) {
-                    this.currentData[companyIndex]['New_SIC'] = result.new_sic;
-                    this.currentData[companyIndex]['New_Accuracy'] = result.new_accuracy.toFixed(1) + '%';
-                    
-                    // Refresh the table to show updated values
-                    this.renderTable();
-                }
+                console.log('✅ Update successful, refreshing data...');
+                
+                // Fetch fresh data from server to ensure we have the latest merged data
+                await this.loadCompanyData();
+                
+                // Refresh the table to show updated values
+                this.renderTable();
                 
                 this.hideLoading();
                 this.logActivity('Score Update', `Updated SIC to ${result.new_sic} with ${result.new_accuracy.toFixed(1)}% accuracy for ${result.company_name}`, 'success');
@@ -1123,9 +1136,12 @@ class SICPredictionApp {
     }
 
     startSICWorkflow(result = null) {
+        console.log('🔄 startSICWorkflow called with result:', result);
+        
         // If real agent result provided, use it
         if (result && result.workflow_steps) {
             console.log('🤖 Using real agent workflow:', result);
+            console.log('✅ workflow_steps found:', result.workflow_steps);
             
             // Map the real workflow steps to our display format
             const workflowSteps = result.workflow_steps.map(step => ({
@@ -1139,12 +1155,19 @@ class SICPredictionApp {
             const workflowData = {
                 workflow_steps: workflowSteps,
                 prediction: result.predicted_sic,
-                confidence: parseFloat(result.confidence.replace('%', '')) / 100, // Convert "87.5%" to 0.875
+                confidence: result.new_accuracy ? parseFloat(result.new_accuracy.replace('%', '')) / 100 : (typeof result.confidence === 'string' ? parseFloat(result.confidence.replace('%', '')) / 100 : result.confidence), // Use new_accuracy if available, otherwise fall back to confidence
                 description: result.reasoning || 'Real agent prediction',
                 company_name: result.company_name,
                 current_sic: result.current_sic,
-                workflow_type: result.workflow_type
+                workflow_type: result.workflow_type,
+                // Store additional accuracy info for display
+                new_accuracy: result.new_accuracy,
+                old_accuracy: result.old_accuracy,
+                improvement_percentage: result.improvement_percentage,
+                analysis_explanation: result.analysis_explanation
             };
+            
+            console.log('📊 About to call displaySICResults with workflowData:', workflowData);
             
             this.agentWorkflows.sic = workflowData;
             this.renderAgentWorkflow('sic', workflowSteps);
@@ -1312,8 +1335,10 @@ class SICPredictionApp {
     }
 
     displaySICResults(data) {
+        console.log('🎯 displaySICResults called with data:', data);
         const resultsContainer = $('#sicResults');
         if (!data || !data.prediction) {
+            console.log('❌ displaySICResults: Missing data or prediction');
             resultsContainer.html('<div class="alert alert-warning">No SIC prediction results available</div>');
             return;
         }
@@ -1334,6 +1359,13 @@ class SICPredictionApp {
                         </div>
                     ` : ''}
                     
+                    ${data.improvement_percentage ? `
+                        <div class="alert alert-info mb-3">
+                            <strong>• Improvement: ${data.improvement_percentage}</strong>
+                            ${data.analysis_explanation ? `<br><small class="text-muted">${data.analysis_explanation}</small>` : ''}
+                        </div>
+                    ` : ''}
+                    
                     <div class="row">
                         <div class="col-md-6">
                             <h6>Predicted SIC Code</h6>
@@ -1350,13 +1382,17 @@ class SICPredictionApp {
                                     ${(confidence * 100).toFixed(1)}%
                                 </div>
                             </div>
+                            ${data.new_accuracy && data.old_accuracy ? `
+                                <small class="text-muted">
+                                    New: ${data.new_accuracy} | Old: ${data.old_accuracy}
+                                </small>
+                            ` : ''}
                         </div>
                     </div>
                     
                     ${data.description ? `
                         <div class="mt-3">
-                            <h6>Analysis Details</h6>
-                            <p class="text-muted">${data.description}</p>
+                            <h6>Analysis Details: ${data.description}</h6>
                         </div>
                     ` : ''}
                     

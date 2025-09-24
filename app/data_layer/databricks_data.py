@@ -10,8 +10,9 @@ from delta.tables import DeltaTable
 import logging
 from typing import Optional, Dict, Any, List
 from app.config.databricks_config import get_databricks_config
+from app.utils.centralized_logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 class DatabricksDataManager:
     """

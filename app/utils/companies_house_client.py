@@ -9,10 +9,11 @@ import sys
 import os
 
 # Add the parent directory to sys.path to import utils
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.config_manager import config
-from utils.logger import logger
+from ..utils.config_manager import config
+from ..utils.logger import logger
+from app.utils.centralized_logging import get_logger
+logger = get_logger(__name__)
 
 @dataclass
 class CompanyData:

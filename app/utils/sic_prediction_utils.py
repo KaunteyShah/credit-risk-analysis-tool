@@ -8,9 +8,8 @@ from typing import Dict, Any, List, Optional
 import streamlit as st
 
 # Add the parent directory to sys.path to import agents
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.agents.sector_classification_agent import SectorClassificationAgent
+from ..agents.sector_classification_agent import SectorClassificationAgent
 
 class SICPredictionManager:
     """Manager class for SIC predictions in Streamlit app"""

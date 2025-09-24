@@ -12,9 +12,10 @@ from dataclasses import dataclass
 from datetime import datetime
 import json
 import logging
+from app.utils.logger import get_logger
 
 # Set up logging
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 @dataclass
 class CompaniesHouseConfig:

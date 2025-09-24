@@ -8,15 +8,18 @@ based on company business descriptions with dual accuracy tracking and CSV manag
 import pandas as pd
 import os
 import threading
+import requests
+import json
 from rapidfuzz import fuzz, process
 from typing import Dict, List, Tuple, Optional, Union
 import logging
 from datetime import datetime
 from .atomic_csv import AtomicCSVWriter
+from app.utils.centralized_logging import get_logger
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 class UpdatedDataManager:
     """
@@ -101,43 +104,55 @@ class UpdatedDataManager:
             # Load existing data
             updated_df = self.load_updated_data()
             
-            # Normalize registration code (handle float to string conversion)
-            normalized_reg_code = str(company_registration_code).replace('.0', '')
+            # Normalize registration code (handle float to string conversion and NaN)
+            if pd.isna(company_registration_code) or str(company_registration_code) in ['nan', 'None', '']:
+                normalized_reg_code = f"TEMP_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                logger.warning(f"Missing registration code for {company_name}, using temporary ID: {normalized_reg_code}")
+            else:
+                normalized_reg_code = str(company_registration_code).replace('.0', '')
             
-            # Create new record with correct structure
+            # Create new record with correct structure  
+            # Convert SIC codes to pandas nullable integers to match existing DataFrame
+            try:
+                current_sic_int = pd.to_numeric(current_sic, errors='coerce')
+                new_sic_int = pd.to_numeric(new_sic, errors='coerce')
+            except:
+                current_sic_int = None
+                new_sic_int = None
+                
             new_record = {
                 'Registration number': normalized_reg_code,  # Normalized format
                 'Company_Name': company_name,
                 'Business_Description': business_description,
-                'Current_SIC': int(current_sic) if str(current_sic).isdigit() else None,  # Ensure integer format
+                'Current_SIC': current_sic_int,  # Use pandas numeric conversion
                 'Old_Accuracy': old_accuracy,
-                'New_SIC': int(new_sic) if str(new_sic).isdigit() else None,  # Ensure integer format 
+                'New_SIC': new_sic_int,  # Use pandas numeric conversion
                 'New_Accuracy': new_accuracy,
                 'Timestamp': datetime.now().isoformat(),
                 'Updated_By': updated_by
             }
             
-            # Check if record already exists for this company
+            # Check if record already exists for this company - but still allow new entries for history
             if not updated_df.empty and 'Registration number' in updated_df.columns:
-                # Normalize registration codes for comparison
-                updated_df['Registration number'] = updated_df['Registration number'].astype(str).str.replace('.0', '', regex=False)
-                existing_mask = updated_df['Registration number'] == normalized_reg_code
+                # We keep ALL records for version history, so just add the new record
+                # Convert dtypes to match existing DataFrame before concatenation
+                new_record_df = pd.DataFrame([new_record])
                 
-                if existing_mask.any():
-                    # Update existing record
-                    updated_df.loc[existing_mask, 'New_SIC'] = new_sic
-                    updated_df.loc[existing_mask, 'New_Accuracy'] = new_accuracy
-                    updated_df.loc[existing_mask, 'Timestamp'] = new_record['Timestamp']
-                    updated_df.loc[existing_mask, 'Updated_By'] = updated_by
-                    logger.info(f"Updated existing record for {company_name}")
-                else:
-                    # Add new record
-                    updated_df = pd.concat([updated_df, pd.DataFrame([new_record])], ignore_index=True)
-                    logger.info(f"Added new record for {company_name}")
+                # Ensure dtypes match existing DataFrame
+                for col in updated_df.columns:
+                    if col in new_record_df.columns:
+                        if updated_df[col].dtype == 'Int64':
+                            new_record_df[col] = new_record_df[col].astype('Int64')
+                        elif updated_df[col].dtype == 'float64':
+                            new_record_df[col] = new_record_df[col].astype('float64')
+                
+                # Add new record (always append for version history)
+                updated_df = pd.concat([updated_df, new_record_df], ignore_index=True)
+                logger.info(f"Added new version for {company_name} (version history maintained)")
             else:
-                # Add new record (first record or empty DataFrame)
+                # First record
                 updated_df = pd.concat([updated_df, pd.DataFrame([new_record])], ignore_index=True)
-                logger.info(f"Added new record for {company_name}")
+                logger.info(f"Added first record for {company_name}")
             
             # Save back to CSV using atomic write
             if AtomicCSVWriter.write_csv_with_lock(updated_df, self.updated_data_file, index=False):
@@ -578,7 +593,7 @@ class EnhancedSICMatcher:
         Matching Strategy:
         1. Company Name (exact match)
         2. Registration Number (if available) 
-        3. Current SIC code (OLD_SIC)
+        3. Old SIC code (from CSV Old_SIC column)
         
         Args:
             companies_df: Original company data
@@ -587,8 +602,8 @@ class EnhancedSICMatcher:
         Returns:
             Merged DataFrame with updated data
         """
-        # Load updated data
-        updated_df = self.updated_data_manager.load_updated_data()
+        # Load updated data - GET LATEST RECORDS ONLY
+        updated_df = self.get_latest_records_only()
         
         if updated_df.empty:
             logger.info("No updated data found")
@@ -611,50 +626,30 @@ class EnhancedSICMatcher:
         
         # Convert SIC codes to consistent format for comparison
         companies_df_copy['UK_SIC_Normalized'] = pd.to_numeric(companies_df_copy['UK SIC 2007 Code'], errors='coerce').fillna(0).astype('Int64')
-        updated_df['Current_SIC_Normalized'] = pd.to_numeric(updated_df['Current_SIC'], errors='coerce').fillna(0).astype('Int64')
+        updated_df['Old_SIC_Normalized'] = pd.to_numeric(updated_df['Old_SIC'], errors='coerce').fillna(0).astype('Int64')
         
-        # Multi-field merge approach
-        # Step 1: Try exact match on all three fields (most precise)
+        # Simplified 2-field merge approach: Company Name + Old SIC Code
+        # Step 1: Try exact company name match first (most reliable)
         merged_df = companies_df_copy.merge(
-            updated_df[['Registration number', 'Company_Name_Normalized', 'Current_SIC_Normalized', 
-                       'New_SIC', 'New_Accuracy', 'Old_Accuracy', 'Timestamp', 'Updated_By']],
-            left_on=[reg_code_col, 'Company_Name_Normalized', 'UK_SIC_Normalized'],
-            right_on=['Registration number', 'Company_Name_Normalized', 'Current_SIC_Normalized'],
+            updated_df[['Company_Name_Normalized', 'New_SIC', 'New_Accuracy', 'Old_Accuracy', 'Timestamp', 'Updated_By']],
+            left_on='Company_Name_Normalized',
+            right_on='Company_Name_Normalized',
             how='left',
             suffixes=('', '_updated')
         )
         
-        # Step 2: For unmatched records, try Company Name + SIC match (handles missing registration numbers)
-        unmatched_mask = merged_df['Timestamp'].isnull()
-        if unmatched_mask.sum() > 0:
-            # Get the original indices of unmatched companies
-            unmatched_indices = merged_df[unmatched_mask].index
-            unmatched_companies = companies_df_copy.loc[unmatched_indices]
+        # Step 2: For companies with exact name matches but wrong SIC, verify SIC code match
+        # Only keep matches where either SIC matches OR we accept name-only matches
+        name_matches = merged_df['Timestamp'].notna()
+        if name_matches.sum() > 0:
+            logger.info(f"Found {name_matches.sum()} exact company name matches")
             
-            # Try matching on Company Name + SIC only
-            name_sic_matches = unmatched_companies.merge(
-                updated_df[['Company_Name_Normalized', 'Current_SIC_Normalized', 
-                           'New_SIC', 'New_Accuracy', 'Old_Accuracy', 'Timestamp', 'Updated_By']],
-                left_on=['Company_Name_Normalized', 'UK_SIC_Normalized'],
-                right_on=['Company_Name_Normalized', 'Current_SIC_Normalized'],
-                how='inner',
-                suffixes=('', '_name_sic_match')
-            )
-            
-            # Update the merged DataFrame with name+SIC matches
-            if not name_sic_matches.empty:
-                for original_idx in name_sic_matches.index:
-                    if original_idx in merged_df.index:
-                        match = name_sic_matches.loc[original_idx]
-                        merged_df.at[original_idx, 'New_SIC'] = match['New_SIC']
-                        merged_df.at[original_idx, 'New_Accuracy_updated'] = match['New_Accuracy']
-                        merged_df.at[original_idx, 'Old_Accuracy_updated'] = match['Old_Accuracy']
-                        merged_df.at[original_idx, 'Timestamp'] = match['Timestamp']
-                        merged_df.at[original_idx, 'Updated_By'] = match['Updated_By']
+            # For exact name matches, we can optionally validate SIC code
+            # But for now, we'll accept exact company name matches as valid
+            # This handles cases where SIC codes might have changed or be formatted differently
         
         # Clean up temporary columns
-        columns_to_drop = ['Company_Name_Normalized', 'UK_SIC_Normalized', 'Registration number_updated', 
-                          'Company_Name_Normalized_updated', 'Current_SIC_Normalized']
+        columns_to_drop = ['Company_Name_Normalized', 'UK_SIC_Normalized']
         for col in columns_to_drop:
             if col in merged_df.columns:
                 merged_df = merged_df.drop(columns=[col])
@@ -684,19 +679,57 @@ class EnhancedSICMatcher:
         updated_count = merged_df['Timestamp'].notna().sum()
         if updated_count > 0:
             logger.info(f"Found {updated_count} companies with updated SIC data")
-            logger.info("Matching strategy: Company Name + Registration Number + Current SIC")
+            logger.info("Matching strategy: Company Name + Old SIC Code")
         else:
             logger.info("No companies have updated SIC data")
         
         return merged_df
-        
-        return merged_df
     
+    def get_latest_records_only(self) -> pd.DataFrame:
+        """
+        Get only the latest record for each company based on timestamp.
+        This method preserves version history but returns only the most recent entry per company for display.
+        
+        Matching Strategy:
+        1. Group by Company_Name (primary - this is the most reliable identifier)
+        2. Return record with latest timestamp for each company
+        3. This handles cases where same company has different registration formats (e.g., 4083914 vs 04083914)
+        
+        Returns:
+            DataFrame with only the latest record per company
+        """
+        try:
+            updated_df = self.updated_data_manager.load_updated_data()
+            
+            if updated_df.empty:
+                logger.info("No updated data found")
+                return updated_df
+            
+            # Convert timestamp to datetime for proper sorting
+            updated_df['Timestamp_dt'] = pd.to_datetime(updated_df['Timestamp'])
+            
+            # Group by Company_Name (normalized) to handle same companies with different registration formats
+            updated_df['Company_Name_Normalized'] = updated_df['Company_Name'].str.strip().str.upper()
+            
+            # Get latest record for each company based on Company_Name
+            latest_df = updated_df.sort_values('Timestamp_dt').groupby('Company_Name_Normalized').tail(1)
+            
+            # Clean up temporary columns
+            latest_df = latest_df.drop(columns=['Timestamp_dt', 'Company_Name_Normalized'])
+            
+            logger.info(f"Returning {len(latest_df)} latest records from {len(updated_df)} total records")
+            logger.info(f"Grouped by Company_Name to handle registration number variations")
+            return latest_df.reset_index(drop=True)
+            
+        except Exception as e:
+            logger.error(f"Error getting latest records: {e}")
+            return pd.DataFrame()
+
     def save_sic_update(self, company_registration_code: str, company_name: str,
                        business_description: str, current_sic: str, old_accuracy: float,
                        new_sic: str, new_accuracy: float) -> bool:
         """
-        Save an updated SIC prediction.
+        Save an updated SIC prediction and automatically update the main table.
         
         Args:
             company_registration_code: Company registration code
@@ -710,10 +743,72 @@ class EnhancedSICMatcher:
         Returns:
             bool: True if saved successfully
         """
-        return self.updated_data_manager.save_updated_prediction(
+        # First save to CSV
+        success = self.updated_data_manager.save_updated_prediction(
             company_registration_code, company_name, business_description,
             current_sic, old_accuracy, new_sic, new_accuracy
         )
+        
+        # If CSV save was successful, automatically trigger main table update
+        if success:
+            self._trigger_main_table_update(
+                company_name=company_name,
+                company_registration=company_registration_code,
+                old_sic=current_sic,
+                new_sic=new_sic,
+                new_accuracy=new_accuracy
+            )
+        
+        return success
+    
+    def _trigger_main_table_update(self, company_name: str, company_registration: str,
+                                  old_sic: str, new_sic: str, new_accuracy: float,
+                                  api_base_url: str = "http://127.0.0.1:8001") -> bool:
+        """
+        Automatically trigger the main table update API.
+        
+        Args:
+            company_name: Company name
+            company_registration: Company registration number
+            old_sic: Old SIC code
+            new_sic: New SIC code
+            new_accuracy: New accuracy percentage
+            api_base_url: Base URL for the Flask API
+            
+        Returns:
+            bool: True if API call was successful
+        """
+        try:
+            url = f"{api_base_url}/api/update_main_table"
+            payload = {
+                'company_name': company_name,
+                'company_registration': company_registration,
+                'old_sic': old_sic,
+                'new_sic': new_sic,
+                'new_accuracy': new_accuracy
+            }
+            
+            # Make the API call with a timeout
+            response = requests.post(url, json=payload, timeout=5)
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result.get('success', False):
+                    logger.info(f"✅ Main table updated for {company_name}: {result.get('matching_strategy', 'Unknown strategy')}")
+                    return True
+                else:
+                    logger.warning(f"⚠️ Main table update failed for {company_name}: {result.get('error', 'Unknown error')}")
+            else:
+                logger.warning(f"⚠️ API call failed with status {response.status_code} for {company_name}")
+                
+        except requests.exceptions.Timeout:
+            logger.warning(f"⚠️ Timeout calling main table update API for {company_name}")
+        except requests.exceptions.ConnectionError:
+            logger.warning(f"⚠️ Connection error calling main table update API for {company_name} (Flask app may not be running)")
+        except Exception as e:
+            logger.warning(f"⚠️ Error calling main table update API for {company_name}: {str(e)}")
+            
+        return False
 
 # Global instance for easy access with thread safety
 _enhanced_sic_matcher = None

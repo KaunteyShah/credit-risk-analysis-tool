@@ -10,12 +10,11 @@ from datetime import datetime
 import hashlib
 
 # Add the parent directory to sys.path to import modules
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.agents.base_agent import BaseAgent, AgentResult
-from app.utils.companies_house_client import companies_house_client
-from app.utils.config_manager import config
-from app.utils.logger import logger
+from ..agents.base_agent import BaseAgent, AgentResult
+from ..utils.companies_house_client import companies_house_client
+from ..utils.config_manager import config
+from ..utils.logger import logger
 
 @dataclass
 class DocumentInfo:

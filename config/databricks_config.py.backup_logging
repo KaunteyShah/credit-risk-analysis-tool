@@ -13,7 +13,7 @@ import mlflow
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 class DatabricksConfig:
     """
@@ -37,7 +37,7 @@ class DatabricksConfig:
     def _load_config(self) -> Dict[str, Any]:
         """Load configuration from environment variables or config files"""
         return {
-            'workspace_url': os.getenv('DATABRICKS_HOST'),
+            'workspace_url': os.getenv('https://dbc-beccfe71-12b6.cloud.databricks.com'),
             'token': os.getenv('DATABRICKS_TOKEN'),
             'cluster_id': os.getenv('DATABRICKS_CLUSTER_ID'),
             'warehouse_id': os.getenv('DATABRICKS_WAREHOUSE_ID'),

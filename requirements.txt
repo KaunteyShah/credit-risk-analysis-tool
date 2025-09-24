@@ -4,6 +4,7 @@
 # Core Framework
 flask>=3.0.3
 flask-cors>=4.0.1
+flask-limiter>=3.7.0
 plotly==5.17.0
 pandas>=2.1.4
 numpy>=1.25.0

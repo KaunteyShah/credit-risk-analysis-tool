@@ -7,6 +7,7 @@ import json
 import logging
 from typing import Dict, Any, Optional, List
 from pathlib import Path
+from app.utils.logger import get_logger
 
 # Load environment variables from .env file
 try:
@@ -22,7 +23,7 @@ except ImportError:
     print("⚠️  python-dotenv not available - skipping .env file loading")
 
 # Set up logging
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 # Try to import Azure Key Vault client
 try:

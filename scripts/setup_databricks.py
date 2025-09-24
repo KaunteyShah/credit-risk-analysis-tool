@@ -10,13 +10,12 @@ from pathlib import Path
 
 # Add project root to path
 project_root = Path(__file__).parent
-sys.path.append(str(project_root))
 
 from config.databricks_config import initialize_databricks, get_databricks_config
 from data_layer.databricks_data import get_data_manager
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 def check_environment():
     """Check if environment is properly configured"""

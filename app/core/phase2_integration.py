@@ -31,13 +31,12 @@ except ImportError:
 
 # Add project root to path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(project_root)
 
 try:
     # Phase 2 imports - real functionality
-    from app.workflows.sic_prediction_workflow import SICPredictionWorkflow
-    from app.apis.companies_house_client import create_companies_house_client
-    from app.apis.web_scraper import create_web_scraper
+    from ..workflows.sic_prediction_workflow import SICPredictionWorkflow
+    from ..apis.companies_house_client import create_companies_house_client
+    from ..apis.web_scraper import create_web_scraper
     PHASE2_AVAILABLE = True
 except ImportError:
     # Fallback if Phase 2 dependencies not available
@@ -483,7 +482,7 @@ class Phase2Integration:
             return self.web_scraper.scrape_company_website(company_name, website_url)
         else:
             # Return mock scraped data
-            from app.apis.web_scraper import MockWebContentScraper
+            from ..apis.web_scraper import MockWebContentScraper
             mock_scraper = MockWebContentScraper()
             return mock_scraper.scrape_company_website(company_name, website_url)
 

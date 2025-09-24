@@ -7,11 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-def setup_logger(
-    name: str = "credit_risk_system",
-    level: int = logging.INFO,
-    log_file: Optional[str] = None
-) -> logging.Logger:
+def get_logger(name: str, level: int = logging.INFO, log_file: Optional[str] = None) -> logging.Logger:
     """
     Set up a logger with both console and file handlers.
     
@@ -51,5 +47,5 @@ def setup_logger(
     
     return logger
 
-# Default logger
-logger = setup_logger()
+# Default logger - using direct logging to avoid recursion
+logger = logging.getLogger(__name__)

@@ -49,7 +49,7 @@ class WebContentScraper:
         
         # Setup logging
         logging.basicConfig(level=logging.INFO)
-        self.logger = logging.getLogger(__name__)
+        self.logger = get_logger(__name__)
     
     def scrape_company_website(self, company_name: str, website_url: Optional[str] = None) -> Dict[str, Any]:
         """

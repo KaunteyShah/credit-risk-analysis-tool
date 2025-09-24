@@ -8,8 +8,9 @@ import logging
 from typing import Dict, Any, Optional
 from azure.keyvault.secrets import SecretClient
 from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
+from app.utils.centralized_logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 class AzureKeyVaultClient:
     """

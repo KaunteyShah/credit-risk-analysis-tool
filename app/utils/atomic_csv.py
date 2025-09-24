@@ -11,8 +11,9 @@ import pandas as pd
 from typing import Dict, Any
 import portalocker
 import logging
+from app.utils.centralized_logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 class AtomicCSVWriter:
     """

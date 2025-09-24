@@ -5,8 +5,9 @@ Provides type checking and sanitization for user inputs.
 
 from typing import Any, Dict, List, Optional, Union, Tuple
 import logging
+from app.utils.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 class ValidationError(Exception):
     """Custom exception for validation errors."""

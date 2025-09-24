@@ -10,7 +10,7 @@ from typing import Optional, Dict, Any
 from data_layer.databricks_data import get_data_manager
 from config.databricks_config import get_databricks_config
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def load_companies_data_cached(limit: Optional[int] = None) -> pd.DataFrame:

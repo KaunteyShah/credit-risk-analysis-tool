@@ -17,14 +17,13 @@ from langchain_openai import ChatOpenAI
 # Import our existing agents (Phase 1)
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from agents.base_agent import BaseAgent, AgentResult
-from agents.data_ingestion_agent import DataIngestionAgent
-from agents.document_download_agent import DocumentDownloadAgent
-from agents.rag_document_agent import RAGDocumentAgent
-from agents.sector_classification_agent import SectorClassificationAgent
-from agents.anomaly_detection_agent import AnomalyDetectionAgent
+from ..agents.base_agent import BaseAgent, AgentResult
+from ..agents.data_ingestion_agent import DataIngestionAgent
+from ..agents.document_download_agent import DocumentDownloadAgent
+from ..agents.rag_document_agent import RAGDocumentAgent
+from ..agents.sector_classification_agent import SectorClassificationAgent
+from ..agents.anomaly_detection_agent import AnomalyDetectionAgent
 
 @dataclass
 class WorkflowState:
@@ -372,7 +371,9 @@ if __name__ == "__main__":
     
     # Use logger if available, otherwise fallback to print for this test script
     try:
-        from app.utils.logger import logger
+        from ..utils.logger import logger
+from app.utils.centralized_logging import get_logger
+logger = get_logger(__name__)
         logger.info(f"Workflow Results: {results}")
     except ImportError:
         print("Workflow Results:", results)

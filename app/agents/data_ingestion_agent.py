@@ -8,12 +8,11 @@ import pandas as pd
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Add the parent directory to sys.path to import modules
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.agents.base_agent import BaseAgent, AgentResult
-from app.utils.companies_house_client import companies_house_client, CompanyData
-from app.utils.config_manager import config
-from app.utils.logger import logger
+from ..agents.base_agent import BaseAgent, AgentResult
+from ..utils.companies_house_client import companies_house_client, CompanyData
+from ..utils.config_manager import config
+from ..utils.logger import logger
 
 class DataIngestionAgent(BaseAgent):
     """Agent responsible for ingesting data from various sources."""

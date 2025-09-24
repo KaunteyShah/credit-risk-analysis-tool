@@ -19,7 +19,7 @@ try:
 except ImportError:
     OPENAI_AVAILABLE = False
     
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 @dataclass
 class APIStatus:

@@ -8,7 +8,6 @@ from typing import Dict, Any, List, Optional
 import streamlit as st
 
 # Add the parent directory to sys.path to import agents
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.agents.sector_classification_agent import SectorClassificationAgent
 
