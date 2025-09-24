@@ -369,6 +369,32 @@ def create_app():
             logger.error(f"Error in /api/data: {str(e)}")
             return jsonify({'error': str(e)}), 500
     
+    @app.route('/api/debug')
+    def debug_data():
+        """Debug endpoint to inspect data structure"""
+        try:
+            if app.company_data is None:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Company data is None'
+                })
+            
+            return jsonify({
+                'status': 'success',
+                'shape': app.company_data.shape,
+                'columns': list(app.company_data.columns),
+                'dtypes': {col: str(dtype) for col, dtype in app.company_data.dtypes.items()},
+                'first_5_countries': app.company_data['Country'].head().tolist() if 'Country' in app.company_data.columns else 'Country column missing',
+                'country_column_exists': 'Country' in app.company_data.columns,
+                'sample_row': app.company_data.iloc[0].to_dict() if len(app.company_data) > 0 else 'No data'
+            })
+        except Exception as e:
+            return jsonify({
+                'status': 'error',
+                'message': str(e),
+                'error_type': type(e).__name__
+            })
+
     @app.route('/api/filter_options')
     def get_filter_options():
         """Get available filter options"""
@@ -389,8 +415,11 @@ def create_app():
             try:
                 countries = app.company_data['Country'].dropna().unique().tolist()
                 countries_list = ['all'] + sorted([str(c) for c in countries if c])
-            except:
-                countries_list = ['all']
+            except Exception as e:
+                logger.error(f"Error accessing Country column: {e}")
+                logger.error(f"DataFrame columns: {list(app.company_data.columns) if app.company_data is not None else 'None'}")
+                logger.error(f"DataFrame shape: {app.company_data.shape if app.company_data is not None else 'None'}")
+                return jsonify({'error': str(e)})
             
             # Safely get employee range
             try:
