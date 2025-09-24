@@ -35,7 +35,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements-azure.txt
+        pip install -r requirements.txt
         
     - name: Run tests
       run: |
@@ -166,7 +166,7 @@ jobs:
         echo "🔧 Configuring Azure App Service for Python deployment..."
         echo "✅ Python version: ${{ env.PYTHON_VERSION }}"
         echo "✅ Entry point: startup.py (EMERGENCY CACHE BYPASS)"
-        echo "✅ Dependencies: requirements-azure.txt for complete functionality"
+        echo "✅ Dependencies: requirements.txt for complete functionality"
         
         # 🆘 EMERGENCY: Use startup.py to bypass ALL Azure main.py caching
         echo "🆘 EMERGENCY DEPLOYMENT: Using startup.py to bypass corrupted main.py cache"
@@ -174,8 +174,7 @@ jobs:
         echo "startup_command=startup.py" >> deployment_marker.txt
         
         # Use full requirements for complete application deployment
-        echo "📦 Using full requirements for complete application..."
-        cp requirements-azure.txt requirements.txt
+        echo "📦 Using requirements.txt for complete application..."
         
         # Verify full requirements
         echo "📋 Full application requirements:"
