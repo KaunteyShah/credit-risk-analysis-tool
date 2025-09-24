@@ -1,0 +1,13 @@
+# Minimal requirements for faster Azure deployment
+flask==3.0.3
+flask-cors==4.0.1
+pandas==2.1.4
+numpy==1.25.0
+requests==2.31.0
+python-dotenv==1.0.0
+gunicorn==21.2.0
+openpyxl==3.1.2
+
+# Azure dependencies
+azure-keyvault-secrets==4.7.0
+azure-identity==1.15.0
