@@ -18,3 +18,4 @@ azure-identity==1.15.0
 # Additional dependencies for enhanced functionality
 beautifulsoup4==4.12.2
 lxml==4.9.3
+rapidfuzz==3.5.2
