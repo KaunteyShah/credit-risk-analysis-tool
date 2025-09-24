@@ -66,5 +66,5 @@ except Exception as e:
     exit(1)
 "
 
-echo "🐍 Starting Python application on port $PORT..."
-python main.py
+echo "Starting the application with ULTRA-FAST startup..."
+exec python ultra_fast_startup.py
