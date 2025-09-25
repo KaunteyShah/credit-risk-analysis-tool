@@ -6,6 +6,7 @@ from typing import Dict, Any, Optional
 from openai import OpenAI
 from app.agents.base_agent import BaseAgent, AgentResult
 from app.utils.logger import get_logger
+from app.utils.config_manager import ConfigManager
 
 logger = get_logger(__name__)
 
@@ -19,21 +20,25 @@ class AIReasoningAgent(BaseAgent):
     def __init__(self):
         super().__init__("AI Reasoning Agent")
         self.client = None
+        self.config = ConfigManager()
+        self.reasoning_cache = {}  # Simple cache for reasoning results
         self._initialize_client()
     
     def _initialize_client(self):
-        """Initialize OpenAI client with API key from environment."""
+        """Initialize OpenAI client with API key from ConfigManager (Azure Key Vault)."""
         try:
-            api_key = os.getenv('OPENAI_API_KEY')
-            if not api_key or api_key == 'dummy-key-for-local-testing':
-                self.log_activity("No valid OpenAI API key found in environment", "WARNING")
+            # Get OpenAI API key from ConfigManager (which uses Azure Key Vault)
+            api_key = self.config.get('openai.api_key')
+            
+            if not api_key or api_key == 'dummy-key-for-local-testing' or len(api_key) < 20:
+                self.log_activity("No valid OpenAI API key found in ConfigManager", "WARNING")
                 return
             
             self.client = OpenAI(
                 api_key=api_key,
                 timeout=5.0  # 5 second timeout to prevent hanging
             )
-            self.log_activity("OpenAI client initialized successfully", "INFO")
+            self.log_activity("OpenAI client initialized successfully with ConfigManager key", "INFO")
             
         except Exception as e:
             self.log_activity(f"Failed to initialize OpenAI client: {str(e)}", "ERROR")
@@ -54,12 +59,6 @@ class AIReasoningAgent(BaseAgent):
         Returns:
             AgentResult with AI-generated reasoning
         """
-        if not self.client:
-            return self.create_result(
-                success=False,
-                error_message="OpenAI client not initialized. Please check API key."
-            )
-        
         try:
             # Extract required data
             company_name = data.get('company_name', 'Unknown Company')
@@ -69,15 +68,41 @@ class AIReasoningAgent(BaseAgent):
             new_accuracy = data.get('new_accuracy')
             sic_description = data.get('sic_description', '')
             
-            # Generate AI reasoning
-            reasoning = self._generate_reasoning(
-                company_name,
-                company_description,
-                current_sic,
-                old_accuracy,
-                new_accuracy,
-                sic_description
-            )
+            # Create cache key
+            cache_key = f"{company_name}_{current_sic}_{old_accuracy}_{new_accuracy or 'none'}"
+            
+            # Check cache first
+            if cache_key in self.reasoning_cache:
+                self.log_activity(f"Using cached reasoning for {company_name}", "INFO")
+                reasoning = self.reasoning_cache[cache_key]
+            else:
+                # Generate AI reasoning (try OpenAI first, fallback if needed)
+                if self.client:
+                    reasoning = self._generate_reasoning(
+                        company_name,
+                        company_description,
+                        current_sic,
+                        old_accuracy,
+                        new_accuracy,
+                        sic_description
+                    )
+                else:
+                    self.log_activity("Using fallback reasoning - OpenAI client not available", "INFO")
+                    reasoning = self._generate_fallback_reasoning(
+                        company_name,
+                        company_description,
+                        current_sic,
+                        old_accuracy,
+                        new_accuracy,
+                        sic_description
+                    )
+                
+                # Cache the result (limit cache size to 100 entries)
+                if len(self.reasoning_cache) >= 100:
+                    # Remove oldest entry
+                    oldest_key = next(iter(self.reasoning_cache))
+                    del self.reasoning_cache[oldest_key]
+                self.reasoning_cache[cache_key] = reasoning
             
             return self.create_result(
                 success=True,
@@ -86,15 +111,39 @@ class AIReasoningAgent(BaseAgent):
                     'analysis_type': 'sic_accuracy_analysis',
                     'company_name': company_name
                 },
-                confidence=0.8
+                confidence=0.8 if self.client else 0.6  # Lower confidence for fallback
             )
             
         except Exception as e:
             self.log_activity(f"Error processing AI reasoning: {str(e)}", "ERROR")
-            return self.create_result(
-                success=False,
-                error_message=f"AI reasoning failed: {str(e)}"
-            )
+            # Try fallback reasoning even on error
+            try:
+                company_name = data.get('company_name', 'Unknown Company')
+                company_description = data.get('company_description', '')
+                current_sic = data.get('current_sic', '')
+                old_accuracy = data.get('old_accuracy', 0)
+                new_accuracy = data.get('new_accuracy')
+                sic_description = data.get('sic_description', '')
+                
+                fallback_reasoning = self._generate_fallback_reasoning(
+                    company_name, company_description, current_sic, 
+                    old_accuracy, new_accuracy, sic_description
+                )
+                
+                return self.create_result(
+                    success=True,
+                    data={
+                        'reasoning': fallback_reasoning,
+                        'analysis_type': 'fallback_analysis',
+                        'company_name': company_name
+                    },
+                    confidence=0.5
+                )
+            except:
+                return self.create_result(
+                    success=False,
+                    error_message=f"AI reasoning failed: {str(e)}"
+                )
     
     def _generate_reasoning(
         self,
@@ -142,8 +191,11 @@ class AIReasoningAgent(BaseAgent):
             self.log_activity(f"OpenAI API call failed: {str(e)}", "ERROR")
             return self._generate_fallback_reasoning(
                 company_name,
+                company_description,
+                current_sic,
                 old_accuracy,
-                new_accuracy
+                new_accuracy,
+                sic_description
             )
     
     def _build_analysis_prompt(
@@ -178,8 +230,11 @@ Keep the response concise but insightful, focused on actionable business insight
     def _generate_fallback_reasoning(
         self,
         company_name: str,
-        old_accuracy: float,
-        new_accuracy: Optional[float] = None
+        company_description: str = "",
+        current_sic: str = "",
+        old_accuracy: float = 0,
+        new_accuracy: Optional[float] = None,
+        sic_description: str = ""
     ) -> str:
         """Generate fallback reasoning when OpenAI is unavailable."""
         
