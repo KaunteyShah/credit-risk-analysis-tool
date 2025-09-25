@@ -44,10 +44,15 @@ done
 
 # Install dependencies if needed
 if [ ! -f "/tmp/.deps_installed" ]; then
-    echo "📦 Installing dependencies..."
+    echo "📦 Installing dependencies from requirements.txt..."
     python3 -m pip install --no-cache-dir -r requirements.txt
-    touch /tmp/.deps_installed
-    echo "✅ Dependencies installed"
+    if [ $? -eq 0 ]; then
+        touch /tmp/.deps_installed
+        echo "✅ Dependencies installed successfully"
+    else
+        echo "❌ Failed to install dependencies"
+        exit 1
+    fi
 else
     echo "✅ Dependencies already installed"
 fi

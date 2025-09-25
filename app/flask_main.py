@@ -76,6 +76,23 @@ def create_fallback_sic_data():
     
     return pd.DataFrame(sic_data)
 
+def create_fallback_sic_data():
+    """Create fallback SIC code data when main SIC file is not available"""
+    sic_data = [
+        {'SIC Code': '7372', 'Description': 'Prepackaged Software'},
+        {'SIC Code': '3711', 'Description': 'Motor Vehicles and Passenger Car Bodies'},
+        {'SIC Code': '4953', 'Description': 'Refuse Systems'},
+        {'SIC Code': '6021', 'Description': 'National Commercial Banks'},
+        {'SIC Code': '8071', 'Description': 'Medical Laboratories'},
+        {'SIC Code': '5411', 'Description': 'Grocery Stores'},
+        {'SIC Code': '1542', 'Description': 'General Contractors-Nonresidential Buildings'},
+        {'SIC Code': '4213', 'Description': 'Trucking, Except Local'},
+        {'SIC Code': '2024', 'Description': 'Ice Cream and Frozen Desserts'},
+        {'SIC Code': '7812', 'Description': 'Motion Picture and Video Tape Production'}
+    ]
+    
+    return pd.DataFrame(sic_data)
+
 def clean_numeric_column(series):
     """Clean and convert a series to numeric values"""
     # Convert to string first, then clean
