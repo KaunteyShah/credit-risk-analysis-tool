@@ -1,83 +1,170 @@
 #!/usr/bin/env python3
 """
-Main entry point for the Credit Risk Analysis Flask application on Azure App Service.
-This file serves as the entry point that Azure App Service can automatically detect.
+Azure App Service Entry Point for Credit Risk Analysis Application
+Enhanced with comprehensive error handling and debugging for Azure deployment
 """
+
 import os
 import sys
-import subprocess
+import logging
+
+# Configure logging for Azure
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('azure_app.log')
+    ]
+)
+
+logger = logging.getLogger(__name__)
 
 # Create Flask app instance for Azure App Service and deployment testing
 app = None
 application = None
 
-try:
-    # Set dummy values during deployment testing to avoid secrets validation errors
-    if not os.environ.get('COMPANIES_HOUSE_API_KEY'):
-        os.environ['COMPANIES_HOUSE_API_KEY'] = 'dummy_value_for_build'
-        print("ℹ️  Set dummy COMPANIES_HOUSE_API_KEY for build testing")
+def create_main_app():
+    """Create the main Flask application with fallbacks"""
+    global app, application
     
-    if not os.environ.get('OPENAI_API_KEY'):
-        os.environ['OPENAI_API_KEY'] = 'dummy_value_for_build'
-        print("ℹ️  Set dummy OPENAI_API_KEY for build testing")
-    
-    from app.flask_main import create_app
-    app = create_app()
-    application = app  # Azure App Service compatibility
-    print("✅ Flask app instance created successfully")
-    
-    # Ensure app is available at module level for Gunicorn
-    if app:
-        print(f"✅ App instance ready - Debug: {app.debug}")
+    try:
+        # Set dummy values during deployment testing to avoid secrets validation errors
+        if not os.environ.get('COMPANIES_HOUSE_API_KEY'):
+            os.environ['COMPANIES_HOUSE_API_KEY'] = 'dummy_value_for_build'
+            logger.info("ℹ️  Set dummy COMPANIES_HOUSE_API_KEY for build testing")
         
-except Exception as e:
-    print(f"⚠️ Flask app creation failed: {e}")
-    # Create a minimal app for debugging
-    from flask import Flask
-    app = Flask(__name__)
-    application = app
-    
-    @app.route('/')
-    def health_check():
-        return {"status": "App created but with errors", "error": str(e)}
-    
-    @app.route('/health')
-    def health():
-        return {"status": "healthy", "message": "Minimal app running"}
-    
-    print("🔧 Created minimal Flask app for debugging")
+        if not os.environ.get('OPENAI_API_KEY'):
+            os.environ['OPENAI_API_KEY'] = 'dummy_value_for_build'
+            logger.info("ℹ️  Set dummy OPENAI_API_KEY for build testing")
+        
+        # Try to import the Azure-optimized Flask app first
+        try:
+            from azure_flask_main import create_azure_app
+            app = create_azure_app()
+            application = app  # Azure App Service compatibility
+            logger.info("✅ Successfully loaded Azure-optimized Flask app")
+            return app
+            
+        except Exception as azure_error:
+            logger.error(f"❌ Azure-optimized app failed: {azure_error}")
+            
+            # Fallback to regular Flask app with error handling
+            try:
+                from app.flask_main import create_app
+                app = create_app()
+                application = app
+                logger.info("✅ Successfully loaded regular Flask app as fallback")
+                return app
+                
+            except Exception as regular_error:
+                logger.error(f"❌ Regular Flask app also failed: {regular_error}")
+                
+                # Final fallback - minimal Flask app
+                from flask import Flask, jsonify
+                app = Flask(__name__)
+                application = app
+                
+                @app.route('/')
+                def minimal_health():
+                    return jsonify({
+                        'status': 'healthy',
+                        'message': 'Minimal Flask app running on Azure',
+                        'environment': 'azure_minimal_fallback'
+                    })
+                
+                @app.route('/health')
+                def health():
+                    return jsonify({
+                        'status': 'healthy',
+                        'environment': 'azure_minimal_fallback'
+                    })
+                
+                logger.info("✅ Started minimal fallback Flask app")
+                return app
+                
+    except Exception as e:
+        logger.error(f"⚠️ Flask app creation failed: {e}")
+        # Create a minimal app for debugging
+        from flask import Flask, jsonify
+        app = Flask(__name__)
+        application = app
+        
+        @app.route('/')
+        def error_health():
+            return jsonify({
+                "status": "App created but with errors", 
+                "error": str(e),
+                "environment": "azure_error_fallback"
+            })
+        
+        @app.route('/health')
+        def health():
+            return jsonify({
+                "status": "healthy", 
+                "message": "Minimal error app running"
+            })
+        
+        logger.info("🔧 Created minimal Flask app for debugging")
+        return app
+
+# Initialize the app
+app = create_main_app()
+application = app
 
 def main():
-    """Main entry point for the Flask application."""
-    print("🚀 Starting Credit Risk Analysis Flask Application...")
-    
-    # Set environment variables
-    os.environ['PYTHONPATH'] = '/home/site/wwwroot'
-    
-    # Azure App Service provides port via WEBSITES_PORT, fallback to 8000 for local dev
-    port = os.environ.get('WEBSITES_PORT') or os.environ.get('PORT', '8000')
-    
-    # Install dependencies if needed - check for pandas specifically
+    """Main entry point with enhanced error handling"""
     try:
-        import pandas
-        import flask
-        import numpy
-        print("✅ Core dependencies already installed")
-    except ImportError as e:
-        print(f"📦 Installing dependencies... Missing: {e}")
-        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt'])
-    
-    # Start Flask app
-    print(f"🌐 Starting Flask application on port {port}...")
-    
-    # Use existing app instance or create new one
-    if app is None:
-        from app.flask_main import create_app
-        flask_app = create_app()
-    else:
-        flask_app = app
-    
-    flask_app.run(host='0.0.0.0', port=int(port), debug=False)
+        # Get the port from Azure environment
+        port = int(os.environ.get('WEBSITES_PORT', '8000'))
+        logger.info(f"Starting Azure Flask app on port {port}")
+        
+        # Use the global app instance
+        if app is None:
+            flask_app = create_main_app()
+        else:
+            flask_app = app
+        
+        # Start the application
+        logger.info(f"🚀 Starting Flask app on 0.0.0.0:{port}")
+        flask_app.run(
+            host='0.0.0.0',
+            port=port,
+            debug=False,  # Disable debug in production
+            threaded=True,
+            use_reloader=False
+        )
+        
+    except Exception as e:
+        logger.error(f"� Critical error in main(): {e}")
+        import traceback
+        logger.error(f"Stack trace: {traceback.format_exc()}")
+        
+        # Try to start a basic web server as absolute final fallback
+        try:
+            from http.server import HTTPServer, BaseHTTPRequestHandler
+            import json
+            
+            class HealthHandler(BaseHTTPRequestHandler):
+                def do_GET(self):
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    response = {
+                        'status': 'emergency_mode',
+                        'message': 'Basic HTTP server running',
+                        'error': str(e)
+                    }
+                    self.wfile.write(json.dumps(response).encode())
+            
+            port = int(os.environ.get('WEBSITES_PORT', '8000'))
+            httpd = HTTPServer(('0.0.0.0', port), HealthHandler)
+            logger.info(f"🆘 Started emergency HTTP server on port {port}")
+            httpd.serve_forever()
+            
+        except Exception as final_error:
+            logger.error(f"💀 Even emergency server failed: {final_error}")
+            sys.exit(1)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
