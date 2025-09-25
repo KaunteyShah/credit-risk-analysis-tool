@@ -8,6 +8,9 @@ import sys
 import subprocess
 
 # Create Flask app instance for Azure App Service and deployment testing
+app = None
+application = None
+
 try:
     # Set dummy values during deployment testing to avoid secrets validation errors
     if not os.environ.get('COMPANIES_HOUSE_API_KEY'):
@@ -22,10 +25,27 @@ try:
     app = create_app()
     application = app  # Azure App Service compatibility
     print("✅ Flask app instance created successfully")
+    
+    # Ensure app is available at module level for Gunicorn
+    if app:
+        print(f"✅ App instance ready - Debug: {app.debug}")
+        
 except Exception as e:
     print(f"⚠️ Flask app creation failed: {e}")
-    app = None
-    application = None
+    # Create a minimal app for debugging
+    from flask import Flask
+    app = Flask(__name__)
+    application = app
+    
+    @app.route('/')
+    def health_check():
+        return {"status": "App created but with errors", "error": str(e)}
+    
+    @app.route('/health')
+    def health():
+        return {"status": "healthy", "message": "Minimal app running"}
+    
+    print("🔧 Created minimal Flask app for debugging")
 
 def main():
     """Main entry point for the Flask application."""
@@ -33,7 +53,9 @@ def main():
     
     # Set environment variables
     os.environ['PYTHONPATH'] = '/home/site/wwwroot'
-    port = os.environ.get('WEBSITES_PORT', '8000')
+    
+    # Azure App Service provides port via WEBSITES_PORT, fallback to 8000 for local dev
+    port = os.environ.get('WEBSITES_PORT') or os.environ.get('PORT', '8000')
     
     # Install dependencies if needed - check for pandas specifically
     try:

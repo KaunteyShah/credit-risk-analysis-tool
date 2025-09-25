@@ -1,5 +1,10 @@
 # Gunicorn configuration for Azure App Service
-bind = "0.0.0.0:8000"
+import os
+
+# Azure App Service provides port via WEBSITES_PORT
+port = os.environ.get('WEBSITES_PORT') or os.environ.get('PORT', '8000')
+bind = f"0.0.0.0:{port}"
+
 workers = 1
 worker_class = "sync"
 worker_connections = 1000
