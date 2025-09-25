@@ -1210,23 +1210,42 @@ class SICPredictionApp {
             
             modal.show();
             
+            console.log('🔄 Fetching company details from API...');
+            
             // Fetch company details with AI reasoning from API
             const response = await fetch(`/api/company_details/${companyIndex}`);
+            
+            console.log('📡 API Response received:', {
+                status: response.status,
+                ok: response.ok,
+                statusText: response.statusText
+            });
             
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             
             const result = await response.json();
+            console.log('📊 API Data received:', {
+                hasCompanyData: !!result.company_data,
+                hasAIReasoning: !!result.ai_reasoning,
+                hasMetadata: !!result.analysis_metadata,
+                companyName: result.company_data?.Company_Name
+            });
             
             if (result.error) {
                 throw new Error(result.error);
             }
             
+            // Validate required data
+            if (!result.company_data) {
+                throw new Error('No company data received from API');
+            }
+            
             // Update modal with fetched data
             const company = result.company_data;
-            const aiReasoning = result.ai_reasoning;
-            const metadata = result.analysis_metadata;
+            const aiReasoning = result.ai_reasoning || 'AI reasoning not available';
+            const metadata = result.analysis_metadata || {};
             
             // Update modal title
             document.getElementById('companyDetailsModalLabel').innerHTML = `
@@ -1234,7 +1253,7 @@ class SICPredictionApp {
             `;
             
             // Build comprehensive company details with AI reasoning
-            const accuracyImprovement = metadata.accuracy_improvement;
+            const accuracyImprovement = metadata.accuracy_improvement || 0;
             const improvementIcon = accuracyImprovement > 0 ? 'fa-arrow-up text-success' : 
                                    accuracyImprovement < 0 ? 'fa-arrow-down text-danger' : 
                                    'fa-minus text-muted';
@@ -1322,20 +1341,23 @@ class SICPredictionApp {
                             <hr class="my-3">
                             <small class="text-muted">
                                 <i class="fas fa-clock me-1"></i>
-                                Analysis generated on ${new Date(metadata.generated_at).toLocaleString()}
+                                Analysis generated on ${metadata.generated_at ? new Date(metadata.generated_at).toLocaleString() : 'Unknown'}
                             </small>
                         </div>
                     </div>
                 </div>
             `;
             
+            console.log('✅ Modal content updated successfully');
             this.logActivity('Company Details', `Viewed AI-powered details for ${company.Company_Name}`, 'info');
             
         } catch (error) {
-            console.error('Error showing company details:', error);
+            console.error('❌ Error showing company details:', error);
             
             // Update modal with error state
-            document.getElementById('companyName').textContent = 'Error Loading Company';
+            document.getElementById('companyDetailsModalLabel').innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>Error Loading Company
+            `;
             document.getElementById('companyDetailsContent').innerHTML = `
                 <div class="alert alert-danger">
                     <i class="fas fa-exclamation-circle me-2"></i>
