@@ -38,50 +38,71 @@ def create_main_app():
             os.environ['OPENAI_API_KEY'] = 'dummy_value_for_build'
             logger.info("ℹ️  Set dummy OPENAI_API_KEY for build testing")
         
-        # Try to import the Azure-optimized Flask app first
+        # Check if we're in Azure environment
+        is_azure = os.environ.get('WEBSITES_PORT') is not None or os.environ.get('WEBSITE_HOSTNAME') is not None
+        
+        if is_azure:
+            logger.info("🔵 Azure environment detected, using Azure-optimized app")
+            # Try Azure-optimized app for Azure deployment
+            try:
+                from azure_flask_main import create_azure_app
+                app = create_azure_app()
+                application = app  # Azure App Service compatibility
+                logger.info("✅ Successfully loaded Azure-optimized Flask app")
+                return app
+                
+            except Exception as azure_error:
+                logger.error(f"❌ Azure-optimized app failed: {azure_error}")
+                # Continue to regular Flask app fallback
+        else:
+            logger.info("💻 Local environment detected, using full Flask app")
+        
+        # Try regular Flask app (for local development or Azure fallback)
         try:
-            from azure_flask_main import create_azure_app
-            app = create_azure_app()
-            application = app  # Azure App Service compatibility
-            logger.info("✅ Successfully loaded Azure-optimized Flask app")
+            from app.flask_main import create_app
+            app = create_app()
+            application = app
+            logger.info("✅ Successfully loaded regular Flask app")
             return app
             
-        except Exception as azure_error:
-            logger.error(f"❌ Azure-optimized app failed: {azure_error}")
+        except Exception as regular_error:
+            logger.error(f"❌ Regular Flask app failed: {regular_error}")
             
-            # Fallback to regular Flask app with error handling
-            try:
-                from app.flask_main import create_app
-                app = create_app()
-                application = app
-                logger.info("✅ Successfully loaded regular Flask app as fallback")
-                return app
-                
-            except Exception as regular_error:
-                logger.error(f"❌ Regular Flask app also failed: {regular_error}")
-                
-                # Final fallback - minimal Flask app
-                from flask import Flask, jsonify
-                app = Flask(__name__)
-                application = app
-                
-                @app.route('/')
-                def minimal_health():
-                    return jsonify({
-                        'status': 'healthy',
-                        'message': 'Minimal Flask app running on Azure',
-                        'environment': 'azure_minimal_fallback'
-                    })
-                
-                @app.route('/health')
-                def health():
-                    return jsonify({
-                        'status': 'healthy',
-                        'environment': 'azure_minimal_fallback'
-                    })
-                
-                logger.info("✅ Started minimal fallback Flask app")
-                return app
+            if is_azure:
+                # Try Azure app as fallback in Azure environment
+                try:
+                    from azure_flask_main import create_azure_app
+                    app = create_azure_app()
+                    application = app
+                    logger.info("✅ Using Azure app as fallback")
+                    return app
+                except Exception as azure_fallback_error:
+                    logger.error(f"❌ Azure fallback also failed: {azure_fallback_error}")
+            
+            # Final fallback - minimal Flask app
+            from flask import Flask, jsonify
+            app = Flask(__name__)
+            application = app
+            
+            @app.route('/')
+            def minimal_health():
+                return jsonify({
+                    'status': 'healthy',
+                    'message': 'Minimal Flask app running',
+                    'environment': 'azure' if is_azure else 'local',
+                    'mode': 'minimal_fallback'
+                })
+            
+            @app.route('/health')
+            def health():
+                return jsonify({
+                    'status': 'healthy',
+                    'environment': 'azure' if is_azure else 'local',
+                    'mode': 'minimal_fallback'
+                })
+            
+            logger.info("✅ Started minimal fallback Flask app")
+            return app
                 
     except Exception as e:
         logger.error(f"⚠️ Flask app creation failed: {e}")
