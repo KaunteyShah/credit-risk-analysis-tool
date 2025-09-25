@@ -15,6 +15,11 @@ python-Levenshtein==0.21.1
 azure-keyvault-secrets==4.7.0
 azure-identity==1.15.0
 
+# LangGraph for agentic workflow visualization
+langgraph==0.2.34
+langchain-core==0.3.15
+pydantic==2.9.2
+
 # Additional dependencies for enhanced functionality
 beautifulsoup4==4.12.2
 lxml==4.9.3
