@@ -1223,8 +1223,8 @@ class SICPredictionApp {
                 ${steps.map((step, index) => `
                     <div class="sic-workflow-step" data-step="${step.step}">
                         <div class="workflow-step-icon ${step.status}" data-step="${step.step}">
+                            ${step.agent}
                         </div>
-                        <div class="workflow-step-label">${step.agent}</div>
                         ${index < steps.length - 1 ? `
                             <div class="workflow-arrow" data-step="${step.step}"></div>
                         ` : ''}
