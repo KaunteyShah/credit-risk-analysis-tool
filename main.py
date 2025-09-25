@@ -129,22 +129,31 @@ def create_main_app():
         logger.info("🔧 Created minimal Flask app for debugging")
         return app
 
-# Initialize the app
-app = create_main_app()
-application = app
+# Global variables for Azure App Service compatibility
+app = None
+application = None
+
+def get_app():
+    """Get or create the Flask app instance for Azure App Service"""
+    global app, application
+    if app is None:
+        app = create_main_app()
+        application = app
+    return app
 
 def main():
     """Main entry point with enhanced error handling"""
+    global app, application
+    
     try:
         # Get the port from Azure environment
         port = int(os.environ.get('WEBSITES_PORT', '8000'))
         logger.info(f"Starting Azure Flask app on port {port}")
         
-        # Use the global app instance
-        if app is None:
-            flask_app = create_main_app()
-        else:
-            flask_app = app
+        # Create the app when we actually need it
+        flask_app = create_main_app()
+        app = flask_app  # Set global for Azure App Service compatibility
+        application = flask_app
         
         # Start the application
         logger.info(f"🚀 Starting Flask app on 0.0.0.0:{port}")
