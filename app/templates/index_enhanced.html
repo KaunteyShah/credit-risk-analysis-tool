@@ -28,6 +28,9 @@
                     Credit Risk Analysis - SIC Code Prediction System
                 </span>
                 <div class="navbar-nav flex-row">
+                    <a href="/workflow" class="btn btn-outline-light btn-sm me-2">
+                        <i class="fas fa-project-diagram"></i> Workflow
+                    </a>
                     <button class="btn btn-outline-light btn-sm me-2" id="toggleFilters">
                         <i class="fas fa-filter"></i> Filters
                     </button>
@@ -252,8 +255,13 @@
                                         <div class="row h-100 g-0">
                                             <div class="col-md-8 border-end">
                                                 <div class="agent-workflow-container p-3">
-                                                    <h6>Agent Workflow Visualization</h6>
-                                                    <div id="sicWorkflowChart" class="workflow-chart"></div>
+                                                    <h6 class="mb-3">Agent Workflow Visualization</h6>
+                                                    <div id="sicWorkflowChart" class="workflow-chart">
+                                                        <div class="text-center text-muted p-4">
+                                                            <i class="fas fa-project-diagram fa-2x mb-3"></i>
+                                                            <p>Workflow will appear when you click "Predict SIC" on a company</p>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="col-md-4">

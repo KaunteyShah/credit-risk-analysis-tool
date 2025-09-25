@@ -26,6 +26,7 @@ class SICPredictionApp {
             sic: null,
             revenue: null
         };
+        this.langGraphStructure = null;
         
         // Start initialization immediately
         this.quickInit();
@@ -929,6 +930,9 @@ class SICPredictionApp {
         this.currentPredictionIndex = companyIndex;
         
         try {
+            // Switch to the agent workflow tab first
+            $('#agent-tabs a[href="#sic-panel"]').tab('show');
+            
             // Start showing the workflow visualization immediately
             this.startSICWorkflow();
             
@@ -962,6 +966,11 @@ class SICPredictionApp {
             
         } catch (error) {
             console.error('❌ Error predicting SIC:', error);
+            
+            // Still show the workflow even if API fails, but with demo data
+            $('#agent-tabs a[href="#sic-panel"]').tab('show');
+            this.startSICWorkflow();
+            
             this.showError(`Error predicting SIC: ${error.message}`);
         }
     }
@@ -1136,80 +1145,175 @@ class SICPredictionApp {
         }
     }
 
-    startSICWorkflow(result = null) {
+    async startSICWorkflow(result = null) {
         console.log('🔄 startSICWorkflow called with result:', result);
         
-        // If real agent result provided, use it
+        // Clear existing workflow
+        $('#sicWorkflowChart').empty();
+        
+        // Define the 4 SIC prediction agents
+        const sicAgents = [
+            {
+                step: 1,
+                agent: "Data Ingestion",
+                message: "Processing company data and extracting key information",
+                icon: "📥",
+                status: "idle"
+            },
+            {
+                step: 2,
+                agent: "Anomaly Detection", 
+                message: "Analyzing data for inconsistencies and outliers",
+                icon: "🔍",
+                status: "idle"
+            },
+            {
+                step: 3,
+                agent: "Sector Classification",
+                message: "Predicting SIC code based on company characteristics",
+                icon: "🎯",
+                status: "idle"
+            },
+            {
+                step: 4,
+                agent: "Results Compilation",
+                message: "Compiling final prediction results and confidence scores",
+                icon: "📊",
+                status: "idle"
+            }
+        ];
+        
+        // Use real workflow steps if provided, otherwise use default agents
+        let workflowSteps = sicAgents;
         if (result && result.workflow_steps) {
             console.log('🤖 Using real agent workflow:', result);
-            console.log('✅ workflow_steps found:', result.workflow_steps);
-            
-            // Map the real workflow steps to our display format
-            const workflowSteps = result.workflow_steps.map(step => ({
-                step: step.step,
+            workflowSteps = result.workflow_steps.map((step, index) => ({
+                step: step.step || index + 1,
                 agent: step.agent,
                 message: step.message,
-                status: step.status || 'completed'
+                icon: this.getAgentIcon(step.agent),
+                status: "idle"
             }));
-            
-            // Store the real workflow data
-            const workflowData = {
-                workflow_steps: workflowSteps,
-                prediction: result.predicted_sic,
-                confidence: result.new_accuracy ? parseFloat(result.new_accuracy.replace('%', '')) / 100 : (typeof result.confidence === 'string' ? parseFloat(result.confidence.replace('%', '')) / 100 : result.confidence), // Use new_accuracy if available, otherwise fall back to confidence
-                description: result.reasoning || 'Real agent prediction',
-                company_name: result.company_name,
-                current_sic: result.current_sic,
-                workflow_type: result.workflow_type,
-                // Store additional accuracy info for display
-                new_accuracy: result.new_accuracy,
-                old_accuracy: result.old_accuracy,
-                improvement_percentage: result.improvement_percentage,
-                analysis_explanation: result.analysis_explanation
-            };
-            
-            console.log('📊 About to call displaySICResults with workflowData:', workflowData);
-            
-            this.agentWorkflows.sic = workflowData;
-            this.renderAgentWorkflow('sic', workflowSteps);
-            this.displaySICResults(workflowData);
-            this.logActivity('Agent Workflow', `Real ${result.workflow_type} SIC prediction workflow completed for ${result.company_name}`, 'success');
-            return;
         }
         
-        // Fallback to demo workflow if no real data
-        const demoWorkflow = {
-            workflow_steps: [
-                {
-                    step: 1,
-                    agent: "Data Ingestion Agent",
-                    message: "Processing company data and extracting key information..."
-                },
-                {
-                    step: 2,
-                    agent: "Anomaly Detection Agent", 
-                    message: "Analyzing data for inconsistencies and outliers..."
-                },
-                {
-                    step: 3,
-                    agent: "Sector Classification Agent",
-                    message: "Predicting SIC code based on company characteristics..."
-                },
-                {
-                    step: 4,
-                    agent: "Results Compilation Agent",
-                    message: "Compiling final prediction results and confidence scores..."
-                }
-            ],
-            prediction: "73110",
-            confidence: 0.87,
-            description: "Demo: Research and experimental development on biotechnology"
+        // Render the 4 agents horizontally
+        this.renderHorizontalWorkflow(workflowSteps);
+        
+        // Start the animated workflow execution
+        setTimeout(() => {
+            this.animateAgentWorkflow(workflowSteps, result);
+        }, 500);
+        
+        // Store workflow data
+        const workflowData = {
+            workflow_steps: workflowSteps,
+            prediction: result?.predicted_sic || "73110",
+            confidence: result?.confidence || 0.87,
+            description: result?.reasoning || "SIC code prediction using multi-agent workflow",
+            company_name: result?.company_name || "Demo Company"
         };
         
-        this.agentWorkflows.sic = demoWorkflow;
-        this.renderAgentWorkflow('sic', demoWorkflow.workflow_steps);
-        this.displaySICResults(demoWorkflow);
-        this.logActivity('Agent Workflow', 'Demo SIC prediction workflow started', 'info');
+        this.agentWorkflows.sic = workflowData;
+        this.logActivity('Agent Workflow', 'SIC prediction workflow started', 'info');
+    }
+    
+    renderHorizontalWorkflow(steps) {
+        const workflowHtml = `
+            <div class="horizontal-workflow">
+                ${steps.map((step, index) => `
+                    <div class="sic-workflow-step" data-step="${step.step}">
+                        <div class="workflow-step-icon ${step.status}" data-step="${step.step}">
+                        </div>
+                        <div class="workflow-step-label">${step.agent}</div>
+                        ${index < steps.length - 1 ? `
+                            <div class="workflow-arrow" data-step="${step.step}"></div>
+                        ` : ''}
+                    </div>
+                `).join('')}
+            </div>
+            <div class="workflow-progress">
+                <div class="workflow-progress-bar"></div>
+            </div>
+        `;
+        
+        $('#sicWorkflowChart').html(workflowHtml);
+    }
+    
+    animateAgentWorkflow(steps, result = null) {
+        let currentStep = 0;
+        const totalSteps = steps.length;
+        
+        const processNextAgent = () => {
+            if (currentStep >= totalSteps) {
+                // All agents completed, show final results
+                setTimeout(() => {
+                    this.displaySICResults({
+                        workflow_steps: steps,
+                        prediction: result?.predicted_sic || "73110",
+                        confidence: result?.confidence || 0.87,
+                        description: result?.reasoning || "SIC code prediction completed",
+                        company_name: result?.company_name || "Demo Company",
+                        new_accuracy: result?.new_accuracy,
+                        old_accuracy: result?.old_accuracy,
+                        improvement_percentage: result?.improvement_percentage
+                    });
+                }, 500);
+                return;
+            }
+            
+            const stepNumber = currentStep + 1;
+            
+            // Mark current agent as processing
+            $(`.workflow-step-icon[data-step="${stepNumber}"]`)
+                .removeClass('idle completed')
+                .addClass('processing');
+            
+            // Update progress bar
+            const progress = ((currentStep + 1) / totalSteps) * 100;
+            $('.workflow-progress-bar').animate({ width: `${progress}%` }, 400);
+            
+            // Mark arrow as active if not the last step
+            if (currentStep < totalSteps - 1) {
+                setTimeout(() => {
+                    $(`.workflow-arrow[data-step="${stepNumber}"]`).addClass('active');
+                }, 800);
+            }
+            
+            // Mark current agent as completed and move to next
+            setTimeout(() => {
+                $(`.workflow-step-icon[data-step="${stepNumber}"]`)
+                    .removeClass('processing')
+                    .addClass('completed');
+                
+                currentStep++;
+                
+                // Process next agent after a short delay
+                setTimeout(processNextAgent, 300);
+                
+            }, 1200);
+        };
+        
+        // Start the animation sequence
+        processNextAgent();
+    }
+    
+    getAgentIcon(agentName) {
+        const icons = {
+            "Data Ingestion": "📥",
+            "Data Ingestion Agent": "📥", 
+            "Anomaly Detection": "🔍",
+            "Anomaly Detection Agent": "🔍",
+            "Sector Classification": "🎯",
+            "Sector Classification Agent": "🎯",
+            "Results Compilation": "📊",
+            "Results Compilation Agent": "📊",
+            "Smart Financial Extraction": "💰",
+            "Smart Financial Extraction Agent": "💰",
+            "Turnover Estimation": "📈",
+            "Turnover Estimation Agent": "📈"
+        };
+        
+        return icons[agentName] || "🤖";
     }
 
     startRevenueWorkflow(result = null) {
@@ -1631,5 +1735,237 @@ class SICPredictionApp {
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
         };
+    }
+
+    // LangGraph Integration Methods
+    async loadLangGraphWorkflow() {
+        try {
+            console.log('🔄 Loading LangGraph workflow structure...');
+            const response = await fetch('/api/workflow/structure');
+            const data = await response.json();
+            
+            if (data.success) {
+                console.log('✅ LangGraph workflow loaded:', data);
+                this.langGraphStructure = data.structure;
+                this.displayLangGraphWorkflow();
+                return true;
+            } else {
+                console.error('❌ Failed to load workflow:', data.error);
+                return false;
+            }
+        } catch (error) {
+            console.error('❌ Error loading LangGraph workflow:', error);
+            return false;
+        }
+    }
+
+    displayLangGraphWorkflow() {
+        if (!this.langGraphStructure) return;
+        
+        const container = $('#sicWorkflowChart');
+        if (container.length === 0) return;
+        
+        // Create a simple node-based visualization
+        const workflow = this.langGraphStructure;
+        let html = `
+            <div class="langgraph-workflow">
+                <div class="workflow-header mb-3">
+                    <h6><i class="fas fa-project-diagram"></i> LangGraph Multi-Agent Workflow</h6>
+                    <button class="btn btn-sm btn-primary" id="start-langgraph-workflow">
+                        <i class="fas fa-play"></i> Execute Workflow
+                    </button>
+                </div>
+                <div class="workflow-nodes">
+        `;
+        
+        // Create nodes in a flow layout
+        workflow.nodes.forEach((node, index) => {
+            const nodeClass = node.type === 'summary' ? 'node-summary' : 'node-agent';
+            html += `
+                <div class="workflow-node ${nodeClass}" data-node-id="${node.id}">
+                    <div class="node-content">
+                        <i class="fas fa-robot"></i>
+                        <span class="node-label">${node.label}</span>
+                        <div class="node-status idle">
+                            <i class="fas fa-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add arrows between nodes (simplified)
+            if (index < workflow.nodes.length - 1) {
+                html += '<div class="workflow-arrow"><i class="fas fa-arrow-down"></i></div>';
+            }
+        });
+        
+        html += `
+                </div>
+                <div class="workflow-info mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        Click "Execute Workflow" to run the complete multi-agent analysis
+                    </small>
+                </div>
+            </div>
+        `;
+        
+        container.html(html);
+        
+        // Add click handler for workflow execution
+        $('#start-langgraph-workflow').on('click', () => this.executeLangGraphWorkflow());
+        
+        // Add CSS styles dynamically
+        if (!$('#langgraph-styles').length) {
+            $('head').append(`
+                <style id="langgraph-styles">
+                .langgraph-workflow {
+                    padding: 15px;
+                    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                    border-radius: 8px;
+                }
+                .workflow-nodes {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 10px;
+                }
+                .workflow-node {
+                    background: white;
+                    border-radius: 6px;
+                    padding: 10px 15px;
+                    border: 2px solid #dee2e6;
+                    min-width: 200px;
+                    text-align: center;
+                    transition: all 0.3s ease;
+                    cursor: pointer;
+                }
+                .workflow-node:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                }
+                .node-agent {
+                    border-color: #007bff;
+                    color: #007bff;
+                }
+                .node-summary {
+                    border-color: #28a745;
+                    color: #28a745;
+                }
+                .node-content {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                }
+                .node-label {
+                    font-weight: 500;
+                    margin: 0 10px;
+                }
+                .node-status {
+                    font-size: 0.8em;
+                }
+                .node-status.idle { color: #6c757d; }
+                .node-status.running { color: #ffc107; }
+                .node-status.completed { color: #28a745; }
+                .node-status.error { color: #dc3545; }
+                .workflow-arrow {
+                    color: #6c757d;
+                    font-size: 1.2em;
+                }
+                .workflow-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                </style>
+            `);
+        }
+    }
+
+    async executeLangGraphWorkflow() {
+        try {
+            console.log('🚀 Executing LangGraph workflow...');
+            
+            // Update button state
+            const button = $('#start-langgraph-workflow');
+            const originalText = button.html();
+            button.html('<i class="fas fa-spinner fa-spin"></i> Running...').prop('disabled', true);
+            
+            // Update node statuses to show progress
+            this.updateWorkflowProgress('running');
+            
+            const response = await fetch('/api/workflow/execute', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                console.log('✅ Workflow execution completed:', result);
+                this.updateWorkflowProgress('completed');
+                this.displayWorkflowResults(result);
+                this.logActivity('LangGraph Workflow', 'Multi-agent workflow executed successfully', 'success');
+            } else {
+                console.error('❌ Workflow execution failed:', result.error);
+                this.updateWorkflowProgress('error');
+                this.logActivity('LangGraph Workflow', `Workflow failed: ${result.error}`, 'error');
+            }
+            
+            // Restore button
+            button.html(originalText).prop('disabled', false);
+            
+        } catch (error) {
+            console.error('❌ Error executing workflow:', error);
+            this.updateWorkflowProgress('error');
+            this.logActivity('LangGraph Workflow', `Workflow error: ${error.message}`, 'error');
+            
+            // Restore button
+            $('#start-langgraph-workflow').html(originalText).prop('disabled', false);
+        }
+    }
+
+    updateWorkflowProgress(status) {
+        $('.workflow-node .node-status').removeClass('idle running completed error').addClass(status);
+    }
+
+    displayWorkflowResults(result) {
+        const resultsContainer = $('#sicResults');
+        if (resultsContainer.length === 0) return;
+        
+        const html = `
+            <div class="workflow-results">
+                <h6><i class="fas fa-chart-bar"></i> LangGraph Workflow Results</h6>
+                <div class="result-item">
+                    <strong>Session ID:</strong> ${result.session_id || 'N/A'}
+                </div>
+                <div class="result-item">
+                    <strong>Current Stage:</strong> ${result.current_stage || 'N/A'}
+                </div>
+                <div class="result-item">
+                    <strong>LangGraph Mode:</strong> ${result.langgraph_enabled ? 'Full LangGraph' : 'Fallback Mode'}
+                </div>
+                <div class="result-item">
+                    <strong>Anomalies Found:</strong> ${result.results?.anomalies?.length || 0}
+                </div>
+                <div class="result-item">
+                    <strong>Sector Predictions:</strong> ${Object.keys(result.results?.sector_predictions || {}).length}
+                </div>
+                <div class="result-item">
+                    <strong>Revenue Estimates:</strong> ${Object.keys(result.results?.revenue_estimates || {}).length}
+                </div>
+                ${result.error ? `<div class="alert alert-warning mt-2"><small>Warning: ${result.error}</small></div>` : ''}
+                <div class="mt-3">
+                    <button class="btn btn-sm btn-outline-primary" onclick="window.open('/workflow', '_blank')">
+                        <i class="fas fa-external-link-alt"></i> Full Visualization
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        resultsContainer.html(html);
     }
 }

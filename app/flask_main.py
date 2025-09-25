@@ -5,6 +5,7 @@ Clean version without duplications
 
 import os
 import sys
+from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 
 # Optional CORS import with fallback
@@ -29,6 +30,7 @@ from app.utils.simulation import simulation_service, is_demo_mode, DEMO_SECRET_K
 from app.utils.input_validation import validate_api_input, validate_predict_sic_input, validate_update_revenue_input
 from app.agents.orchestrator import MultiAgentOrchestrator
 from app.agents.sector_classification_agent import SectorClassificationAgent
+from app.workflows.langgraph_workflow import CreditRiskWorkflow
 
 def clean_numeric_column(series):
     """Clean and convert a series to numeric values"""
@@ -61,7 +63,11 @@ def create_app():
     # Initialize multi-agent orchestrator for real workflow processing
     app.orchestrator = MultiAgentOrchestrator()
     app.sector_agent = SectorClassificationAgent()
+    
+    # Initialize LangGraph workflow for visualization
+    app.langgraph_workflow = CreditRiskWorkflow()
     logger.info("Multi-agent orchestrator initialized successfully")
+    logger.info("LangGraph workflow initialized for visualization")
     
     def load_company_data():
         """Load and prepare company data"""
@@ -129,6 +135,11 @@ def create_app():
     def index():
         """Main dashboard page with enhanced dual-panel layout"""
         return render_template('index_enhanced.html')
+
+    @app.route('/workflow')
+    def workflow_visualization():
+        """LangGraph workflow visualization page"""
+        return render_template('workflow_visualization.html')
 
     @app.route('/health')
     def health_check():
@@ -692,6 +703,101 @@ def create_app():
             ],
             'workflow_status': 'active'
         })
+
+    @app.route('/api/workflow/structure')
+    def get_workflow_structure():
+        """Get LangGraph workflow structure for visualization"""
+        try:
+            structure = app.langgraph_workflow.get_workflow_visualization()
+            return jsonify({
+                'success': True,
+                'structure': structure,
+                'langgraph_available': hasattr(app.langgraph_workflow, 'graph') and app.langgraph_workflow.graph is not None
+            })
+        except Exception as e:
+            logger.error(f"Error getting workflow structure: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/workflow/execute', methods=['POST'])
+    def execute_workflow():
+        """Execute the LangGraph workflow"""
+        try:
+            # Get request data
+            data = request.get_json() or {}
+            
+            # Prepare workflow input
+            workflow_input = {
+                'company_data': app.company_data.to_dict('records') if hasattr(app, 'company_data') and app.company_data is not None else [],
+                'session_metadata': {
+                    'timestamp': datetime.now().isoformat(),
+                    'user_initiated': True,
+                    'demo_mode': is_demo_mode()
+                }
+            }
+            
+            # Execute the workflow
+            result = app.langgraph_workflow.execute_workflow(workflow_input)
+            
+            return jsonify(result)
+            
+        except Exception as e:
+            logger.error(f"Error executing workflow: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+
+    @app.route('/api/workflow/status/<session_id>')
+    def get_workflow_status(session_id):
+        """Get status of a specific workflow session"""
+        # This would typically query a database or cache
+        # For now, return a simulated status
+        return jsonify({
+            'session_id': session_id,
+            'status': 'completed',
+            'progress': 100,
+            'stages': [
+                {'name': 'data_ingestion', 'status': 'completed', 'progress': 100},
+                {'name': 'anomaly_detection', 'status': 'completed', 'progress': 100},
+                {'name': 'sector_classification', 'status': 'completed', 'progress': 100},
+                {'name': 'turnover_estimation', 'status': 'completed', 'progress': 100}
+            ]
+        })
+
+    @app.route('/api/workflow/visualization')
+    def get_workflow_visualization():
+        """Get workflow visualization data for frontend"""
+        try:
+            # Get the workflow structure
+            structure = app.langgraph_workflow.get_workflow_visualization()
+            
+            # Add real-time status (simulated for now)
+            for node in structure['nodes']:
+                node['current_status'] = 'idle'
+                node['progress'] = 0
+                node['last_execution'] = None
+                
+            # Add execution history (simulated)
+            execution_history = [
+                {
+                    'session_id': 'session_001',
+                    'start_time': '2024-09-25T10:00:00Z',
+                    'end_time': '2024-09-25T10:05:00Z',
+                    'status': 'completed',
+                    'nodes_executed': ['data_ingestion', 'anomaly_detection', 'sector_classification']
+                }
+            ]
+            
+            return jsonify({
+                'success': True,
+                'workflow_structure': structure,
+                'execution_history': execution_history,
+                'available_actions': ['start_workflow', 'pause_workflow', 'view_logs']
+            })
+            
+        except Exception as e:
+            logger.error(f"Error getting workflow visualization: {str(e)}")
+            return jsonify({'error': str(e)}), 500
 
     @app.route('/api/predict_sic', methods=['POST'])
     @validate_api_input(validate_predict_sic_input)

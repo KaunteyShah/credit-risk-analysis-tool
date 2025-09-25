@@ -279,15 +279,16 @@ html, body {
 
 /* Workflow Chart Container */
 .workflow-chart {
-    min-height: 300px;
-    background-color: #f8f9fa;
-    border: 2px dashed #dee2e6;
+    min-height: 350px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #dee2e6;
     border-radius: var(--border-radius);
-    display: flex;
-    align-items: center;
-    justify-content: center;
     position: relative;
     overflow: hidden;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .workflow-chart::before {
@@ -297,8 +298,367 @@ html, body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, transparent 25%, rgba(13, 110, 253, 0.03) 25%);
+    background: linear-gradient(45deg, transparent 25%, rgba(13, 110, 253, 0.02) 25%);
     background-size: 20px 20px;
+}
+
+/* Horizontal Workflow Container */
+.horizontal-workflow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+    padding: 30px 10px;
+    gap: 10px;
+}
+
+/* SIC Prediction Workflow Specific Styles */
+.sic-workflow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    flex: 1;
+    max-width: 120px;
+}
+
+.workflow-step-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+    transition: all 0.4s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    position: relative;
+    border: 2px solid transparent;
+}
+
+/* Simplified Step States - Only Grey and Yellow */
+.workflow-step-icon.idle {
+    background: #6c757d;
+    border-color: #6c757d;
+}
+
+.workflow-step-icon.processing {
+    background: #ffc107;
+    border-color: #ffc107;
+    animation: simpleGlow 1.5s infinite;
+    box-shadow: 0 6px 25px rgba(255, 193, 7, 0.4);
+}
+
+.workflow-step-icon.completed {
+    background: #ffc107;
+    border-color: #ffc107;
+}
+
+.workflow-step-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    color: #495057;
+    line-height: 1.3;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    max-width: 120px;
+}
+
+/* Enhanced Workflow Connections - 3x Longer Arrows */
+.workflow-arrow {
+    position: absolute;
+    top: 40px;
+    right: -90px;
+    width: 90px;
+    height: 3px;
+    background: linear-gradient(90deg, #dee2e6, #adb5bd);
+    transition: all 0.5s ease;
+    border-radius: 2px;
+}
+
+.workflow-arrow::after {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: -4px;
+    width: 0;
+    height: 0;
+    border-left: 10px solid #adb5bd;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    transition: all 0.5s ease;
+}
+
+.workflow-arrow.active {
+    background: linear-gradient(90deg, #ffc107, #ffb300);
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+}
+
+.workflow-arrow.active::after {
+    border-left-color: #ffb300;
+}
+
+/* Remove arrow from last step */
+.sic-workflow-step:last-child .workflow-arrow {
+    display: none;
+}
+
+/* Progress Bar */
+.workflow-progress {
+    position: absolute;
+    bottom: 15px;
+    left: 20px;
+    right: 20px;
+    height: 4px;
+    background: rgba(0,0,0,0.08);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.workflow-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #ffc107, #ffb300);
+    width: 0%;
+    transition: width 0.8s ease;
+    border-radius: 2px;
+}
+
+/* Simplified Animation - Just a gentle glow */
+@keyframes simpleGlow {
+    0%, 100% {
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+    }
+    50% {
+        box-shadow: 0 6px 25px rgba(255, 193, 7, 0.6);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .horizontal-workflow {
+        gap: 5px;
+        padding: 20px 5px;
+    }
+    
+    .sic-workflow-step {
+        max-width: 90px;
+    }
+    
+    .workflow-step-icon {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .workflow-step-label {
+        font-size: 10px;
+        min-height: 30px;
+    }
+    
+    .workflow-arrow {
+        right: -60px;
+        width: 60px;
+    }
+}
+
+/* Remove arrow from last step */
+.sic-workflow-step:last-child .workflow-arrow,
+.sic-workflow-step:last-child .workflow-message {
+    display: none;
+}
+
+/* Progress Bar */
+.workflow-progress {
+    position: absolute;
+    bottom: 15px;
+    left: 20px;
+    right: 20px;
+    height: 6px;
+    background: rgba(0,0,0,0.08);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.workflow-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #198754, #20c997, #0d6efd);
+    width: 0%;
+    transition: width 0.8s ease;
+    border-radius: 3px;
+    position: relative;
+}
+
+.workflow-progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: progressShine 2s infinite;
+}
+
+/* Enhanced Animations */
+@keyframes agentPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 6px 25px rgba(255, 193, 7, 0.5);
+    }
+    50% {
+        transform: scale(1.08);
+        box-shadow: 0 8px 30px rgba(255, 193, 7, 0.7);
+    }
+}
+
+@keyframes messagePass {
+    0% {
+        opacity: 0;
+        transform: translateX(-20px) scale(0.8);
+    }
+    20% {
+        opacity: 1;
+        transform: translateX(-10px) scale(1);
+    }
+    80% {
+        opacity: 1;
+        transform: translateX(40px) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(60px) scale(0.8);
+    }
+}
+
+@keyframes arrowGlow {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba(13, 110, 253, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.6);
+    }
+}
+
+@keyframes progressShine {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .horizontal-workflow {
+        gap: 10px;
+        padding: 20px 10px;
+    }
+    
+    .sic-workflow-step {
+        max-width: 90px;
+    }
+    
+    .workflow-step-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 20px;
+    }
+    
+    .workflow-step-label {
+        font-size: 10px;
+        min-height: 30px;
+    }
+    
+    .workflow-arrow {
+        right: -20px;
+        width: 20px;
+    }
+    
+    .workflow-message {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+    }
+}
+
+/* Remove arrow from last step */
+.sic-workflow-step:last-child .workflow-arrow {
+    display: none;
+}
+
+/* Progress Bar */
+.workflow-progress {
+    position: absolute;
+    bottom: 10px;
+    left: 20px;
+    right: 20px;
+    height: 4px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.workflow-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #198754, #20c997);
+    width: 0%;
+    transition: width 0.5s ease;
+    border-radius: 2px;
+}
+
+/* Animations */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 20px rgba(255, 193, 7, 0.4);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 6px 25px rgba(255, 193, 7, 0.6);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .sic-workflow-step {
+        max-width: 80px;
+    }
+    
+    .workflow-step-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 18px;
+    }
+    
+    .workflow-step-label {
+        font-size: 9px;
+    }
+    
+    .workflow-arrow {
+        right: -15px;
+        width: 10px;
+    }
 }
 
 /* Agent Results */
