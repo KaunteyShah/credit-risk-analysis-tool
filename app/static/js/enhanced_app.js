@@ -933,8 +933,8 @@ class SICPredictionApp {
             // Switch to the agent workflow tab first
             $('#agent-tabs a[href="#sic-panel"]').tab('show');
             
-            // Start showing the workflow visualization immediately
-            this.startSICWorkflow();
+            // Clear existing workflow but don't start animation yet - wait for API response
+            $('#sicWorkflowChart').empty().html('<div class="text-center p-4"><i class="fas fa-spinner fa-spin fa-3x text-primary"></i><h5 class="mt-3">Preparing SIC prediction...</h5></div>');
             
             const response = await fetch('/api/predict_sic', {
                 method: 'POST',
@@ -1344,9 +1344,11 @@ class SICPredictionApp {
         }
         
         this.agentWorkflows.revenue = result;
-        this.renderAgentWorkflow('revenue', result.workflow_steps);
+        
+        // Don't render workflow animation for updates - just show results
+        // This prevents conflicts with the horizontal revenue prediction workflow
         this.displayRevenueResults(result);
-        this.logActivity('Agent Workflow', 'Revenue update workflow started', 'info');
+        this.logActivity('Agent Workflow', 'Revenue update completed successfully', 'success');
     }
 
     startUpdateWorkflow(result = null) {
@@ -1385,9 +1387,11 @@ class SICPredictionApp {
         }
         
         this.agentWorkflows.update = result;
-        this.renderAgentWorkflow('sic', result.workflow_steps);
+        
+        // Use a separate workflow container to avoid conflicts with SIC prediction
+        // Don't render workflow animation for updates - just show results
         this.displayUpdateResults(result);
-        this.logActivity('Agent Workflow', 'SIC update workflow started', 'info');
+        this.logActivity('Agent Workflow', 'SIC update completed successfully', 'success');
     }
 
     displayUpdateResults(result) {
