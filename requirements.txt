@@ -21,6 +21,9 @@ beautifulsoup4==4.12.3
 lxml==4.9.4
 rapidfuzz==3.6.1
 
+# OpenAI for AI reasoning agent
+openai>=1.104.2
+
 # LangGraph for agentic workflow visualization
 langgraph==0.2.34
 langchain-core==0.3.15

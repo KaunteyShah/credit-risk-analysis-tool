@@ -1644,6 +1644,91 @@ def create_app():
         except Exception as e:
             return jsonify({'error': f'Agent test failed: {str(e)}'}), 500
     
+    @app.route('/api/company_details/<int:company_index>', methods=['GET'])
+    def get_company_details_with_reasoning(company_index):
+        """
+        Get comprehensive company details with AI reasoning for SIC accuracy.
+        This endpoint provides all company data plus AI-generated explanations.
+        """
+        logger.info(f"🏢 Company details requested for index: {company_index}")
+        
+        try:
+            # Validate company index
+            if company_index < 0 or company_index >= len(app.company_data):
+                return jsonify({
+                    'error': f'Invalid company index: {company_index}. Valid range: 0-{len(app.company_data)-1}'
+                }), 400
+            
+            # Get company data
+            company = app.company_data.iloc[company_index].to_dict()
+            
+            # Prepare data for AI reasoning agent
+            reasoning_data = {
+                'company_name': company.get('Company Name', ''),
+                'company_description': company.get('Business Description', ''),
+                'current_sic': str(company.get('UK SIC 2007 Code', '')),
+                'old_accuracy': float(company.get('Old_Accuracy', 0)),
+                'new_accuracy': float(company.get('New_Accuracy', 0)) if company.get('New_Accuracy') else None,
+                'sic_description': company.get('UK SIC 2007 Description', '')
+            }
+            
+            # Get AI reasoning (import here to avoid circular imports)
+            try:
+                from app.agents.ai_reasoning_agent import ai_reasoning_agent
+                reasoning_result = ai_reasoning_agent.process(reasoning_data)
+                
+                if reasoning_result.success:
+                    ai_reasoning = reasoning_result.data.get('reasoning', 'No reasoning available')
+                    logger.info(f"✅ AI reasoning generated for {company.get('Company_Name', 'Unknown')}")
+                else:
+                    ai_reasoning = f"AI reasoning unavailable: {reasoning_result.error_message}"
+                    logger.warning(f"⚠️ AI reasoning failed for company {company_index}")
+                    
+            except Exception as ai_error:
+                logger.error(f"❌ AI reasoning agent error: {str(ai_error)}")
+                ai_reasoning = f"AI reasoning temporarily unavailable. Please check OpenAI API configuration."
+            
+            # Compile comprehensive response
+            response_data = {
+                'company_index': company_index,
+                'company_data': {
+                    'Company_Name': company.get('Company Name', 'N/A'),
+                    'Registration_Number': company.get('Registration number', 'N/A'),
+                    'UK_SIC_2007_Code': company.get('UK SIC 2007 Code', 'N/A'),
+                    'UK_SIC_2007_Description': company.get('UK SIC 2007 Description', 'N/A'),
+                    'Old_Accuracy': company.get('Old_Accuracy', 'N/A'),
+                    'New_Accuracy': company.get('New_Accuracy', 'N/A'),
+                    'Business_Description': company.get('Business Description', 'No description available'),
+                    'Sales_USD': company.get('Sales (USD)', 'N/A'),
+                    'Employees_Total': company.get('Employees (Total)', 'N/A'),
+                    'Address_Line_1': company.get('Address Line 1', 'N/A'),
+                    'City': company.get('City', 'N/A'),
+                    'Post_Code': company.get('Post Code', 'N/A'),
+                    'Country': company.get('Country', 'N/A'),
+                    'Website': company.get('Website', 'N/A'),
+                    'Phone': company.get('Phone', 'N/A')
+                },
+                'ai_reasoning': ai_reasoning,
+                'analysis_metadata': {
+                    'generated_at': datetime.now().isoformat(),
+                    'reasoning_source': 'ai_reasoning_agent',
+                    'accuracy_improvement': (
+                        float(company.get('New_Accuracy', 0)) - float(company.get('Old_Accuracy', 0))
+                        if company.get('New_Accuracy') else 0
+                    )
+                }
+            }
+            
+            logger.info(f"✅ Company details with AI reasoning returned for index {company_index}")
+            return jsonify(response_data)
+            
+        except Exception as e:
+            logger.error(f"❌ Error getting company details: {str(e)}")
+            return jsonify({
+                'error': f'Failed to get company details: {str(e)}',
+                'company_index': company_index
+            }), 500
+
     # Load data when app starts
     load_company_data()
     

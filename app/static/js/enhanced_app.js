@@ -176,7 +176,16 @@ class SICPredictionApp {
             
             const row = `
                 <tr>
-                    <td>${company['Company Name'] || 'N/A'}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <span>${company['Company Name'] || 'N/A'}</span>
+                            <button class="btn btn-sm btn-outline-info ms-2 company-info-btn" 
+                                    data-company-index="${index}" 
+                                    title="View detailed company information">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    </td>
                     <td>${company.Country || 'N/A'}</td>
                     <td>${company['Employees (Total)'] ? parseInt(company['Employees (Total)']).toLocaleString() : 'N/A'}</td>
                     <td>${company['Sales (USD)'] ? '$' + parseInt(company['Sales (USD)']).toLocaleString() : 'N/A'}</td>
@@ -207,6 +216,7 @@ class SICPredictionApp {
         // Remove any existing listeners to avoid duplicates
         $(document).off('click', '.predict-sic-btn');
         $(document).off('click', '.revenue-btn');
+        $(document).off('click', '.company-info-btn');
         
         // Predict SIC button
         $(document).on('click', '.predict-sic-btn', (e) => {
@@ -220,6 +230,13 @@ class SICPredictionApp {
             e.preventDefault();
             const companyIndex = $(e.currentTarget).data('company-index');
             this.updateRevenue(companyIndex);
+        });
+        
+        // Company info button
+        $(document).on('click', '.company-info-btn', (e) => {
+            e.preventDefault();
+            const companyIndex = $(e.currentTarget).data('company-index');
+            this.showCompanyDetails(companyIndex);
         });
     }
 
@@ -791,7 +808,14 @@ class SICPredictionApp {
             
             return `
                 <tr data-company-index="${(this.currentPage - 1) * this.perPage + index}">
-                    <td class="fw-semibold">${company['Company Name'] || 'N/A'}</td>
+                    <td class="fw-semibold">
+                        ${company['Company Name'] || 'N/A'}
+                        <button class="btn btn-sm btn-outline-info ms-2 company-info-btn" 
+                                data-company-index="${(this.currentPage - 1) * this.perPage + index}" 
+                                title="View Company Details">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </td>
                     <td>${company['Country'] || 'N/A'}</td>
                     <td class="text-end">${this.formatNumber(company['Employees (Total)'] || 0)}</td>
                     <td class="text-end">$${this.formatCurrency(company['Sales (USD)'] || 0)}</td>
@@ -824,9 +848,18 @@ class SICPredictionApp {
     }
 
     attachButtonEventListeners() {
+        console.log('🔧 Attaching button event listeners...');
+        
         // Remove any existing event listeners to prevent duplicates
         $('.btn-predict').off('click');
         $('.btn-update').off('click');
+        $('.company-info-btn').off('click');
+        
+        console.log('Found buttons:', {
+            predictButtons: $('.btn-predict').length,
+            updateButtons: $('.btn-update').length,
+            infoButtons: $('.company-info-btn').length
+        });
         
         // Attach click events for Predict SIC buttons
         $('.btn-predict').on('click', (e) => {
@@ -840,6 +873,16 @@ class SICPredictionApp {
             e.preventDefault();
             const index = $(e.currentTarget).data('company-index');
             this.updateRevenue(index);
+        });
+        
+        // Attach click events for Company Info buttons
+        $('.company-info-btn').on('click', (e) => {
+            e.preventDefault();
+            console.log('🔵 Company info button clicked!');
+            console.log('Event target:', e.currentTarget);
+            const index = $(e.currentTarget).data('company-index');
+            console.log('Company index:', index);
+            this.showCompanyDetails(index);
         });
     }
 
@@ -1142,6 +1185,166 @@ class SICPredictionApp {
             console.error('Error updating score from prediction:', error);
             this.hideLoading();
             this.showError(`Error updating score: ${error.message}`);
+        }
+    }
+
+    async showCompanyDetails(companyIndex) {
+        console.log('🏢 Company Info button clicked for company index:', companyIndex);
+        
+        try {
+            // Show the modal immediately with loading state
+            const modal = new bootstrap.Modal(document.getElementById('companyDetailsModal'));
+            
+            // Set loading state
+            document.getElementById('companyDetailsModalLabel').innerHTML = `
+                <i class="fas fa-building me-2"></i>Loading...
+            `;
+            document.getElementById('companyDetailsContent').innerHTML = `
+                <div class="text-center p-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading company details...</span>
+                    </div>
+                    <p class="mt-2">Fetching company information and AI analysis...</p>
+                </div>
+            `;
+            
+            modal.show();
+            
+            // Fetch company details with AI reasoning from API
+            const response = await fetch(`/api/company_details/${companyIndex}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result.error) {
+                throw new Error(result.error);
+            }
+            
+            // Update modal with fetched data
+            const company = result.company_data;
+            const aiReasoning = result.ai_reasoning;
+            const metadata = result.analysis_metadata;
+            
+            // Update modal title
+            document.getElementById('companyDetailsModalLabel').innerHTML = `
+                <i class="fas fa-building me-2"></i>${company.Company_Name || 'Unknown Company'}
+            `;
+            
+            // Build comprehensive company details with AI reasoning
+            const accuracyImprovement = metadata.accuracy_improvement;
+            const improvementIcon = accuracyImprovement > 0 ? 'fa-arrow-up text-success' : 
+                                   accuracyImprovement < 0 ? 'fa-arrow-down text-danger' : 
+                                   'fa-minus text-muted';
+            
+            document.getElementById('companyDetailsContent').innerHTML = `
+                <!-- Company Information Section -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-primary mb-3"><i class="fas fa-building me-2"></i>Company Information</h6>
+                        <div class="card border-0 bg-light p-3 mb-3">
+                            <p class="mb-2"><strong>Company Name:</strong> ${company.Company_Name || 'N/A'}</p>
+                            <p class="mb-2"><strong>Registration Number:</strong> ${company.Registration_Number || 'N/A'}</p>
+                            <p class="mb-2"><strong>Website:</strong> ${company.Website && company.Website !== 'N/A' ? `<a href="${company.Website}" target="_blank" class="text-decoration-none">${company.Website}</a>` : 'N/A'}</p>
+                            <p class="mb-0"><strong>Phone:</strong> ${company.Phone || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary mb-3"><i class="fas fa-chart-line me-2"></i>Business Metrics</h6>
+                        <div class="card border-0 bg-light p-3 mb-3">
+                            <p class="mb-2"><strong>Sales (USD):</strong> ${company.Sales_USD && company.Sales_USD !== 'N/A' ? '$' + Number(company.Sales_USD).toLocaleString() : 'N/A'}</p>
+                            <p class="mb-0"><strong>Employees:</strong> ${company.Employees_Total && company.Employees_Total !== 'N/A' ? Number(company.Employees_Total).toLocaleString() : 'N/A'}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Address Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6 class="text-primary mb-3"><i class="fas fa-map-marker-alt me-2"></i>Company Address</h6>
+                        <div class="card border-0 bg-light p-3">
+                            <p class="mb-0">
+                                ${[company.Address_Line_1, company.City, company.Post_Code, company.Country]
+                                  .filter(item => item && item !== 'N/A')
+                                  .join(', ') || 'Address not available'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Business Description Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6 class="text-primary mb-3"><i class="fas fa-file-text me-2"></i>Business Description</h6>
+                        <div class="card border-0 bg-light p-3">
+                            <p class="text-muted mb-0" style="line-height: 1.6;">${company.Business_Description || 'Business description not available'}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- SIC Code and AI Analysis Section -->
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-primary mb-3"><i class="fas fa-robot me-2"></i>SIC Code Analysis & AI Reasoning</h6>
+                        
+                        <!-- Current SIC Classification -->
+                        <div class="card border-primary mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0"><i class="fas fa-code me-2"></i>Current SIC Classification</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <p class="mb-2"><strong>UK SIC 2007 Code:</strong> <span class="badge bg-primary fs-6">${company.UK_SIC_2007_Code || 'N/A'}</span></p>
+                                        <p class="mb-0"><strong>Description:</strong> ${company.UK_SIC_2007_Description || 'Description not available'}</p>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <p class="mb-0"><strong>Current Accuracy:</strong></p>
+                                        <span class="badge bg-warning fs-5">${company.Old_Accuracy || 'N/A'}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- AI Reasoning -->
+                        <div class="alert alert-primary border-0" style="background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-brain text-primary me-3 mt-1 fs-4"></i>
+                                <div class="flex-grow-1">
+                                    <h6 class="text-primary mb-3">AI Analysis: Why is the accuracy ${company.Old_Accuracy || 'N/A'}%?</h6>
+                                    <div style="line-height: 1.7;">
+                                        ${aiReasoning}
+                                    </div>
+                                </div>
+                            </div>
+                            <hr class="my-3">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                Analysis generated on ${new Date(metadata.generated_at).toLocaleString()}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            this.logActivity('Company Details', `Viewed AI-powered details for ${company.Company_Name}`, 'info');
+            
+        } catch (error) {
+            console.error('Error showing company details:', error);
+            
+            // Update modal with error state
+            document.getElementById('companyName').textContent = 'Error Loading Company';
+            document.getElementById('companyDetailsContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Error loading company details:</strong> ${error.message}
+                    <br><small class="mt-2 d-block">Please try again or contact support if the issue persists.</small>
+                </div>
+            `;
+            
+            this.logActivity('Company Details Error', `Failed to load details for index ${companyIndex}: ${error.message}`, 'error');
         }
     }
 
