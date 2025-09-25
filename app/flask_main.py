@@ -1662,14 +1662,45 @@ def create_app():
             # Get company data
             company = app.company_data.iloc[company_index].to_dict()
             
+            # Helper function to safely convert values and handle NaN
+            def safe_convert(value, default='N/A'):
+                """Safely convert values, handling NaN and None"""
+                import math
+                if value is None:
+                    return default
+                if isinstance(value, (int, float)) and math.isnan(value):
+                    return default
+                if isinstance(value, str) and value.lower() in ['nan', 'none', '']:
+                    return default
+                return value
+            
+            # Helper function for numeric values
+            def safe_numeric(value, default=0):
+                """Safely convert numeric values, handling NaN"""
+                import math
+                try:
+                    if value is None:
+                        return default
+                    if isinstance(value, (int, float)):
+                        if math.isnan(value):
+                            return default
+                        return float(value)
+                    if isinstance(value, str):
+                        if value.lower() in ['nan', 'none', '', 'n/a']:
+                            return default
+                        return float(value)
+                    return default
+                except (ValueError, TypeError):
+                    return default
+            
             # Prepare data for AI reasoning agent
             reasoning_data = {
-                'company_name': company.get('Company Name', ''),
-                'company_description': company.get('Business Description', ''),
-                'current_sic': str(company.get('UK SIC 2007 Code', '')),
-                'old_accuracy': float(company.get('Old_Accuracy', 0)),
-                'new_accuracy': float(company.get('New_Accuracy', 0)) if company.get('New_Accuracy') else None,
-                'sic_description': company.get('UK SIC 2007 Description', '')
+                'company_name': safe_convert(company.get('Company Name', ''), 'Unknown Company'),
+                'company_description': safe_convert(company.get('Business Description', ''), ''),
+                'current_sic': str(safe_convert(company.get('UK SIC 2007 Code', ''), '')),
+                'old_accuracy': safe_numeric(company.get('Old_Accuracy', 0), 0),
+                'new_accuracy': safe_numeric(company.get('New_Accuracy')) if company.get('New_Accuracy') is not None else None,
+                'sic_description': safe_convert(company.get('UK SIC 2007 Description', ''), '')
             }
             
             # Get AI reasoning (import here to avoid circular imports)
@@ -1692,30 +1723,29 @@ def create_app():
             response_data = {
                 'company_index': company_index,
                 'company_data': {
-                    'Company_Name': company.get('Company Name', 'N/A'),
-                    'Registration_Number': company.get('Registration number', 'N/A'),
-                    'UK_SIC_2007_Code': company.get('UK SIC 2007 Code', 'N/A'),
-                    'UK_SIC_2007_Description': company.get('UK SIC 2007 Description', 'N/A'),
-                    'Old_Accuracy': company.get('Old_Accuracy', 'N/A'),
-                    'New_Accuracy': company.get('New_Accuracy', 'N/A'),
-                    'Business_Description': company.get('Business Description', 'No description available'),
-                    'Sales_USD': company.get('Sales (USD)', 'N/A'),
-                    'Employees_Total': company.get('Employees (Total)', 'N/A'),
-                    'Address_Line_1': company.get('Address Line 1', 'N/A'),
-                    'City': company.get('City', 'N/A'),
-                    'Post_Code': company.get('Post Code', 'N/A'),
-                    'Country': company.get('Country', 'N/A'),
-                    'Website': company.get('Website', 'N/A'),
-                    'Phone': company.get('Phone', 'N/A')
+                    'Company_Name': safe_convert(company.get('Company Name', 'N/A')),
+                    'Registration_Number': safe_convert(company.get('Registration number', 'N/A')),
+                    'UK_SIC_2007_Code': safe_convert(company.get('UK SIC 2007 Code', 'N/A')),
+                    'UK_SIC_2007_Description': safe_convert(company.get('UK SIC 2007 Description', 'N/A')),
+                    'Old_Accuracy': safe_numeric(company.get('Old_Accuracy'), 0),
+                    'New_Accuracy': safe_numeric(company.get('New_Accuracy')) if company.get('New_Accuracy') is not None else None,
+                    'Business_Description': safe_convert(company.get('Business Description', 'No description available')),
+                    'Sales_USD': safe_convert(company.get('Sales (USD)', 'N/A')),
+                    'Employees_Total': safe_convert(company.get('Employees (Total)', 'N/A')),
+                    'Address_Line_1': safe_convert(company.get('Address Line 1', 'N/A')),
+                    'City': safe_convert(company.get('City', 'N/A')),
+                    'Post_Code': safe_convert(company.get('Post Code', 'N/A')),
+                    'Country': safe_convert(company.get('Country', 'N/A')),
+                    'Website': safe_convert(company.get('Website', 'N/A')),
+                    'Phone': safe_convert(company.get('Phone', 'N/A'))
                 },
                 'ai_reasoning': ai_reasoning,
                 'analysis_metadata': {
                     'generated_at': datetime.now().isoformat(),
                     'reasoning_source': 'ai_reasoning_agent',
                     'accuracy_improvement': (
-                        float(company.get('New_Accuracy', 0)) - float(company.get('Old_Accuracy', 0))
-                        if company.get('New_Accuracy') else 0
-                    )
+                        safe_numeric(company.get('New_Accuracy'), 0) - safe_numeric(company.get('Old_Accuracy'), 0)
+                    ) if company.get('New_Accuracy') is not None else 0
                 }
             }
             
