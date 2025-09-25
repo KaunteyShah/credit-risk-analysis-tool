@@ -1148,8 +1148,10 @@ class SICPredictionApp {
     async startSICWorkflow(result = null) {
         console.log('🔄 startSICWorkflow called with result:', result);
         
-        // Clear existing workflow
+        // Clear existing workflow and stop any running animations
         $('#sicWorkflowChart').empty();
+        $('.workflow-progress-bar').stop(true, true).css('width', '0%');
+        $('.workflow-arrow').removeClass('active');
         
         // Define the 4 SIC prediction agents
         const sicAgents = [
@@ -1251,11 +1253,12 @@ class SICPredictionApp {
                         workflow_steps: steps,
                         prediction: result?.predicted_sic || "73110",
                         confidence: result?.confidence || 0.87,
-                        description: result?.reasoning || "SIC code prediction completed",
+                        description: result?.reasoning || result?.analysis_explanation || result?.description || "SIC code prediction completed using multi-agent analysis",
                         company_name: result?.company_name || "Demo Company",
                         new_accuracy: result?.new_accuracy,
                         old_accuracy: result?.old_accuracy,
-                        improvement_percentage: result?.improvement_percentage
+                        improvement_percentage: result?.improvement_percentage,
+                        analysis_explanation: result?.analysis_explanation || result?.reasoning
                     });
                 }, 500);
                 return;
@@ -1268,13 +1271,14 @@ class SICPredictionApp {
                 .removeClass('idle completed')
                 .addClass('processing');
             
-            // Update progress bar
+            // Update progress bar - stop any existing animations first
             const progress = ((currentStep + 1) / totalSteps) * 100;
-            $('.workflow-progress-bar').animate({ width: `${progress}%` }, 400);
+            $('.workflow-progress-bar').stop(true, false).animate({ width: `${progress}%` }, 400);
             
-            // Mark arrow as active if not the last step
+            // Mark arrow as active if not the last step - clear any existing active arrows first
             if (currentStep < totalSteps - 1) {
                 setTimeout(() => {
+                    $('.workflow-arrow').removeClass('active'); // Clear all arrows
                     $(`.workflow-arrow[data-step="${stepNumber}"]`).addClass('active');
                 }, 800);
             }
