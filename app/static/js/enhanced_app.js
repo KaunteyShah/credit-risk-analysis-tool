@@ -1155,28 +1155,28 @@ class SICPredictionApp {
         const sicAgents = [
             {
                 step: 1,
-                agent: "Data Ingestion",
+                agent: "Data Ingestion Agent",
                 message: "Processing company data and extracting key information",
                 icon: "📥",
                 status: "idle"
             },
             {
                 step: 2,
-                agent: "Anomaly Detection", 
+                agent: "Anomaly Detection Agent", 
                 message: "Analyzing data for inconsistencies and outliers",
                 icon: "🔍",
                 status: "idle"
             },
             {
                 step: 3,
-                agent: "Sector Classification",
+                agent: "Sector Classification Agent",
                 message: "Predicting SIC code based on company characteristics",
                 icon: "🎯",
                 status: "idle"
             },
             {
                 step: 4,
-                agent: "Results Compilation",
+                agent: "Results Compilation Agent",
                 message: "Compiling final prediction results and confidence scores",
                 icon: "📊",
                 status: "idle"
@@ -1299,17 +1299,11 @@ class SICPredictionApp {
     
     getAgentIcon(agentName) {
         const icons = {
-            "Data Ingestion": "📥",
             "Data Ingestion Agent": "📥", 
-            "Anomaly Detection": "🔍",
             "Anomaly Detection Agent": "🔍",
-            "Sector Classification": "🎯",
             "Sector Classification Agent": "🎯",
-            "Results Compilation": "📊",
             "Results Compilation Agent": "📊",
-            "Smart Financial Extraction": "💰",
             "Smart Financial Extraction Agent": "💰",
-            "Turnover Estimation": "📈",
             "Turnover Estimation Agent": "📈"
         };
         
