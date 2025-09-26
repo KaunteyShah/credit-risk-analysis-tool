@@ -16,7 +16,7 @@ env:
   AZURE_RESOURCE_GROUP: rg-credit-risk-analysis-prod-ukwest
   AZURE_LOCATION: ukwest
   PYTHON_VERSION: '3.11'
-  APP_SERVICE_NAME: credit-risk-analysis-prod-app-25h2ya
+  APP_SERVICE_NAME: credit-risk-analysis-v2-1758842788
 
 jobs:
   # Application Testing
