@@ -1,4 +1,4 @@
-name: Deploy Credit Risk Analysis to Azure
+name: Deploy Credit Risk Analysis to Azure (Clean Environment)
 
 on:
   push:
@@ -13,10 +13,10 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  AZURE_RESOURCE_GROUP: rg-credit-risk-analysis-prod-ukwest
+  AZURE_RESOURCE_GROUP: rg-credit-risk-clean
   AZURE_LOCATION: ukwest
   PYTHON_VERSION: '3.11'
-  APP_SERVICE_NAME: credit-risk-analysis-v2-1758842788
+  APP_SERVICE_NAME: credit-risk-clean-app
 
 jobs:
   # Application Testing
@@ -51,7 +51,7 @@ jobs:
         # Install compatible data science packages (fix numpy/pandas compatibility)
         echo "Installing compatible numpy and pandas versions..."
         pip install numpy==1.26.4  # Updated for Python 3.11 compatibility
-        pip install pandas==2.1.4  # Keep same version but install after compatible numpy
+        pip install pandas==2.2.3  # Updated to match requirements.txt
         pip install openpyxl==3.1.2
         pip install scikit-learn==1.3.0 
         pip install fuzzywuzzy==0.18.0 python-Levenshtein==0.21.1
