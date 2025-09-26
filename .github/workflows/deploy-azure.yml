@@ -278,6 +278,7 @@ jobs:
         echo "✅ Deployment initiated via Kudu API"
         
         # Configure app settings using extracted credentials
+        echo "⚙️ Configuring app settings..."
         curl -X POST \
           -u "$USERNAME:$PASSWORD" \
           -H "Content-Type: application/json" \
@@ -295,6 +296,14 @@ jobs:
           "https://credit-risk-clean-app.scm.azurewebsites.net/api/settings"
           
         echo "⚙️ App settings configured"
+        
+        # Force app restart to pick up new settings
+        echo "🔄 Restarting app service to apply new configuration..."
+        curl -X POST \
+          -u "$USERNAME:$PASSWORD" \
+          "https://credit-risk-clean-app.scm.azurewebsites.net/api/functions/host/restart"
+          
+        echo "✅ App service restarted"
       
     - name: Wait for deployment completion
       run: |
