@@ -20,7 +20,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-# Global variables for Azure App Service compatibility
+# Create Flask app instance for Azure App Service and deployment testing
 app = None
 application = None
 
@@ -42,7 +42,7 @@ def create_main_app():
         is_azure = os.environ.get('WEBSITES_PORT') is not None or os.environ.get('WEBSITE_HOSTNAME') is not None
         logger.info(f"🌐 Environment detected: {'Azure' if is_azure else 'Local'}")
         
-        # Try to load the regular Flask app
+        # Always use the regular Flask app
         try:
             from app.flask_main import create_app
             app = create_app()
@@ -54,40 +54,43 @@ def create_main_app():
             logger.error(f"❌ Flask app failed to load: {flask_error}")
             logger.error(f"Error details: {str(flask_error)}")
             
-            # Store the error for use in the minimal app
-            error_message = str(flask_error)
+            # Check if we're in Azure environment for error response
+            is_azure = os.environ.get('WEBSITES_PORT') is not None or os.environ.get('WEBSITE_HOSTNAME') is not None
             
-            try:
-                # Final fallback - minimal Flask app
-                from flask import Flask, jsonify
-                app = Flask(__name__)
-                application = app
-                
-                @app.route('/')
-                def minimal_health():
-                    return jsonify({
-                        'status': 'error',
-                        'message': 'Main Flask app failed to load',
-                        'error': error_message,
-                        'environment': 'azure' if is_azure else 'local',
-                        'mode': 'minimal_fallback'
-                    })
-                
-                @app.route('/health')
-                def health():
-                    return jsonify({
-                        'status': 'error',
-                        'error': error_message,
-                        'environment': 'azure' if is_azure else 'local',
-                        'mode': 'minimal_fallback'
-                    })
-                
-                logger.info("✅ Started minimal fallback Flask app")
-                return app
-                
-            except Exception as minimal_error:
-                logger.error(f"⚠️ Minimal Flask app creation also failed: {minimal_error}")
-                raise minimal_error
+            except Exception as e:
+        flask_error = f"Critical application error: {e}"
+        print(f"❌ {flask_error}")
+        import traceback
+        traceback.print_exc()
+        
+        # Store the error for use in the minimal app
+        error_message = str(e)
+        
+        try:
+            # Final fallback - minimal Flask app
+            from flask import Flask, jsonify
+            app = Flask(__name__)
+            application = app
+            
+            @app.route('/')
+            def minimal_health():
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Main Flask app failed to load',
+                    'error': error_message,
+                    'environment': 'azure' if is_azure else 'local',
+                    'mode': 'minimal_fallback'
+                })
+            
+            @app.route('/health')
+            def health():
+                return jsonify({
+                    'status': 'error',
+                    'error': error_message,
+                    'environment': 'azure' if is_azure else 'local',
+            
+            logger.info("✅ Started minimal fallback Flask app")
+            return app
                 
     except Exception as e:
         logger.error(f"⚠️ Flask app creation failed: {e}")
@@ -105,7 +108,7 @@ def create_main_app():
             })
         
         @app.route('/health')
-        def health_check():
+        def health():
             return jsonify({
                 "status": "healthy", 
                 "message": "Minimal error app running"
@@ -113,6 +116,10 @@ def create_main_app():
         
         logger.info("🔧 Created minimal Flask app for debugging")
         return app
+
+# Global variables for Azure App Service compatibility
+app = None
+application = None
 
 def get_app():
     """Get or create the Flask app instance for Azure App Service"""
@@ -147,7 +154,7 @@ def main():
         )
         
     except Exception as e:
-        logger.error(f"Critical error in main(): {e}")
+        logger.error(f"� Critical error in main(): {e}")
         import traceback
         logger.error(f"Stack trace: {traceback.format_exc()}")
         
