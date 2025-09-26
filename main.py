@@ -36,8 +36,8 @@ def create_application():
             logger.info(f"Added to Python path: {app_dir}")
         
         # Import and create Flask app
-        logger.info("Loading Flask application from flask_main...")
-        from flask_main import create_app
+        logger.info("Loading Flask application from app.flask_main...")
+        from app.flask_main import create_app
         
         app = create_app()
         logger.info("✅ Flask application created successfully!")
