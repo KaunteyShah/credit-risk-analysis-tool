@@ -9,6 +9,7 @@
     --info-color: #0dcaf0;
     --dark-color: #212529;
     --light-color: #f8f9fa;
+    --ey-yellow: #ffe600;  /* EY Brand Yellow */
     --sidebar-width: 320px;
     --header-height: 60px;
     --border-radius: 8px;
@@ -36,8 +37,20 @@ html, body {
     right: 0;
     z-index: 1030;
     height: var(--header-height);
-    background: linear-gradient(135deg, var(--primary-color), #0a58ca);
+    background: var(--ey-yellow);
     box-shadow: var(--box-shadow);
+}
+
+/* EY Navbar text styling */
+.navbar .navbar-brand,
+.navbar .nav-link {
+    color: var(--dark-color) !important;  /* Black text on yellow background */
+    font-weight: 600;
+}
+
+.navbar .navbar-brand:hover,
+.navbar .nav-link:hover {
+    color: var(--dark-color) !important;
 }
 
 /* Main Container */
@@ -255,7 +268,7 @@ html, body {
 
 /* Agent Dashboard */
 .nav-tabs {
-    border-bottom: 2px solid var(--primary-color);
+    border-bottom: 2px solid var(--ey-yellow);
 }
 
 .nav-tabs .nav-link {
@@ -267,14 +280,14 @@ html, body {
 }
 
 .nav-tabs .nav-link:hover {
-    color: var(--primary-color);
-    background-color: rgba(13, 110, 253, 0.1);
+    color: var(--dark-color);
+    background-color: rgba(255, 230, 0, 0.1);
 }
 
 .nav-tabs .nav-link.active {
-    color: var(--primary-color);
+    color: var(--dark-color);
     background-color: white;
-    border-bottom: 3px solid var(--primary-color);
+    border-bottom: 3px solid var(--ey-yellow);
 }
 
 /* Workflow Chart Container */
@@ -367,12 +380,12 @@ html, body {
     display: none;
 }
 
-/* Enhanced Workflow Connections - 3x Longer Arrows */
+/* Enhanced Workflow Connections - Properly spaced arrows */
 .workflow-arrow {
     position: absolute;
     top: 30px;
-    right: -90px;
-    width: 90px;
+    right: -100px;  /* Increased from -90px to prevent touching nodes */
+    width: 80px;    /* Reduced from 90px for better visual balance */
     height: 3px;
     background: linear-gradient(90deg, #dee2e6, #adb5bd);
     transition: all 0.5s ease;
@@ -719,15 +732,17 @@ html, body {
 }
 
 .card-header {
-    background: linear-gradient(135deg, var(--primary-color), #0a58ca);
-    color: white;
+    background: var(--ey-yellow);
+    color: var(--dark-color);  /* Black text on yellow background */
     border-bottom: none;
     padding: 12px 15px;
+    font-weight: 600;
 }
 
 .card-header h6 {
     margin: 0;
     font-weight: 600;
+    color: var(--dark-color);
 }
 
 /* Loading States */

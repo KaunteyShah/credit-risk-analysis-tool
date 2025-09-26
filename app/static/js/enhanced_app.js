@@ -1511,16 +1511,16 @@ class SICPredictionApp {
                 .removeClass('idle completed')
                 .addClass('processing');
             
-            // Update progress bar based on step START (not completion) to prevent back-and-forth
-            const progress = (currentStep / totalSteps) * 100;
-            $('.workflow-progress-bar').stop(true, true).animate({ width: `${progress}%` }, 600, 'swing');
+            // Simplified progress bar - single smooth animation to completion
+            const completionProgress = ((currentStep + 1) / totalSteps) * 100;
+            $('.workflow-progress-bar').stop(true, true).animate({ width: `${completionProgress}%` }, 1200, 'swing');
             
             // Mark arrow as active if not the last step - clear any existing active arrows first
             if (currentStep < totalSteps - 1) {
                 setTimeout(() => {
                     $('.workflow-arrow').removeClass('active'); // Clear all arrows
                     $(`.workflow-arrow[data-step="${stepNumber}"]`).addClass('active');
-                }, 800);
+                }, 400);
             }
             
             // Mark current agent as completed and move to next
@@ -1529,14 +1529,10 @@ class SICPredictionApp {
                     .removeClass('processing')
                     .addClass('completed');
                 
-                // Update progress bar to show completion AFTER agent finishes
-                const completionProgress = ((currentStep + 1) / totalSteps) * 100;
-                $('.workflow-progress-bar').stop(true, true).animate({ width: `${completionProgress}%` }, 300, 'swing');
-                
                 currentStep++;
                 
                 // Process next agent after a short delay
-                setTimeout(processNextAgent, 300);
+                setTimeout(processNextAgent, 200);
                 
             }, 1200);
         };
@@ -1698,11 +1694,11 @@ class SICPredictionApp {
         const confidenceClass = confidence > 0.8 ? 'success' : confidence > 0.6 ? 'warning' : 'danger';
         
         const resultsHTML = `
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-robot me-2"></i>Real Agent Prediction</h5>
-                </div>
-                <div class="card-body">
+            <div class="card border-0">
+                <div class="card-body pt-2">
+                    <div class="mb-3">
+                        <h5 class="mb-2 text-dark"><i class="fas fa-robot me-2 text-primary"></i>Real Agent Prediction</h5>
+                    </div>
                     ${data.company_name ? `
                         <div class="mb-3">
                             <p class="mb-1 fs-5"><strong>${data.company_name}</strong></p>
