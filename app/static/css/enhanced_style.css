@@ -324,9 +324,9 @@ html, body {
 }
 
 .workflow-step-icon {
-    width: 140px;
-    height: 60px;
-    border-radius: 30px;
+    width: 170px;  /* 10% wider: 154px * 1.1 = 169.4px ≈ 170px */
+    height: 66px;  /* Keep height the same */
+    border-radius: 33px;  /* Keep border radius the same */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -335,11 +335,11 @@ html, body {
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     position: relative;
     border: 2px solid transparent;
-    font-size: 12px;
+    font-size: 13px;  /* Keep font size */
     font-weight: 600;
     text-align: center;
     color: white;
-    padding: 0 15px;
+    padding: 0 18px;  /* 10% wider padding: 16px * 1.1 ≈ 18px */
     line-height: 1.2;
 }
 
@@ -444,14 +444,14 @@ html, body {
     }
     
     .sic-workflow-step {
-        max-width: 120px;
+        max-width: 132px;  /* 10% bigger: 120px * 1.1 */
     }
     
     .workflow-step-icon {
-        width: 100px;
-        height: 50px;
-        font-size: 10px;
-        padding: 0 10px;
+        width: 110px;  /* 10% bigger: 100px * 1.1 */
+        height: 55px;   /* 10% bigger: 50px * 1.1 */
+        font-size: 11px;  /* 10% bigger: 10px * 1.1 */
+        padding: 0 11px;  /* 10% bigger: 10px * 1.1 */
     }
     
     .workflow-arrow {

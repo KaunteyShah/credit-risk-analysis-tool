@@ -27,6 +27,7 @@ class SICPredictionApp {
             revenue: null
         };
         this.langGraphStructure = null;
+        this.workflowRunning = false; // Flag to prevent multiple animations
         
         // Start initialization immediately
         this.quickInit();
@@ -1373,6 +1374,14 @@ class SICPredictionApp {
     async startSICWorkflow(result = null) {
         console.log('🔄 startSICWorkflow called with result:', result);
         
+        // Prevent multiple workflows from running simultaneously
+        if (this.workflowRunning) {
+            console.log('⚠️ Workflow already running, skipping...');
+            return;
+        }
+        
+        this.workflowRunning = true;
+        
         // Clear existing workflow and stop any running animations
         $('#sicWorkflowChart').empty();
         $('.workflow-progress-bar').stop(true, true).css('width', '0%');
@@ -1470,6 +1479,9 @@ class SICPredictionApp {
         let currentStep = 0;
         const totalSteps = steps.length;
         
+        // Stop any existing progress bar animations immediately
+        $('.workflow-progress-bar').stop(true, true);
+        
         const processNextAgent = () => {
             if (currentStep >= totalSteps) {
                 // All agents completed, show final results
@@ -1485,6 +1497,9 @@ class SICPredictionApp {
                         improvement_percentage: result?.improvement_percentage,
                         analysis_explanation: result?.analysis_explanation || result?.reasoning
                     });
+                    
+                    // Reset workflow flag when complete
+                    this.workflowRunning = false;
                 }, 500);
                 return;
             }
@@ -1496,9 +1511,9 @@ class SICPredictionApp {
                 .removeClass('idle completed')
                 .addClass('processing');
             
-            // Update progress bar - stop any existing animations first
-            const progress = ((currentStep + 1) / totalSteps) * 100;
-            $('.workflow-progress-bar').stop(true, false).animate({ width: `${progress}%` }, 400);
+            // Update progress bar based on step START (not completion) to prevent back-and-forth
+            const progress = (currentStep / totalSteps) * 100;
+            $('.workflow-progress-bar').stop(true, true).animate({ width: `${progress}%` }, 600, 'swing');
             
             // Mark arrow as active if not the last step - clear any existing active arrows first
             if (currentStep < totalSteps - 1) {
@@ -1513,6 +1528,10 @@ class SICPredictionApp {
                 $(`.workflow-step-icon[data-step="${stepNumber}"]`)
                     .removeClass('processing')
                     .addClass('completed');
+                
+                // Update progress bar to show completion AFTER agent finishes
+                const completionProgress = ((currentStep + 1) / totalSteps) * 100;
+                $('.workflow-progress-bar').stop(true, true).animate({ width: `${completionProgress}%` }, 300, 'swing');
                 
                 currentStep++;
                 
