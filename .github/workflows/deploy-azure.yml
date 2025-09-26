@@ -251,15 +251,12 @@ jobs:
         echo "📊 Application type: $(grep -o 'full.*application\|Flask.*app' main.py | head -1)"
         echo "✅ Full application main.py confirmed for deployment ($(wc -l < main.py) lines)"
 
-    - name: Deploy to Azure App Service (with nuclear cache clear)
-      uses: azure/webapps-deploy@v2
+    - name: Deploy to Azure App Service (simplified)
+      uses: azure/webapps-deploy@v3
       with:
         app-name: ${{ env.APP_SERVICE_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: '.'
-      timeout-minutes: 25
-      continue-on-error: true
-      id: first_deploy
       env:
         SCM_DO_BUILD_DURING_DEPLOYMENT: true
         ENABLE_ORYX_BUILD: true
@@ -270,43 +267,19 @@ jobs:
         SCM_CACHE_CLEAR: true
         SCM_REPOSITORY_CACHE_CLEAR: true
         WEBSITE_LOCAL_CACHE_OPTION: Never
-        WEBSITE_LOCAL_CACHE_SIZEINMB: 0
-        WEBSITE_DYNAMIC_CACHE: 0
-        MSDEPLOY_RENAME_LOCKED_FILES: 1
-        PYTHONPATH: '/home/site/wwwroot'
-        WEBSITES_PORT: 8000
-        APP_COMMAND_LINE: 'python3 main.py'
-      
-    - name: Retry deployment if failed
-      if: steps.first_deploy.outcome == 'failure'
-      run: |
-        echo "⚠️ First deployment attempt failed, retrying in 60 seconds..."
-        sleep 60
-        
-    - name: Second deployment attempt
-      if: steps.first_deploy.outcome == 'failure'
-      uses: azure/webapps-deploy@v2
+    - name: Deploy to Azure App Service (simplified)
+      uses: azure/webapps-deploy@v3
       with:
         app-name: ${{ env.APP_SERVICE_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: '.'
-      timeout-minutes: 25
       env:
         SCM_DO_BUILD_DURING_DEPLOYMENT: true
         ENABLE_ORYX_BUILD: true
         WEBSITES_PORT: 8000
         APP_COMMAND_LINE: 'python3 main.py'
         PYTHON_ENABLE_GUNICORN_MULTIWORKERS: false
-        WEBSITES_ENABLE_APP_SERVICE_STORAGE: false
         WEBSITES_CONTAINER_START_TIME_LIMIT: 900
-        WEBSITE_RUN_FROM_PACKAGE: 0
-        SCM_CACHE_CLEAR: true
-        SCM_REPOSITORY_CACHE_CLEAR: true
-        WEBSITE_LOCAL_CACHE_OPTION: Never
-        WEBSITE_LOCAL_CACHE_SIZEINMB: 0
-        WEBSITE_DYNAMIC_CACHE: 0
-        MSDEPLOY_RENAME_LOCKED_FILES: 1
-        PYTHONPATH: '/home/site/wwwroot'
       
     - name: Wait for deployment completion
       run: |
