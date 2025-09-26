@@ -251,22 +251,7 @@ jobs:
         echo "📊 Application type: $(grep -o 'full.*application\|Flask.*app' main.py | head -1)"
         echo "✅ Full application main.py confirmed for deployment ($(wc -l < main.py) lines)"
 
-    - name: Deploy to Azure App Service (simplified)
-      uses: azure/webapps-deploy@v3
-      with:
-        app-name: ${{ env.APP_SERVICE_NAME }}
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: '.'
-      env:
-        SCM_DO_BUILD_DURING_DEPLOYMENT: true
-        ENABLE_ORYX_BUILD: true
-        PYTHON_ENABLE_GUNICORN_MULTIWORKERS: false
-        WEBSITES_ENABLE_APP_SERVICE_STORAGE: false
-        WEBSITES_CONTAINER_START_TIME_LIMIT: 900
-        WEBSITE_RUN_FROM_PACKAGE: 0
-        SCM_CACHE_CLEAR: true
-        SCM_REPOSITORY_CACHE_CLEAR: true
-        WEBSITE_LOCAL_CACHE_OPTION: Never
+
     - name: Deploy using Kudu API (publish profile method)
       run: |
         echo "🚀 Deploying using Kudu ZIP API to avoid slot issues..."
