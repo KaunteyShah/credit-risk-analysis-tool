@@ -202,12 +202,24 @@ def create_app():
                             logger.info("Generating demo SIC accuracy data...")
                             app.company_data['SIC_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data))
                             app.sic_matcher = None
+                            
+                            # CRITICAL FIX: Add Old_Accuracy and New_Accuracy columns when SIC matcher fails
+                            if 'Old_Accuracy' not in app.company_data.columns:
+                                app.company_data['Old_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data)) * 100
+                            if 'New_Accuracy' not in app.company_data.columns:
+                                app.company_data['New_Accuracy'] = None  # Will be filled when user clicks "Predict SIC"
                     else:
                         logger.warning(f"SIC codes file not found: {sic_file}")
                         # Generate demo accuracy data for Azure deployment
                         logger.info("Generating demo SIC accuracy data...")
                         app.company_data['SIC_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data))
                         app.sic_matcher = None
+                        
+                        # CRITICAL FIX: Add Old_Accuracy and New_Accuracy columns when no SIC file
+                        if 'Old_Accuracy' not in app.company_data.columns:
+                            app.company_data['Old_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data)) * 100
+                        if 'New_Accuracy' not in app.company_data.columns:
+                            app.company_data['New_Accuracy'] = None  # Will be filled when user clicks "Predict SIC"
                     
                     # Add helper columns
                     app.company_data['Needs_Revenue_Update'] = app.company_data['Sales (USD)'].isna()
