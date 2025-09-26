@@ -1,0 +1,9 @@
+<step title="Incoming Request" date="2025-09-16T13:57:53.486" instance="df2788" url="/api/deployments/latest?deployer=GITHUB_ZIP_DEPLOY&amp;time=2025-09-16_13-56-56Z" method="GET" type="request" pid="767,1,22" Host="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" User-Agent="GITHUBACTIONS_DeployWebAppToAzure_4a5a1b673f02fbd359f5f791fff0e4d3e82e3a2733128fe8bf04c072d54f4342" Authorization="Bas..." Content-Type="application/json; charset=utf-8" Cookie="ARRAffinity=df2788fb3e5f96d53e88638b51f78b399174bc066b03447dde3bac5ebbfa91f6;Path=/;HttpOnly;Secure;Domain=credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net; ARRAffinitySameSite=df2788fb3e5f96d53e88638b51f78b399174bc066b03447dde3bac5ebbfa91f6;Path=/;HttpOnly;SameSite=None;Secure;Domain=credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" Content-Length="0" X-ARR-LOG-ID="8a040eee-9979-4179-9ddf-ce9bb96d587a" CLIENT-IP="48.214.53.119:43009" X-SITE-DEPLOYMENT-ID="credit-risk-analysis-prod-app-25h2ya" WAS-DEFAULT-HOSTNAME="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/deployments/latest?deployer=GITHUB_ZIP_DEPLOY&amp;time=2025-09-16_13-56-56Z" X-Client-IP="48.214.53.119" X-Client-Port="43009" >
+  <step title="Cleanup Xml Logs" date="2025-09-16T13:57:53.487" /><!-- duration: 3ms -->
+  <step title="DeploymentService.GetResult" date="2025-09-16T13:57:53.496" >
+    <step title="DeploymentService.GetLatestDeployment" date="2025-09-16T13:57:53.518" >
+      <step title="DeploymentManager.GetResults" date="2025-09-16T13:57:53.520" /><!-- duration: 175ms -->
+    </step><!-- duration: 181ms -->
+  </step><!-- duration: 205ms -->
+  <step title="Outgoing response" date="2025-09-16T13:57:53.710" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 4ms -->
+</step><!-- duration: 255ms -->

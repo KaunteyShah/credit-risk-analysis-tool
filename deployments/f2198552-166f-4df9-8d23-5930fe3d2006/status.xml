@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>f2198552-166f-4df9-8d23-5930fe3d2006</id>
+  <author>N/A</author>
+  <deployer>GITHUB_ZIP_DEPLOY</deployer>
+  <authorEmail>N/A</authorEmail>
+  <message>{"type":"deployment","sha":"506dae56a818adaed7986a33ce53f3633f10c71d","repoName":"KaunteyShah/credit-risk-analysis-tool","actor":"KaunteyShah","slotName":"production","commitMessage":"Revert API columns back to expected Old_Accuracy, New_Accuracy, New_SIC format"}</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-09-25T23:57:05.3630458Z</lastSuccessEndTime>
+  <receivedTime>2025-09-25T23:56:51.0315701Z</receivedTime>
+  <startTime>2025-09-25T23:56:52.2629555Z</startTime>
+  <endTime>2025-09-25T23:57:05.3630458Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>True</is_readonly>
+  <buildSummary />
+</deployment>

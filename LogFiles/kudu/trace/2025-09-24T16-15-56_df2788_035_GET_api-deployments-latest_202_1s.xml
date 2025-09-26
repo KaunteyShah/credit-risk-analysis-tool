@@ -1,0 +1,11 @@
+<step title="Incoming Request" date="2025-09-24T16:15:56.595" instance="df2788" url="/api/deployments/latest?deployer=GITHUB_ZIP_DEPLOY&amp;time=2025-09-24_16-14-21Z" method="GET" type="request" pid="768,1,21" Host="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" User-Agent="GITHUBACTIONS_DeployWebAppToAzure_4a5a1b673f02fbd359f5f791fff0e4d3e82e3a2733128fe8bf04c072d54f4342" Authorization="Bas..." Content-Type="application/json; charset=utf-8" Cookie="ARRAffinity=df2788fb3e5f96d53e88638b51f78b399174bc066b03447dde3bac5ebbfa91f6;Path=/;HttpOnly;Secure;Domain=credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net; ARRAffinitySameSite=df2788fb3e5f96d53e88638b51f78b399174bc066b03447dde3bac5ebbfa91f6;Path=/;HttpOnly;SameSite=None;Secure;Domain=credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" Content-Length="0" X-ARR-LOG-ID="5302d49e-5115-40f5-9282-867f8f1a1b08" CLIENT-IP="40.116.92.113:22548" X-SITE-DEPLOYMENT-ID="credit-risk-analysis-prod-app-25h2ya" WAS-DEFAULT-HOSTNAME="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/deployments/latest?deployer=GITHUB_ZIP_DEPLOY&amp;time=2025-09-24_16-14-21Z" X-Client-IP="40.116.92.113" X-Client-Port="22548" >
+  <step title="Cleanup Xml Logs" date="2025-09-24T16:15:56.599" >
+    <step title="Cleanup Infos" date="2025-09-24T16:15:56.619" totalFiles="826" totalCleanup="666" /><!-- duration: 6ms -->
+  </step><!-- duration: 30ms -->
+  <step title="DeploymentService.GetResult" date="2025-09-24T16:15:56.636" >
+    <step title="DeploymentService.GetLatestDeployment" date="2025-09-24T16:15:56.638" >
+      <step title="DeploymentManager.GetResults" date="2025-09-24T16:15:56.644" /><!-- duration: 756ms -->
+    </step><!-- duration: 763ms -->
+  </step><!-- duration: 767ms -->
+  <step title="Outgoing response" date="2025-09-24T16:15:57.414" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 2ms -->
+</step><!-- duration: 822ms -->

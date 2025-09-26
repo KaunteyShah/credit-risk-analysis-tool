@@ -1,0 +1,11 @@
+<step title="Incoming Request" date="2025-09-23T18:25:06.851" instance="df2788" url="/api/deployments/latest?deployer=GITHUB_ZIP_DEPLOY&amp;time=2025-09-23_18-24-35Z" method="GET" type="request" pid="768,1,69" Host="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" User-Agent="GITHUBACTIONS_DeployWebAppToAzure_4a5a1b673f02fbd359f5f791fff0e4d3e82e3a2733128fe8bf04c072d54f4342" Authorization="Bas..." Content-Type="application/json; charset=utf-8" Cookie="ARRAffinity=df2788fb3e5f96d53e88638b51f78b399174bc066b03447dde3bac5ebbfa91f6;Path=/;HttpOnly;Secure;Domain=credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net; ARRAffinitySameSite=df2788fb3e5f96d53e88638b51f78b399174bc066b03447dde3bac5ebbfa91f6;Path=/;HttpOnly;SameSite=None;Secure;Domain=credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" Content-Length="0" X-ARR-LOG-ID="3c5f61f9-9f46-4031-8bb8-c190cc6f6883" CLIENT-IP="172.182.202.202:7233" X-SITE-DEPLOYMENT-ID="credit-risk-analysis-prod-app-25h2ya" WAS-DEFAULT-HOSTNAME="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/deployments/latest?deployer=GITHUB_ZIP_DEPLOY&amp;time=2025-09-23_18-24-35Z" X-Client-IP="172.182.202.202" X-Client-Port="7233" >
+  <step title="Cleanup Xml Logs" date="2025-09-23T18:25:06.852" >
+    <step title="Cleanup Infos" date="2025-09-23T18:25:06.878" totalFiles="419" totalCleanup="259" /><!-- duration: 5ms -->
+  </step><!-- duration: 34ms -->
+  <step title="DeploymentService.GetResult" date="2025-09-23T18:25:06.889" >
+    <step title="DeploymentService.GetLatestDeployment" date="2025-09-23T18:25:06.891" >
+      <step title="DeploymentManager.GetResults" date="2025-09-23T18:25:06.892" /><!-- duration: 560ms -->
+    </step><!-- duration: 563ms -->
+  </step><!-- duration: 571ms -->
+  <step title="Outgoing response" date="2025-09-23T18:25:07.463" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 5ms -->
+</step><!-- duration: 621ms -->

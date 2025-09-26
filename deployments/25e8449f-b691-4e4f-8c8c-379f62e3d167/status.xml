@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>25e8449f-b691-4e4f-8c8c-379f62e3d167</id>
+  <author>N/A</author>
+  <deployer>GITHUB_ZIP_DEPLOY</deployer>
+  <authorEmail>N/A</authorEmail>
+  <message>{"type":"deployment","sha":"4c9e1bbd15dba3480732ab71de3b7d85abaf0582","repoName":"KaunteyShah/credit-risk-analysis-tool","actor":"KaunteyShah","slotName":"production","commitMessage":"feat: Add comprehensive company details modal with AI reasoning\n\n- Add new API endpoint /api/company_details/&lt;index&gt; with AI reasoning\n- Add AI Reasoning Agent using OpenAI API with fallback logic\n- Add info buttons to company table for detailed modal view\n- Update modal to show company info, business metrics, address, description\n- Position UK SIC code prominently with Old Accuracy (removed New Accuracy)\n- Enhanced AI reasoning explains why accuracy score is what it is\n- Use only Sample_data2.csv data (removed updated_sic_predictions.csv refs)\n- Add real API key integration via Azure Key Vault\n- Add OpenAI dependency to requirements files\n- Improve performance with timeout handling and fallback reasoning\n\nFixes modal loading performance and provides comprehensive company analysis"}</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-09-25T23:50:18.5827113Z</lastSuccessEndTime>
+  <receivedTime>2025-09-25T23:49:49.1304922Z</receivedTime>
+  <startTime>2025-09-25T23:49:50.3811509Z</startTime>
+  <endTime>2025-09-25T23:50:18.5827113Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>True</is_readonly>
+  <buildSummary />
+</deployment>

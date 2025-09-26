@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>c7324e4f-da94-44f7-a5b5-0af4eecd63ce</id>
+  <author>N/A</author>
+  <deployer>GITHUB_ZIP_DEPLOY</deployer>
+  <authorEmail>N/A</authorEmail>
+  <message>{"type":"deployment","sha":"df3cc0d5f0af105ab2579de413b188c7be9d3f9e","repoName":"KaunteyShah/credit-risk-analysis-tool","actor":"KaunteyShah","slotName":"production","commitMessage":"Fix API data endpoint - use correct CSV column names for proper data display"}</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-09-25T23:53:51.6639705Z</lastSuccessEndTime>
+  <receivedTime>2025-09-25T23:53:38.166116Z</receivedTime>
+  <startTime>2025-09-25T23:53:39.3890709Z</startTime>
+  <endTime>2025-09-25T23:53:51.6639705Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>True</is_readonly>
+  <buildSummary />
+</deployment>

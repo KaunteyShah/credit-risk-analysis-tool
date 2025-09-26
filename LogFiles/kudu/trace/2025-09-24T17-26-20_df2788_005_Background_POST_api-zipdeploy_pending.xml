@@ -1,0 +1,39 @@
+<step title="BackgroundTrace" date="2025-09-24T17:26:20.861" instance="df2788" url="/api/zipdeploy" method="POST" >
+  <step title="Cleanup Xml Logs" date="2025-09-24T17:26:20.862" >
+    <step title="Cleanup Infos" date="2025-09-24T17:26:20.874" totalFiles="956" totalCleanup="796" /><!-- duration: 3ms -->
+  </step><!-- duration: 17ms -->
+  <step title="Creating temporary deployment - FetchDeploymentManager" date="2025-09-24T17:26:20.914" /><!-- duration: 1ms -->
+  <step title="Creating temporary deployment" date="2025-09-24T17:26:20.917" /><!-- duration: 30ms -->
+  <step title="Performing fetch based deployment" date="2025-09-24T17:26:20.964" >
+    <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file /tmp/zipdeploy/8f55991e-07c8-48ff-b137-2c62bbf6f016.zip (0.90 MB) to /tmp/zipdeploy/extracted" date="2025-09-24T17:26:22.079" >
+      <step title="ChmodRecursive Process exited with total time taken in ms: 18" date="2025-09-24T17:26:22.143" /><!-- duration: 2ms -->
+    </step><!-- duration: 72ms -->
+    <step title="Deployment timer started" date="2025-09-24T17:26:24.157" >
+      <step title="DeploymentManager.Deploy(id:011e41d3-7b51-454c-8737-28af992c58c2)" date="2025-09-24T17:26:24.160" >
+        <step title="Collecting changeset information" date="2025-09-24T17:26:24.167" /><!-- duration: 54ms -->
+        <step title="Updating submodules" date="2025-09-24T17:26:24.227" /><!-- duration: 1072ms -->
+        <step title="Determining deployment builder" date="2025-09-24T17:26:25.452" >
+          <step title="Builder is OryxBuilder" date="2025-09-24T17:26:25.458" /><!-- duration: 1ms -->
+        </step><!-- duration: 9ms -->
+        <step title="PreDeployment: context.CleanOutputPath False" date="2025-09-24T17:26:25.498" >
+          <step title="PreDeployment: context.OutputPath /home/site/wwwroot" date="2025-09-24T17:26:25.570" >
+            <step title="Building" date="2025-09-24T17:26:25.661" >
+              <step title="Executing external process" date="2025-09-24T17:26:25.855" type="process" path="bash" arguments="-c &quot;oryx build /tmp/zipdeploy/extracted -o /home/site/wwwroot --platform python --platform-version 3.11 -p virtualenv_name=antenv --log-file /tmp/build-debug.log  -i /tmp/8ddfb8f7d202cca --compress-destination-dir | tee /tmp/oryx-build.log ; exit $PIPESTATUS &quot;" /><!-- duration: 37253ms -->
+              <step title="Using PythonDeploymentLogParser" date="2025-09-24T17:27:03.218" /><!-- duration: 2ms -->
+              <step title="Triggering recycle (preview mode disabled)." date="2025-09-24T17:27:03.588" /><!-- duration: 2ms -->
+              <step title="Modified file to trigger a restart of the app container." date="2025-09-24T17:27:03.604" /><!-- duration: 2ms -->
+              <step title="Skip function trigger and logicapp sync because function is not enabled." date="2025-09-24T17:27:03.616" /><!-- duration: 2ms -->
+              <step title="Purge deployment items" date="2025-09-24T17:27:04.389" >
+                <step title="Remove temp-65e5, Failed, received at 09/24/2025 17:26:20" date="2025-09-24T17:27:04.424" /><!-- duration: 2ms -->
+                <step title="Remove 6857da8d-, Success, received at 09/24/2025 16:14:24" date="2025-09-24T17:27:04.461" /><!-- duration: 1ms -->
+              </step><!-- duration: 75ms -->
+            </step><!-- duration: 38849ms -->
+          </step><!-- duration: 38941ms -->
+          <step title="Cleaning up temp files" date="2025-09-24T17:27:04.512" /><!-- duration: 1580ms -->
+          <step title="Cleaning up temp files" date="2025-09-24T17:27:06.095" /><!-- duration: 502ms -->
+          <step title="Reloading status file with latest updates" date="2025-09-24T17:27:06.618" >
+            <step title="WebHooksManager.PublishEventAsync: PostDeployment" date="2025-09-24T17:27:06.620" /><!-- duration: 23ms -->
+          </step><!-- duration: 27ms -->
+          <step title="Cleaning up temporary deployment - fetch deployment was successful" date="2025-09-24T17:27:06.648" /><!-- duration: 1ms -->
+        </step><!-- duration: 41176ms -->
+      </step><!-- duration: 42518ms -->

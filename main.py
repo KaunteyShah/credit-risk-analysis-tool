@@ -67,7 +67,7 @@ def create_main_app():
                 return jsonify({
                     'status': 'error',
                     'message': 'Main Flask app failed to load',
-                    'error': str(flask_error),
+                    'error': str(e),
                     'environment': 'azure' if is_azure else 'local',
                     'mode': 'minimal_fallback'
                 })
@@ -76,7 +76,7 @@ def create_main_app():
             def health():
                 return jsonify({
                     'status': 'error',
-                    'error': str(flask_error),
+                    'error': str(e),
                     'environment': 'azure' if is_azure else 'local',
                     'mode': 'minimal_fallback'
                 })

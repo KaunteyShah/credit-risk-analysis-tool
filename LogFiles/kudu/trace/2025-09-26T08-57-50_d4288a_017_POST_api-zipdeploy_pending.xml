@@ -1,0 +1,28 @@
+<step title="Incoming Request" date="2025-09-26T08:57:50.045" instance="d4288a" url="/api/zipdeploy?isAsync=true&amp;deployer=GITHUB_ZIP_DEPLOY&amp;message=%7B%22type%22%3A%22deployment%22%2C%22sha%22%3A%220cb8b4a210539d9879ccb779eaa69541464d425b%22%2C%22repoName%22%3A%22KaunteyShah%2Fcredit-risk-analysis-tool%22%2C%22actor%22%3A%22KaunteyShah%22%2C%22slotName%22%3A%22production%22%2C%22commitMessage%22%3A%22Force%20redeploy%3A%20Clear%20Azure%20cache%20and%20memory%20management%22%7D" method="POST" type="request" pid="768,1,5" Host="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" User-Agent="GITHUBACTIONS_DeployWebAppToAzure_4a5a1b673f02fbd359f5f791fff0e4d3e82e3a2733128fe8bf04c072d54f4342" Authorization="Bas..." Content-Type="application/octet-stream" Cookie="ARRAffinity=d4288a76a30685b82d1a125a71ab74070c0980c4c374e0ab9d1514403840ca6a;Path=/;HttpOnly;Secure;Domain=credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net; ARRAffinitySameSite=d4288a76a30685b82d1a125a71ab74070c0980c4c374e0ab9d1514403840ca6a;Path=/;HttpOnly;SameSite=None;Secure;Domain=credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" Transfer-Encoding="chunked" X-ARR-LOG-ID="77ba1777-d557-4a04-864d-691081807675" CLIENT-IP="52.165.251.164:44032" X-SITE-DEPLOYMENT-ID="credit-risk-analysis-prod-app-25h2ya" WAS-DEFAULT-HOSTNAME="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/zipdeploy?isAsync=true&amp;deployer=GITHUB_ZIP_DEPLOY&amp;message=%7B%22type%22%3A%22deployment%22%2C%22sha%22%3A%220cb8b4a210539d9879ccb779eaa69541464d425b%22%2C%22repoName%22%3A%22KaunteyShah%2Fcredit-risk-analysis-tool%22%2C%22actor%22%3A%22KaunteyShah%22%2C%22slotName%22%3A%22production%22%2C%22commitMessage%22%3A%22Force%20redeploy%3A%20Clear%20Azure%20cache%20and%20memory%20management%22%7D" X-Client-IP="52.165.251.164" X-Client-Port="44032" >
+  <step title="Cleanup Xml Logs" date="2025-09-26T08:57:50.046" >
+    <step title="Cleanup Infos" date="2025-09-26T08:57:50.085" totalFiles="1792" totalCleanup="1632" /><!-- duration: 3ms -->
+  </step><!-- duration: 44ms -->
+  <step title="ZipPushDeploy" date="2025-09-26T08:57:50.109" >
+    <step title="ZipDeploy. Extract zip. Remote build." date="2025-09-26T08:57:50.112" /><!-- duration: 3ms -->
+    <step title="None repository commit" date="2025-09-26T08:57:50.118" >
+      <step title="Commit id: f086e7b2-1167-403c-9a7f-7ad244c76c94" date="2025-09-26T08:57:50.121" Message="N/A" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 4ms -->
+    </step><!-- duration: 10ms -->
+    <step title="Starting PushDeployAsync" date="2025-09-26T08:57:50.156" /><!-- duration: 3ms -->
+    <step title="Writing artifact to /tmp/zipdeploy/4bd6829b-2bc7-4f9e-b466-a1804e18d796.zip" date="2025-09-26T08:57:50.164" >
+      <step title="Writing multipart request body to /tmp/zipdeploy/4bd6829b-2bc7-4f9e-b466-a1804e18d796.zip" date="2025-09-26T08:57:50.167" /><!-- duration: 2ms -->
+    </step><!-- duration: 378ms -->
+    <step title="Removing previous build artifact&apos;s manifest file" date="2025-09-26T08:57:50.544" >
+      <step title="None repository commit" date="2025-09-26T08:57:50.547" >
+        <step title="Commit id: f086e7b2-1167-403c-9a7f-7ad244c76c94" date="2025-09-26T08:57:50.550" Message="N/A" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 3ms -->
+      </step><!-- duration: 8ms -->
+      <step title="Start deployment in the background" date="2025-09-26T08:57:50.557" >
+        <step title="None repository commit" date="2025-09-26T08:57:50.563" >
+          <step title="Commit id: f086e7b2-1167-403c-9a7f-7ad244c76c94" date="2025-09-26T08:57:50.565" Message="N/A" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 2ms -->
+        </step><!-- duration: 5ms -->
+        <step title="Acquiring Deployment Lock" date="2025-09-26T08:57:50.578" /><!-- duration: 2ms -->
+        <step title="Cannot Acquire Deployment Lock already held" date="2025-09-26T08:57:50.582" /><!-- duration: 2ms -->
+      </step><!-- duration: 65ms -->
+      <step title="There is a deployment currently in progress. Please try again when it completes." date="2025-09-26T08:57:50.626" /><!-- duration: 2ms -->
+    </step><!-- duration: 85ms -->
+    <step title="Outgoing response" date="2025-09-26T08:57:50.631" type="response" statusCode="409" statusText="Conflict" /><!-- duration: 2ms -->
+  </step><!-- duration: 528ms -->

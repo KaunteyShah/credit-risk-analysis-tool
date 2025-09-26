@@ -1,0 +1,18 @@
+<step title="Incoming Request" date="2025-09-25T21:31:49.525" instance="d4288a" url="/api/zipdeploy?isAsync=true&amp;deployer=GITHUB_ZIP_DEPLOY&amp;message=%7B%22type%22%3A%22deployment%22%2C%22sha%22%3A%22c26766eb683c98205d6ba1705aabeb6f8efa1cd1%22%2C%22repoName%22%3A%22KaunteyShah%2Fcredit-risk-analysis-tool%22%2C%22actor%22%3A%22KaunteyShah%22%2C%22slotName%22%3A%22production%22%2C%22commitMessage%22%3A%22Fix%20LangGraph%20workflow%20node%20naming%20conflict%20-%20rename%20workflow_summary%20node%20to%20summary_generation%22%7D" method="POST" type="request" pid="769,1,3" Host="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" User-Agent="GITHUBACTIONS_DeployWebAppToAzure_4a5a1b673f02fbd359f5f791fff0e4d3e82e3a2733128fe8bf04c072d54f4342" Authorization="Bas..." Content-Type="application/octet-stream" Cookie="ARRAffinity=d4288a76a30685b82d1a125a71ab74070c0980c4c374e0ab9d1514403840ca6a;Path=/;HttpOnly;Secure;Domain=credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net; ARRAffinitySameSite=d4288a76a30685b82d1a125a71ab74070c0980c4c374e0ab9d1514403840ca6a;Path=/;HttpOnly;SameSite=None;Secure;Domain=credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" Transfer-Encoding="chunked" X-ARR-LOG-ID="023e46d7-5513-46bb-9fb3-39e18b0ba217" CLIENT-IP="172.215.209.245:57344" X-SITE-DEPLOYMENT-ID="credit-risk-analysis-prod-app-25h2ya" WAS-DEFAULT-HOSTNAME="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/zipdeploy?isAsync=true&amp;deployer=GITHUB_ZIP_DEPLOY&amp;message=%7B%22type%22%3A%22deployment%22%2C%22sha%22%3A%22c26766eb683c98205d6ba1705aabeb6f8efa1cd1%22%2C%22repoName%22%3A%22KaunteyShah%2Fcredit-risk-analysis-tool%22%2C%22actor%22%3A%22KaunteyShah%22%2C%22slotName%22%3A%22production%22%2C%22commitMessage%22%3A%22Fix%20LangGraph%20workflow%20node%20naming%20conflict%20-%20rename%20workflow_summary%20node%20to%20summary_generation%22%7D" X-Client-IP="172.215.209.245" X-Client-Port="57344" >
+  <step title="ZipPushDeploy" date="2025-09-25T21:31:49.552" >
+    <step title="ZipDeploy. Extract zip. Remote build." date="2025-09-25T21:31:49.555" /><!-- duration: 2ms -->
+    <step title="None repository commit" date="2025-09-25T21:31:49.562" >
+      <step title="Commit id: 1f01c2f6-ba52-4b9d-a9c4-55f3c7bbb0c1" date="2025-09-25T21:31:49.577" Message="N/A" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 17ms -->
+    </step><!-- duration: 34ms -->
+    <step title="Starting PushDeployAsync" date="2025-09-25T21:31:49.597" /><!-- duration: 2ms -->
+    <step title="Writing artifact to /tmp/zipdeploy/3826e1c2-a075-48f4-bbc7-7ef91c9338cd.zip" date="2025-09-25T21:31:49.606" >
+      <step title="Writing multipart request body to /tmp/zipdeploy/3826e1c2-a075-48f4-bbc7-7ef91c9338cd.zip" date="2025-09-25T21:31:49.608" /><!-- duration: 2ms -->
+    </step><!-- duration: 517ms -->
+    <step title="Removing previous build artifact&apos;s manifest file" date="2025-09-25T21:31:50.127" >
+      <step title="Start deployment in the background" date="2025-09-25T21:31:50.134" >
+        <step title="Acquiring Deployment Lock" date="2025-09-25T21:31:50.142" /><!-- duration: 2ms -->
+        <step title="Acquired Deployment Lock" date="2025-09-25T21:31:50.167" /><!-- duration: 2ms -->
+      </step><!-- duration: 78ms -->
+    </step><!-- duration: 89ms -->
+    <step title="Outgoing response" date="2025-09-25T21:31:50.222" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 4ms -->
+  </step><!-- duration: 675ms -->

@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>ff32559a-6276-40fa-aed2-56a6070e471f</id>
+  <author>N/A</author>
+  <deployer>GITHUB_ZIP_DEPLOY</deployer>
+  <authorEmail>N/A</authorEmail>
+  <message>{"type":"deployment","sha":"1b16a21aa346b2c79867910db63b33c86286b604","repoName":"KaunteyShah/credit-risk-analysis-tool","actor":"KaunteyShah","slotName":"production","commitMessage":"Complete UI overhaul: EY branding, workflow fixes, and enhanced UX\n\n✨ EY Branding Integration:\n- Header changed to 'EY - Data Risk Modernisation - SIC Code Prediction System'\n- Navbar background changed from blue to EY yellow (#ffe600)\n- All text on yellow backgrounds now uses black for optimal contrast\n- Card headers and modal headers updated to EY yellow theme\n\n🔧 Workflow Visualization Improvements:\n- Fixed arrow spacing to prevent touching workflow nodes\n- Arrows positioned at right: -100px with 80px width for better visual balance\n- Simplified progress bar animation to single smooth progression\n- Eliminated dual-animation causing back-and-forth movement\n- Progress bar now animates directly to completion (1200ms duration)\n\n🎨 UI/UX Enhancements:\n- Removed blue header box from 'Real Agent Prediction' section\n- Creates more space and cleaner appearance\n- Navigation tabs now use EY yellow accents\n- Consistent black text throughout yellow-themed sections\n\n📱 Technical Improvements:\n- C"}</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-09-26T01:08:46.6628946Z</lastSuccessEndTime>
+  <receivedTime>2025-09-26T01:08:32.4152594Z</receivedTime>
+  <startTime>2025-09-26T01:08:33.679627Z</startTime>
+  <endTime>2025-09-26T01:08:46.6628946Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>True</is_readonly>
+  <buildSummary />
+</deployment>

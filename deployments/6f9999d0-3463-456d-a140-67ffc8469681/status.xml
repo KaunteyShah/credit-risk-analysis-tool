@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>6f9999d0-3463-456d-a140-67ffc8469681</id>
+  <author>N/A</author>
+  <deployer>GITHUB_ZIP_DEPLOY</deployer>
+  <authorEmail>N/A</authorEmail>
+  <message>{"type":"deployment","sha":"63b25f446b16b26c28d3cf1c732061efa8f1bbd3","repoName":"KaunteyShah/credit-risk-analysis-tool","actor":"KaunteyShah","slotName":"production","commitMessage":"Fix progress bar animation - replace jQuery with pure CSS transitions"}</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-09-26T01:41:15.843157Z</lastSuccessEndTime>
+  <receivedTime>2025-09-26T01:41:01.279743Z</receivedTime>
+  <startTime>2025-09-26T01:41:02.5653698Z</startTime>
+  <endTime>2025-09-26T01:41:15.843157Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>True</is_readonly>
+  <buildSummary />
+</deployment>

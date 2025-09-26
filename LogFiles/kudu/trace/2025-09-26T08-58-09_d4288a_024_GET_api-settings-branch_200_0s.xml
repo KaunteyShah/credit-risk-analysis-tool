@@ -1,0 +1,6 @@
+<step title="Incoming Request" date="2025-09-26T08:58:09.265" instance="d4288a" url="/api/settings/branch" method="GET" type="request" pid="768,1,21" Host="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" User-Agent="Azure-WebSites-Controller/105.0.7.92" Authorization="Bas..." x-ms-request-id="17139984-3c61-4531-975a-e0f392a537db" X-ARR-LOG-ID="17139984-3c61-4531-975a-e0f392a537db" CLIENT-IP="51.140.210.103:5185" X-SITE-DEPLOYMENT-ID="credit-risk-analysis-prod-app-25h2ya" WAS-DEFAULT-HOSTNAME="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" X-MS-PLATFORM-INTERNAL="True" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/settings/branch" X-Client-IP="51.140.210.103" X-Client-Port="5185" >
+  <step title="Cleanup Xml Logs" date="2025-09-26T08:58:09.267" >
+    <step title="Cleanup Infos" date="2025-09-26T08:58:09.293" totalFiles="1798" totalCleanup="1638" /><!-- duration: 5ms -->
+  </step><!-- duration: 34ms -->
+  <step title="Outgoing response" date="2025-09-26T08:58:09.303" type="response" statusCode="200" statusText="OK" /><!-- duration: 16ms -->
+</step><!-- duration: 56ms -->

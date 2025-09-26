@@ -1,0 +1,9 @@
+<step title="Incoming Request" date="2025-09-26T08:56:37.258" instance="d4288a" url="/api/settings" method="POST" type="request" pid="768,1,57" Host="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" User-Agent="Azure-WebSites-Controller/105.0.7.92" Authorization="Bas..." Content-Type="application/json" Expect="100-continue" Content-Length="24" x-ms-request-id="71db10b5-e7d7-4c67-a17a-3d9b3a48a426" X-ARR-LOG-ID="71db10b5-e7d7-4c67-a17a-3d9b3a48a426" CLIENT-IP="51.140.210.103:5185" X-SITE-DEPLOYMENT-ID="credit-risk-analysis-prod-app-25h2ya" WAS-DEFAULT-HOSTNAME="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" X-MS-PLATFORM-INTERNAL="True" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/settings" X-Client-IP="51.140.210.103" X-Client-Port="5185" >
+  <step title="Cleanup Xml Logs" date="2025-09-26T08:56:37.263" >
+    <step title="Cleanup Infos" date="2025-09-26T08:56:37.287" totalFiles="1770" totalCleanup="1610" /><!-- duration: 4ms -->
+  </step><!-- duration: 30ms -->
+  <step title="Acquiring Deployment Lock" date="2025-09-26T08:56:37.749" /><!-- duration: 2ms -->
+  <step title="Acquired Deployment Lock" date="2025-09-26T08:56:37.793" /><!-- duration: 2ms -->
+  <step title="Releasing Deployment Lock" date="2025-09-26T08:56:37.862" /><!-- duration: 3ms -->
+  <step title="Outgoing response" date="2025-09-26T08:56:37.875" type="response" statusCode="204" statusText="NoContent" /><!-- duration: 2ms -->
+</step><!-- duration: 621ms -->

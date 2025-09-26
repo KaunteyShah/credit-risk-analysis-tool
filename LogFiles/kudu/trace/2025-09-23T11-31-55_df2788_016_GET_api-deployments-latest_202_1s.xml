@@ -1,0 +1,11 @@
+<step title="Incoming Request" date="2025-09-23T11:31:55.621" instance="df2788" url="/api/deployments/latest?deployer=GITHUB_ZIP_DEPLOY&amp;time=2025-09-23_11-31-30Z" method="GET" type="request" pid="768,1,60" Host="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" User-Agent="GITHUBACTIONS_DeployWebAppToAzure_4a5a1b673f02fbd359f5f791fff0e4d3e82e3a2733128fe8bf04c072d54f4342" Authorization="Bas..." Content-Type="application/json; charset=utf-8" Cookie="ARRAffinity=df2788fb3e5f96d53e88638b51f78b399174bc066b03447dde3bac5ebbfa91f6;Path=/;HttpOnly;Secure;Domain=credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net; ARRAffinitySameSite=df2788fb3e5f96d53e88638b51f78b399174bc066b03447dde3bac5ebbfa91f6;Path=/;HttpOnly;SameSite=None;Secure;Domain=credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" Content-Length="0" X-ARR-LOG-ID="676d2dac-7a2e-4637-aabe-9020f1c0385b" CLIENT-IP="128.24.161.39:26680" X-SITE-DEPLOYMENT-ID="credit-risk-analysis-prod-app-25h2ya" WAS-DEFAULT-HOSTNAME="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/deployments/latest?deployer=GITHUB_ZIP_DEPLOY&amp;time=2025-09-23_11-31-30Z" X-Client-IP="128.24.161.39" X-Client-Port="26680" >
+  <step title="Cleanup Xml Logs" date="2025-09-23T11:31:55.623" >
+    <step title="Cleanup Infos" date="2025-09-23T11:31:55.627" totalFiles="249" totalCleanup="89" /><!-- duration: 4ms -->
+  </step><!-- duration: 10ms -->
+  <step title="DeploymentService.GetResult" date="2025-09-23T11:31:55.636" >
+    <step title="DeploymentService.GetLatestDeployment" date="2025-09-23T11:31:55.637" >
+      <step title="DeploymentManager.GetResults" date="2025-09-23T11:31:55.638" /><!-- duration: 516ms -->
+    </step><!-- duration: 520ms -->
+  </step><!-- duration: 524ms -->
+  <step title="Outgoing response" date="2025-09-23T11:31:56.162" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 3ms -->
+</step><!-- duration: 560ms -->

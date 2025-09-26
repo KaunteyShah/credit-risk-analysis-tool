@@ -1,0 +1,5 @@
+<step title="Incoming Request" date="2025-09-24T17:14:54.631" instance="df2788" url="/logstream" method="GET" type="request" pid="767,1,7" Host="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" User-Agent="AZURECLI/2.76.0 (HOMEBREW)" Accept-Encoding="identity" Authorization="Bas..." x-ms-client-request-id="f58cfa56-9969-11f0-995e-02213740a574" X-ARR-LOG-ID="f58cfa56-9969-11f0-995e-02213740a574" CLIENT-IP="82.7.68.78:50574" X-SITE-DEPLOYMENT-ID="credit-risk-analysis-prod-app-25h2ya" WAS-DEFAULT-HOSTNAME="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/logstream" X-Client-IP="82.7.68.78" X-Client-Port="50574" >
+  <step title="LogStreamHandlerMiddleware.Invoke" date="2025-09-24T17:14:54.638" /><!-- duration: 769ms -->
+  <step title="Error occurred" date="2025-09-24T17:15:55.405" type="error" text="LogStreamManager: ProcessRequest end" /><!-- duration: 2ms -->
+  <step title="Outgoing response" date="2025-09-24T17:15:55.412" type="response" statusCode="200" statusText="OK" /><!-- duration: 2ms -->
+</step><!-- duration: 60783ms -->

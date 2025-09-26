@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>0cb8b4a210539d9879ccb779eaa69541464d425b</id>
+  <author>KaunteyShah</author>
+  <deployer>GitHub</deployer>
+  <authorEmail>kauntey.shah@uk.ey.com</authorEmail>
+  <message>Force redeploy: Clear Azure cache and memory management</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-09-26T08:57:49.6268285Z</lastSuccessEndTime>
+  <receivedTime>2025-09-26T08:56:54.1852487Z</receivedTime>
+  <startTime>2025-09-26T08:56:55.4683315Z</startTime>
+  <endTime>2025-09-26T08:57:49.6268285Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>False</is_readonly>
+  <buildSummary />
+</deployment>
