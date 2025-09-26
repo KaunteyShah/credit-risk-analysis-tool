@@ -55,6 +55,98 @@ class SICPredictionApp {
         $(document).on('click', '.btn-refresh, #refreshBtn', () => {
             this.loadDataDirectly();
         });
+        
+        // Demo mode toggle
+        this.initializeDemoModeToggle();
+    }
+
+    async initializeDemoModeToggle() {
+        try {
+            // Load current demo mode status
+            const response = await fetch('/api/demo-mode-status');
+            if (response.ok) {
+                const status = await response.json();
+                this.updateDemoModeUI(status.demo_mode, status.mode_description);
+            } else {
+                console.warn('Failed to load demo mode status');
+                this.updateDemoModeUI(false, 'Real Fuzzy Matching');
+            }
+            
+            // Setup toggle event listener
+            $('#demoModeToggle').on('change', (e) => {
+                const isDemo = e.target.checked;
+                this.toggleDemoMode(isDemo);
+            });
+            
+        } catch (error) {
+            console.error('Error initializing demo mode toggle:', error);
+            this.updateDemoModeUI(false, 'Real Fuzzy Matching');
+        }
+    }
+
+    updateDemoModeUI(isDemoMode, description) {
+        const toggle = $('#demoModeToggle');
+        const label = $('#demoModeLabel');
+        const desc = $('#demoModeDescription');
+        
+        toggle.prop('checked', isDemoMode);
+        label.text(isDemoMode ? 'Demo Mode' : 'Real Fuzzy Matching');
+        desc.text(description || 'Toggle between demo simulation and real fuzzy matching');
+        
+        // Update icon
+        const icon = label.parent().find('i');
+        icon.removeClass('fas fa-toggle-on fas fa-toggle-off')
+            .addClass(isDemoMode ? 'fas fa-toggle-on text-warning' : 'fas fa-toggle-off text-success');
+    }
+
+    async toggleDemoMode(isDemoMode) {
+        try {
+            // Show confirmation dialog
+            const modeText = isDemoMode ? 'Demo Mode' : 'Real Fuzzy Matching';
+            const confirmed = confirm(
+                `Switch to ${modeText}?\n\n` +
+                (isDemoMode ? 
+                    'Demo Mode uses simulated predictions for demonstration purposes.' :
+                    'Real Fuzzy Matching uses advanced algorithms with actual SIC code database.')
+            );
+            
+            if (!confirmed) {
+                // Revert toggle state
+                $('#demoModeToggle').prop('checked', !isDemoMode);
+                return;
+            }
+            
+            // Update demo mode via API
+            const response = await fetch('/api/toggle-demo-mode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    demo_mode: isDemoMode
+                })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                this.updateDemoModeUI(result.demo_mode, result.message);
+                
+                // Log the change
+                this.logActivity('System', `Switched to ${result.demo_mode ? 'Demo Mode' : 'Real Fuzzy Matching'}`, 'info');
+                
+                // Show success notification
+                this.showNotification(result.message, 'success');
+            } else {
+                throw new Error('Failed to toggle demo mode');
+            }
+            
+        } catch (error) {
+            console.error('Error toggling demo mode:', error);
+            
+            // Revert toggle state on error
+            $('#demoModeToggle').prop('checked', !isDemoMode);
+            this.showNotification('Failed to change demo mode: ' + error.message, 'error');
+        }
     }
 
     async loadDataDirectly() {
@@ -335,6 +427,34 @@ class SICPredictionApp {
 
     toggleSidebar() {
         $('#filterSidebar').toggleClass('collapsed');
+    }
+
+    showNotification(message, type = 'info') {
+        // Create notification element
+        const alertClass = type === 'success' ? 'alert-success' : 
+                          type === 'error' ? 'alert-danger' : 
+                          type === 'warning' ? 'alert-warning' : 
+                          'alert-info';
+        
+        const iconClass = type === 'success' ? 'fa-check-circle' : 
+                         type === 'error' ? 'fa-exclamation-circle' : 
+                         type === 'warning' ? 'fa-exclamation-triangle' : 
+                         'fa-info-circle';
+        
+        const notification = $(`
+            <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+                 style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                <i class="fas ${iconClass} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `);
+        
+        // Append to body and auto-remove after 5 seconds
+        $('body').append(notification);
+        setTimeout(() => {
+            notification.alert('close');
+        }, 5000);
     }
 
     logActivity(category, message, type = 'info') {

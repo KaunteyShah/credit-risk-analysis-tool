@@ -12,33 +12,47 @@ import time
 import numpy as np
 from typing import Dict, Any, List, Optional
 
-# Demo mode flag - can be controlled via environment variable
-DEMO_MODE = os.getenv('DEMO_MODE', 'true').lower() in ('true', '1', 'yes', 'on')
+# Demo mode flag - can be controlled via environment variable or dynamically
+_DEMO_MODE = os.getenv('DEMO_MODE', 'false').lower() in ('true', '1', 'yes', 'on')
+
+def is_demo_mode() -> bool:
+    """Get current demo mode status"""
+    global _DEMO_MODE
+    return _DEMO_MODE
+
+def set_demo_mode(enabled: bool) -> bool:
+    """Set demo mode status dynamically"""
+    global _DEMO_MODE
+    _DEMO_MODE = enabled
+    return _DEMO_MODE
+
+# Backward compatibility
+DEMO_MODE = _DEMO_MODE
 
 class SimulationService:
     """Service for generating simulation data and delays"""
     
     def __init__(self, seed: int = 42):
         """Initialize with optional random seed for reproducibility"""
-        if DEMO_MODE:
+        if is_demo_mode():
             random.seed(seed)
             np.random.seed(seed)
     
     def generate_sic_accuracy(self, count: int) -> np.ndarray:
         """Generate random SIC accuracy values for demonstration"""
-        if not DEMO_MODE:
+        if not is_demo_mode():
             raise RuntimeError("Simulation methods only available in DEMO_MODE")
         
         return np.random.uniform(0.7, 0.99, count)
     
     def simulate_prediction_delay(self, min_delay: float = 0.5, max_delay: float = 1.5) -> None:
         """Simulate processing delay for realistic demo experience"""
-        if DEMO_MODE:
+        if is_demo_mode():
             time.sleep(random.uniform(min_delay, max_delay))
     
     def generate_mock_sic_prediction(self) -> Dict[str, Any]:
         """Generate mock SIC prediction result"""
-        if not DEMO_MODE:
+        if not is_demo_mode():
             raise RuntimeError("Simulation methods only available in DEMO_MODE")
         
         mock_sics = ['2834', '3571', '7372', '5045', '6282']

@@ -644,6 +644,43 @@ def create_app():
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
+    @app.route('/api/toggle-demo-mode', methods=['POST'])
+    def toggle_demo_mode():
+        """Toggle demo mode on/off"""
+        try:
+            data = request.get_json()
+            if not data or 'demo_mode' not in data:
+                return jsonify({'error': 'demo_mode parameter required'}), 400
+            
+            demo_mode = bool(data['demo_mode'])
+            
+            # Import the simulation functions
+            from app.utils.simulation import set_demo_mode, is_demo_mode
+            
+            # Set the new demo mode
+            set_demo_mode(demo_mode)
+            
+            return jsonify({
+                'success': True,
+                'demo_mode': is_demo_mode(),
+                'message': f'Demo mode {"enabled" if is_demo_mode() else "disabled"}'
+            })
+        except Exception as e:
+            logger.error(f"Error toggling demo mode: {e}")
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/demo-mode-status')
+    def demo_mode_status():
+        """Get current demo mode status"""
+        try:
+            return jsonify({
+                'demo_mode': is_demo_mode(),
+                'mode_description': 'Demo Mode' if is_demo_mode() else 'Real Fuzzy Matching'
+            })
+        except Exception as e:
+            logger.error(f"Error getting demo mode status: {e}")
+            return jsonify({'error': str(e)}), 500
+
     @app.route('/api/test')
     def test_endpoint():
         """Simple test endpoint"""
@@ -972,7 +1009,7 @@ def create_app():
                     reasoning = suggestion.reasoning
                     
                     # Calculate new accuracy using enhanced SIC matcher
-                    if hasattr(app, 'sic_matcher'):
+                    if hasattr(app, 'sic_matcher') and app.sic_matcher:
                         # Store raw prediction confidence as percentage
                         algorithm_accuracy = confidence * 100
                         
@@ -1014,7 +1051,7 @@ def create_app():
                 confidence = prediction_result['confidence']
                 
                 # Calculate REAL accuracy using the new algorithm calculation
-                if hasattr(app, 'sic_matcher') and predicted_sic:
+                if hasattr(app, 'sic_matcher') and app.sic_matcher and predicted_sic:
                     # Use calculate_new_accuracy to get what the algorithm calculated
                     algorithm_result = app.sic_matcher.calculate_new_accuracy(business_description)
                     algorithm_accuracy = algorithm_result['new_accuracy']  # What algorithm actually calculated

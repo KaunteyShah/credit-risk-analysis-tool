@@ -1,7 +1,17 @@
-name: Deploy Credit Risk Analysis to Azure (Clean Environment)
+# Credit Risk Analysis - Azure App Service Deployment
+# 
+# This workflow deploys the Flask Credit Risk Analysis application to Azure App Service
+# WORKING CONFIGURATION - Successfully tested September 26, 2025
+#
+# Key Success Factors:
+# - Uses Kudu ZIP API deployment (NOT azure/webapps-deploy action)
+# - Correct startup command: "gunicorn --bind=0.0.0.0:8000 --timeout 600 --workers 1 startup:application"
+# - B3 tier App Service Plan (7GB RAM, 2 vCPUs) for ML workloads
+# - Clean deployment package excluding .venv and cache files
+#
+# Troubleshooting: See docs/AZURE_DEPLOYMENT_TROUBLESHOOTING.md
 
-# Updated to deploy to credit-risk-clean-app in rg-credit-risk-clean resource group
-# Deployment with fresh publish profile authentication - retry deployment
+name: Deploy Credit Risk Analysis to Azure (Clean Environment)
 
 on:
   push:
@@ -252,58 +262,46 @@ jobs:
         echo "✅ Full application main.py confirmed for deployment ($(wc -l < main.py) lines)"
 
 
-    - name: Deploy using Kudu API (publish profile method)
+    - name: Deploy using Azure CLI (WORKING SOLUTION)
       run: |
-        echo "🚀 Deploying using Kudu ZIP API to avoid slot issues..."
+        echo "🚀 Deploying using Azure CLI + Kudu ZIP API (Proven Working Method)"
+        echo "⚠️  This method bypasses azure/webapps-deploy@v2 issues"
         
-        # Extract username and password from publish profile
-        PROFILE_XML='${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}'
+        # Create clean deployment package (exclude virtual environments and cache)
+        echo "📦 Creating clean deployment package..."
+        zip -r deploy.zip . \
+          -x "*.git*" "*.github*" "*node_modules*" "*.DS_Store*" \
+             "*__pycache__*" "*.pyc" "*.venv*" ".venv/*" "*logs/*" "*deploy.zip*"
         
-        # Get Zip Deploy credentials from publish profile
-        USERNAME=$(echo "$PROFILE_XML" | grep 'publishMethod="ZipDeploy"' | sed 's/.*userName="\([^"]*\)".*/\1/')
-        PASSWORD=$(echo "$PROFILE_XML" | grep 'publishMethod="ZipDeploy"' | sed 's/.*userPWD="\([^"]*\)".*/\1/')
+        echo "📦 Package created ($(du -h deploy.zip | cut -f1))"
         
-        # Create deployment package
-        zip -r deploy.zip . -x "*.git*" "*.github*" "*node_modules*" "*.DS_Store*" "*__pycache__*" "*.pyc" "*deploy.zip*"
+        # Deploy using Azure CLI (requires AZURE_CREDENTIALS secret)
+        echo "🔑 Authenticating with Azure..."
+        echo '${{ secrets.AZURE_CREDENTIALS }}' | az login --service-principal -u $(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId) -p $(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientSecret) --tenant $(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .tenantId)
         
-        echo "📦 Created deployment package ($(du -h deploy.zip | cut -f1))"
+        # CRITICAL: Set correct startup command BEFORE deployment
+        echo "⚙️ Setting correct startup command..."
+        az webapp config set \
+          --name ${{ env.APP_SERVICE_NAME }} \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --startup-file "gunicorn --bind=0.0.0.0:8000 --timeout 600 --workers 1 startup:application"
         
-        # Deploy using Kudu ZIP API
-        curl -X POST \
-          -u "$USERNAME:$PASSWORD" \
-          --data-binary @deploy.zip \
-          -H "Content-Type: application/zip" \
-          "https://credit-risk-clean-app.scm.azurewebsites.net/api/zipdeploy?isAsync=true"
-          
-        echo "✅ Deployment initiated via Kudu API"
+        # Enable application logging
+        echo "📋 Enabling application logging..."
+        az webapp log config \
+          --name ${{ env.APP_SERVICE_NAME }} \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --application-logging filesystem
         
-        # Configure app settings using extracted credentials
-        echo "⚙️ Configuring app settings..."
-        curl -X POST \
-          -u "$USERNAME:$PASSWORD" \
-          -H "Content-Type: application/json" \
-          -d '{
-            "SCM_DO_BUILD_DURING_DEPLOYMENT": "true",
-            "ENABLE_ORYX_BUILD": "true",
-            "WEBSITES_PORT": "8000",
-            "WEBSITES_CONTAINER_START_TIME_LIMIT": "900",
-            "PYTHON_VERSION": "3.11",
-            "APP_COMMAND_LINE": "gunicorn --bind=0.0.0.0:8000 --timeout 600 --workers 1 startup:application",
-            "PYTHON_ENABLE_GUNICORN_MULTIWORKERS": "false",
-            "SCM_CACHE_CLEAR": "true",
-            "WEBSITE_RUN_FROM_PACKAGE": "0"
-          }' \
-          "https://credit-risk-clean-app.scm.azurewebsites.net/api/settings"
-          
-        echo "⚙️ App settings configured"
+        # Deploy the package
+        echo "� Deploying package via Kudu ZIP API..."
+        az webapp deploy \
+          --name ${{ env.APP_SERVICE_NAME }} \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --src-path deploy.zip \
+          --type zip
         
-        # Force app restart to pick up new settings
-        echo "🔄 Restarting app service to apply new configuration..."
-        curl -X POST \
-          -u "$USERNAME:$PASSWORD" \
-          "https://credit-risk-clean-app.scm.azurewebsites.net/api/functions/host/restart"
-          
-        echo "✅ App service restarted"
+        echo "✅ Deployment completed successfully"
       
     - name: Wait for deployment completion
       run: |

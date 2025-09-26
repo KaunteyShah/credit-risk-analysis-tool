@@ -72,7 +72,44 @@ Open your browser and go to http://localhost:8000
 - ✅ `start.sh` / `start.bat` - Automated setup scripts
 - ✅ Complete `app/` folder structure
 
-## 🔧 Troubleshooting
+## � Documentation
+
+### Deployment Guides
+- **[Azure Deployment Troubleshooting](docs/AZURE_DEPLOYMENT_TROUBLESHOOTING.md)** - Complete troubleshooting guide for production deployment issues
+- **[GitHub Actions Deployment Guide](docs/GITHUB_ACTIONS_DEPLOYMENT_GUIDE.md)** - Working CI/CD pipeline configuration  
+- **[Azure Configuration Quick Reference](docs/AZURE_CONFIG_QUICK_REFERENCE.md)** - Copy-paste commands and configuration values
+
+### Application Documentation
+- **[Setup Guide](SETUP_GUIDE.md)** - Detailed installation instructions
+- **[Presentation Guide](PRESENTATION_GUIDE.md)** - Demo and presentation instructions
+- **[Working Version Log](WORKING_VERSION_LOG.md)** - Version history and changes
+
+## 🚀 Azure Deployment (Production)
+
+The application is deployed and running at: **https://credit-risk-clean-app.azurewebsites.net**
+
+### Quick Deployment Commands
+```bash
+# Set correct startup command (CRITICAL)
+az webapp config set \
+  --name credit-risk-clean-app \
+  --resource-group rg-credit-risk-clean \
+  --startup-file "gunicorn --bind=0.0.0.0:8000 --timeout 600 --workers 1 startup:application"
+
+# Deploy package
+az webapp deploy \
+  --name credit-risk-clean-app \
+  --resource-group rg-credit-risk-clean \
+  --src-path deploy.zip \
+  --type zip
+
+# Verify deployment  
+curl -I https://credit-risk-clean-app.azurewebsites.net
+```
+
+**⚠️ Important**: Always set the correct startup command after deployment. See [Azure Configuration Quick Reference](docs/AZURE_CONFIG_QUICK_REFERENCE.md) for details.
+
+## �🔧 Troubleshooting
 
 ### Common Issues
 
