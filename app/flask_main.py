@@ -681,6 +681,48 @@ def create_app():
             logger.error(f"Error getting demo mode status: {e}")
             return jsonify({'error': str(e)}), 500
 
+    @app.route('/api/debug/sic-matcher')
+    def debug_sic_matcher():
+        """Debug SIC matcher status in Azure"""
+        try:
+            import os
+            debug_info = {
+                'demo_mode': is_demo_mode(),
+                'sic_matcher': {
+                    'exists': hasattr(app, 'sic_matcher'),
+                    'is_none': hasattr(app, 'sic_matcher') and app.sic_matcher is None,
+                    'type': str(type(app.sic_matcher)) if hasattr(app, 'sic_matcher') and app.sic_matcher else 'None'
+                },
+                'file_checks': {},
+                'dependencies': {}
+            }
+            
+            # Check file locations
+            sic_file_paths = [
+                'data/SIC_codes.xlsx',
+                '/home/site/wwwroot/data/SIC_codes.xlsx',
+                os.path.join(os.path.dirname(__file__), '../data/SIC_codes.xlsx')
+            ]
+            for path in sic_file_paths:
+                debug_info['file_checks'][path] = os.path.exists(path)
+            
+            # Check dependencies
+            try:
+                import rapidfuzz
+                debug_info['dependencies']['rapidfuzz'] = rapidfuzz.__version__
+            except ImportError as e:
+                debug_info['dependencies']['rapidfuzz'] = f'Error: {e}'
+            
+            try:
+                from app.utils.enhanced_sic_matcher import get_enhanced_sic_matcher
+                debug_info['dependencies']['enhanced_matcher_import'] = 'Success'
+            except ImportError as e:
+                debug_info['dependencies']['enhanced_matcher_import'] = f'Error: {e}'
+            
+            return jsonify(debug_info)
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
     @app.route('/api/test')
     def test_endpoint():
         """Simple test endpoint"""
