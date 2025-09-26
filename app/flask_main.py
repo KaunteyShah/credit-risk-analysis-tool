@@ -28,70 +28,30 @@ if project_root not in sys.path:
 from app.utils.logger import logger
 from app.utils.simulation import simulation_service, is_demo_mode, DEMO_SECRET_KEY
 from app.utils.input_validation import validate_api_input, validate_predict_sic_input, validate_update_revenue_input
-from app.agents.orchestrator import MultiAgentOrchestrator
-from app.agents.sector_classification_agent import SectorClassificationAgent
-from app.workflows.langgraph_workflow import CreditRiskWorkflow
 
-def create_fallback_company_data():
-    """Create fallback company data when main data files are not available"""
-    import numpy as np
-    
-    # Generate sample company data for demo
-    companies = [
-        "Tech Innovations Inc", "Global Manufacturing Corp", "Green Energy Solutions",
-        "Financial Services Ltd", "Healthcare Solutions", "Retail Excellence",
-        "Construction Dynamics", "Transport Logistics", "Food & Beverage Co",
-        "Entertainment Media"
-    ]
-    
-    data = []
-    for i, company in enumerate(companies):
-        data.append({
-            'Company Name': company,
-            'Sales (USD)': np.random.randint(1000000, 100000000),
-            'Total Assets (USD)': np.random.randint(500000, 50000000),
-            'Net Income (USD)': np.random.randint(-1000000, 10000000),
-            'SIC Code': np.random.choice(['7372', '3711', '4953', '6021', '8071', '5411', '1542', '4213', '2024', '7812']),
-            'Description': f"Sample description for {company}",
-            'SIC_Accuracy': np.random.uniform(0.7, 0.95),
-            'Needs_Revenue_Update': np.random.choice([True, False])
-        })
-    
-    return pd.DataFrame(data)
+# Try to import complex components but don't fail if they're not available
+try:
+    from app.agents.orchestrator import MultiAgentOrchestrator
+    ORCHESTRATOR_AVAILABLE = True
+except ImportError:
+    ORCHESTRATOR_AVAILABLE = False
+    logger.warning("Multi-agent orchestrator not available")
 
-def create_fallback_sic_data():
-    """Create fallback SIC code data when main SIC file is not available"""
-    sic_data = [
-        {'SIC Code': '7372', 'Description': 'Prepackaged Software'},
-        {'SIC Code': '3711', 'Description': 'Motor Vehicles and Passenger Car Bodies'},
-        {'SIC Code': '4953', 'Description': 'Refuse Systems'},
-        {'SIC Code': '6021', 'Description': 'National Commercial Banks'},
-        {'SIC Code': '8071', 'Description': 'Medical Laboratories'},
-        {'SIC Code': '5411', 'Description': 'Grocery Stores'},
-        {'SIC Code': '1542', 'Description': 'General Contractors-Nonresidential Buildings'},
-        {'SIC Code': '4213', 'Description': 'Trucking, Except Local'},
-        {'SIC Code': '2024', 'Description': 'Ice Cream and Frozen Desserts'},
-        {'SIC Code': '7812', 'Description': 'Motion Picture and Video Tape Production'}
-    ]
-    
-    return pd.DataFrame(sic_data)
+try:
+    from app.agents.sector_classification_agent import SectorClassificationAgent
+    SECTOR_AGENT_AVAILABLE = True
+except ImportError:
+    SECTOR_AGENT_AVAILABLE = False
+    logger.warning("Sector classification agent not available")
 
-def create_fallback_sic_data():
-    """Create fallback SIC code data when main SIC file is not available"""
-    sic_data = [
-        {'SIC Code': '7372', 'Description': 'Prepackaged Software'},
-        {'SIC Code': '3711', 'Description': 'Motor Vehicles and Passenger Car Bodies'},
-        {'SIC Code': '4953', 'Description': 'Refuse Systems'},
-        {'SIC Code': '6021', 'Description': 'National Commercial Banks'},
-        {'SIC Code': '8071', 'Description': 'Medical Laboratories'},
-        {'SIC Code': '5411', 'Description': 'Grocery Stores'},
-        {'SIC Code': '1542', 'Description': 'General Contractors-Nonresidential Buildings'},
-        {'SIC Code': '4213', 'Description': 'Trucking, Except Local'},
-        {'SIC Code': '2024', 'Description': 'Ice Cream and Frozen Desserts'},
-        {'SIC Code': '7812', 'Description': 'Motion Picture and Video Tape Production'}
-    ]
-    
-    return pd.DataFrame(sic_data)
+try:
+    from app.workflows.langgraph_workflow import CreditRiskWorkflow
+    WORKFLOW_AVAILABLE = True
+except ImportError:
+    WORKFLOW_AVAILABLE = False
+    logger.warning("LangGraph workflow not available")
+
+
 
 def clean_numeric_column(series):
     """Clean and convert a series to numeric values"""
@@ -122,24 +82,38 @@ def create_app():
     app.sic_codes = None
     
     # Initialize components with error handling
-    try:
-        # Initialize multi-agent orchestrator for real workflow processing
-        app.orchestrator = MultiAgentOrchestrator()
-        app.sector_agent = SectorClassificationAgent()
-        logger.info("Multi-agent orchestrator initialized successfully")
-    except Exception as e:
-        logger.error(f"Failed to initialize orchestrator: {e}")
+    if ORCHESTRATOR_AVAILABLE:
+        try:
+            # Initialize multi-agent orchestrator for real workflow processing
+            app.orchestrator = MultiAgentOrchestrator()
+            logger.info("Multi-agent orchestrator initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize orchestrator: {e}")
+            app.orchestrator = None
+    else:
         app.orchestrator = None
+        
+    if SECTOR_AGENT_AVAILABLE:
+        try:
+            app.sector_agent = SectorClassificationAgent()
+            logger.info("Sector classification agent initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize sector agent: {e}")
+            app.sector_agent = None
+    else:
         app.sector_agent = None
-    
-    try:
-        # Initialize LangGraph workflow for visualization
-        app.langgraph_workflow = CreditRiskWorkflow()
-        logger.info("LangGraph workflow initialized for visualization")
-    except Exception as e:
-        logger.error(f"Failed to initialize LangGraph workflow: {e}")
+
+    if WORKFLOW_AVAILABLE:
+        try:
+            # Initialize LangGraph workflow for visualization
+            app.langgraph_workflow = CreditRiskWorkflow()
+            logger.info("LangGraph workflow initialized for visualization")
+        except Exception as e:
+            logger.error(f"Failed to initialize LangGraph workflow: {e}")
+            app.langgraph_workflow = None
+    else:
         app.langgraph_workflow = None
-    
+
     def load_company_data():
         """Load and prepare company data with robust error handling"""
         try:
@@ -198,31 +172,39 @@ def create_app():
                     
                     if sic_file and os.path.exists(sic_file):
                         try:
-                            # Initialize enhanced SIC matcher
-                            from app.utils.enhanced_sic_matcher import get_enhanced_sic_matcher
-                            sic_matcher = get_enhanced_sic_matcher(sic_file)
-                            
-                            # Calculate dual accuracy using enhanced fuzzy matching
-                            logger.info("Calculating dual SIC accuracy using enhanced fuzzy matching...")
-                            app.company_data = sic_matcher.batch_calculate_dual_accuracy(app.company_data)
-                            
-                            # Merge with any existing updated data
-                            app.company_data = sic_matcher.merge_with_updated_data(app.company_data)
-                            
-                            logger.info("Enhanced SIC accuracy calculation completed")
-                            
-                            # Store the matcher for later use
-                            app.sic_matcher = sic_matcher
+                            # Try to initialize enhanced SIC matcher
+                            try:
+                                from app.utils.enhanced_sic_matcher import get_enhanced_sic_matcher
+                                sic_matcher = get_enhanced_sic_matcher(sic_file)
+                                
+                                # Calculate dual accuracy using enhanced fuzzy matching
+                                logger.info("Calculating dual SIC accuracy using enhanced fuzzy matching...")
+                                app.company_data = sic_matcher.batch_calculate_dual_accuracy(app.company_data)
+                                
+                                # Merge with any existing updated data
+                                app.company_data = sic_matcher.merge_with_updated_data(app.company_data)
+                                
+                                logger.info("Enhanced SIC accuracy calculation completed")
+                                
+                                # Store the matcher for later use
+                                app.sic_matcher = sic_matcher
+                                
+                            except ImportError as import_error:
+                                logger.warning(f"Enhanced SIC matcher not available: {import_error}")
+                                # Generate demo accuracy data 
+                                logger.info("Generating demo SIC accuracy data...")
+                                app.company_data['SIC_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data))
+                                app.sic_matcher = None
                             
                         except Exception as sic_error:
                             logger.error(f"Enhanced SIC matcher failed: {sic_error}")
-                            # Fallback: generate demo accuracy data for Azure deployment
+                            # Generate demo accuracy data for Azure deployment
                             logger.info("Generating demo SIC accuracy data...")
                             app.company_data['SIC_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data))
                             app.sic_matcher = None
                     else:
                         logger.warning(f"SIC codes file not found: {sic_file}")
-                        # Fallback: generate demo accuracy data for Azure deployment
+                        # Generate demo accuracy data for Azure deployment
                         logger.info("Generating demo SIC accuracy data...")
                         app.company_data['SIC_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data))
                         app.sic_matcher = None
@@ -232,19 +214,10 @@ def create_app():
                     
                 except Exception as data_error:
                     logger.error(f"Error processing company data file: {data_error}")
-                    logger.warning("Using fallback company data for Azure deployment")
-                    app.company_data = create_fallback_company_data()
-                    app.sic_matcher = None
+                    raise Exception(f"Failed to process company data: {data_error}")
                     
             else:
-                logger.error("❌ Company data file not found in any expected location!")
-                logger.error("All tested paths:")
-                for i, path in enumerate(possible_data_paths):
-                    abs_path = os.path.abspath(path)
-                    logger.error(f"  Path {i+1}: {abs_path}")
-                logger.warning("Using fallback company data for Azure deployment")
-                app.company_data = create_fallback_company_data()
-                app.sic_matcher = None
+                raise FileNotFoundError("Company data file not found in any expected location!")
             
             # Load SIC codes for reference with multiple path resolution
             try:
@@ -269,19 +242,14 @@ def create_app():
                     logger.info(f"Loaded {len(app.sic_codes)} SIC codes")
                 else:
                     logger.warning("SIC codes file not found in any expected location")
-                    app.sic_codes = create_fallback_sic_data()
+                    app.sic_codes = None
             except Exception as sic_error:
                 logger.error(f"Error loading SIC codes: {sic_error}")
-                app.sic_codes = create_fallback_sic_data()
+                app.sic_codes = None
                 
         except Exception as e:
             logger.error(f"Critical error loading data: {str(e)}")
-            logger.warning("Using complete fallback data set for Azure deployment")
-            app.company_data = create_fallback_company_data()
-            app.sic_codes = create_fallback_sic_data()
-            app.sic_matcher = None
-            app.company_data = pd.DataFrame()
-            app.sic_codes = pd.DataFrame()
+            raise Exception(f"Data loading failed: {str(e)}")
     
     @app.route('/')
     def index():

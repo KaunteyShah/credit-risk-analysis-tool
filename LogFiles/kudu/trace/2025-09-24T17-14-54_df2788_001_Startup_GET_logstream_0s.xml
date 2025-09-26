@@ -1,5 +1,0 @@
-<step title="Startup Request" date="2025-09-24T17:14:54.596" instance="df2788" url="/logstream" method="GET" type="request" pid="767,1,7" ScmType="None" SCM_DO_BUILD_DURING_DEPLOYMENT="true" >
-  <step title="Cleanup Xml Logs" date="2025-09-24T17:14:54.598" >
-    <step title="Cleanup Infos" date="2025-09-24T17:14:54.613" totalFiles="943" totalCleanup="783" /><!-- duration: 3ms -->
-  </step><!-- duration: 21ms -->
-</step><!-- duration: 24ms -->

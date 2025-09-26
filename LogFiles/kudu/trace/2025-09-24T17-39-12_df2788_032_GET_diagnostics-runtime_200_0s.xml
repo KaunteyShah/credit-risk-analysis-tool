@@ -1,7 +1,0 @@
-<step title="Incoming Request" date="2025-09-24T17:39:12.697" instance="df2788" url="/diagnostics/runtime" method="GET" type="request" pid="768,1,17" Host="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" User-Agent="GITHUBACTIONS_DeployWebAppToAzure_4a5a1b673f02fbd359f5f791fff0e4d3e82e3a2733128fe8bf04c072d54f4342" Authorization="Bas..." Content-Type="application/json; charset=utf-8" Content-Length="0" X-ARR-LOG-ID="04171f78-0b6d-45f6-9e32-20ab8d025b08" CLIENT-IP="64.236.133.199:49152" X-SITE-DEPLOYMENT-ID="credit-risk-analysis-prod-app-25h2ya" WAS-DEFAULT-HOSTNAME="credit-risk-analysis-prod-app-25h2ya.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/diagnostics/runtime" X-Client-IP="64.236.133.199" X-Client-Port="49152" >
-  <step title="Cleanup Xml Logs" date="2025-09-24T17:39:12.699" >
-    <step title="Cleanup Infos" date="2025-09-24T17:39:12.716" totalFiles="1047" totalCleanup="887" /><!-- duration: 3ms -->
-  </step><!-- duration: 21ms -->
-  <step title="RuntimeController.GetRuntimeVersions" date="2025-09-24T17:39:12.723" /><!-- duration: 2ms -->
-  <step title="Outgoing response" date="2025-09-24T17:39:12.727" type="response" statusCode="200" statusText="OK" /><!-- duration: 2ms -->
-</step><!-- duration: 33ms -->
