@@ -143,9 +143,32 @@ def create_app():
     def load_company_data():
         """Load and prepare company data with robust error handling"""
         try:
-            # Load company data
-            company_file = os.path.join(project_root, 'data', 'Sample_data2.csv')
-            if os.path.exists(company_file):
+            # Log environment info for debugging Azure deployment
+            logger.info(f"Loading company data from:")
+            logger.info(f"  project_root: {project_root}")
+            logger.info(f"  __file__: {__file__}")
+            logger.info(f"  os.getcwd(): {os.getcwd()}")
+            logger.info(f"  os.path.dirname(__file__): {os.path.dirname(__file__)}")
+            
+            # Try multiple paths for Azure deployment compatibility
+            possible_data_paths = [
+                os.path.join(project_root, 'data', 'Sample_data2.csv'),
+                os.path.join(os.path.dirname(__file__), '..', 'data', 'Sample_data2.csv'),
+                os.path.join(os.getcwd(), 'data', 'Sample_data2.csv'),
+                'data/Sample_data2.csv',
+                './data/Sample_data2.csv'
+            ]
+            
+            company_file = None
+            for i, path in enumerate(possible_data_paths):
+                abs_path = os.path.abspath(path)
+                logger.info(f"  Checking path {i+1}: {abs_path} - {'EXISTS' if os.path.exists(abs_path) else 'NOT FOUND'}")
+                if os.path.exists(abs_path):
+                    company_file = abs_path
+                    logger.info(f"✅ Found company data file at: {company_file}")
+                    break
+            
+            if company_file and os.path.exists(company_file):
                 try:
                     app.company_data = pd.read_csv(company_file)
                     logger.info(f"Loaded {len(app.company_data)} companies from CSV")
@@ -156,9 +179,24 @@ def create_app():
                         if col in app.company_data.columns:
                             app.company_data[col] = clean_numeric_column(app.company_data[col])
                     
-                    # Load SIC codes and initialize enhanced fuzzy matching
-                    sic_file = os.path.join(project_root, 'data', 'SIC_codes.xlsx')
-                    if os.path.exists(sic_file):
+                    # Load SIC codes and initialize enhanced fuzzy matching with multiple path resolution
+                    possible_sic_paths = [
+                        os.path.join(project_root, 'data', 'SIC_codes.xlsx'),
+                        os.path.join(os.path.dirname(__file__), '..', 'data', 'SIC_codes.xlsx'),
+                        os.path.join(os.getcwd(), 'data', 'SIC_codes.xlsx'),
+                        'data/SIC_codes.xlsx',
+                        './data/SIC_codes.xlsx'
+                    ]
+                    
+                    sic_file = None
+                    for path in possible_sic_paths:
+                        abs_path = os.path.abspath(path)
+                        if os.path.exists(abs_path):
+                            sic_file = abs_path
+                            logger.info(f"Found SIC codes file at: {sic_file}")
+                            break
+                    
+                    if sic_file and os.path.exists(sic_file):
                         try:
                             # Initialize enhanced SIC matcher
                             from app.utils.enhanced_sic_matcher import get_enhanced_sic_matcher
@@ -199,19 +237,38 @@ def create_app():
                     app.sic_matcher = None
                     
             else:
-                logger.error(f"Company data file not found: {company_file}")
-                logger.warning("Data files missing - using fallback data for Azure deployment")
+                logger.error("❌ Company data file not found in any expected location!")
+                logger.error("All tested paths:")
+                for i, path in enumerate(possible_data_paths):
+                    abs_path = os.path.abspath(path)
+                    logger.error(f"  Path {i+1}: {abs_path}")
+                logger.warning("Using fallback company data for Azure deployment")
                 app.company_data = create_fallback_company_data()
                 app.sic_matcher = None
             
-            # Load SIC codes for reference
+            # Load SIC codes for reference with multiple path resolution
             try:
-                sic_file = os.path.join(project_root, 'data', 'SIC_codes.xlsx')
-                if os.path.exists(sic_file):
+                possible_sic_paths = [
+                    os.path.join(project_root, 'data', 'SIC_codes.xlsx'),
+                    os.path.join(os.path.dirname(__file__), '..', 'data', 'SIC_codes.xlsx'),
+                    os.path.join(os.getcwd(), 'data', 'SIC_codes.xlsx'),
+                    'data/SIC_codes.xlsx',
+                    './data/SIC_codes.xlsx'
+                ]
+                
+                sic_file = None
+                for path in possible_sic_paths:
+                    abs_path = os.path.abspath(path)
+                    if os.path.exists(abs_path):
+                        sic_file = abs_path
+                        logger.info(f"Found SIC codes reference file at: {sic_file}")
+                        break
+                
+                if sic_file and os.path.exists(sic_file):
                     app.sic_codes = pd.read_excel(sic_file)
                     logger.info(f"Loaded {len(app.sic_codes)} SIC codes")
                 else:
-                    logger.warning(f"SIC codes file not found: {sic_file}")
+                    logger.warning("SIC codes file not found in any expected location")
                     app.sic_codes = create_fallback_sic_data()
             except Exception as sic_error:
                 logger.error(f"Error loading SIC codes: {sic_error}")
