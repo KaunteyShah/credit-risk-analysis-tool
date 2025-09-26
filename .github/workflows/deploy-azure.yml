@@ -267,19 +267,45 @@ jobs:
         SCM_CACHE_CLEAR: true
         SCM_REPOSITORY_CACHE_CLEAR: true
         WEBSITE_LOCAL_CACHE_OPTION: Never
-    - name: Deploy to Azure App Service (simplified)
-      uses: azure/webapps-deploy@v3
-      with:
-        app-name: ${{ env.APP_SERVICE_NAME }}
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: '.'
-      env:
-        SCM_DO_BUILD_DURING_DEPLOYMENT: true
-        ENABLE_ORYX_BUILD: true
-        WEBSITES_PORT: 8000
-        APP_COMMAND_LINE: 'python3 main.py'
-        PYTHON_ENABLE_GUNICORN_MULTIWORKERS: false
-        WEBSITES_CONTAINER_START_TIME_LIMIT: 900
+    - name: Deploy using Kudu API (publish profile method)
+      run: |
+        echo "🚀 Deploying using Kudu ZIP API to avoid slot issues..."
+        
+        # Extract username and password from publish profile
+        PROFILE_XML='${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}'
+        
+        # Get Zip Deploy credentials from publish profile
+        USERNAME=$(echo "$PROFILE_XML" | grep 'publishMethod="ZipDeploy"' | sed 's/.*userName="\([^"]*\)".*/\1/')
+        PASSWORD=$(echo "$PROFILE_XML" | grep 'publishMethod="ZipDeploy"' | sed 's/.*userPWD="\([^"]*\)".*/\1/')
+        
+        # Create deployment package
+        zip -r deploy.zip . -x "*.git*" "*.github*" "*node_modules*" "*.DS_Store*" "*__pycache__*" "*.pyc" "*deploy.zip*"
+        
+        echo "📦 Created deployment package ($(du -h deploy.zip | cut -f1))"
+        
+        # Deploy using Kudu ZIP API
+        curl -X POST \
+          -u "$USERNAME:$PASSWORD" \
+          --data-binary @deploy.zip \
+          -H "Content-Type: application/zip" \
+          "https://credit-risk-clean-app.scm.azurewebsites.net/api/zipdeploy?isAsync=true"
+          
+        echo "✅ Deployment initiated via Kudu API"
+        
+        # Configure app settings using extracted credentials
+        curl -X POST \
+          -u "$USERNAME:$PASSWORD" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "SCM_DO_BUILD_DURING_DEPLOYMENT": "true",
+            "ENABLE_ORYX_BUILD": "true", 
+            "WEBSITES_PORT": "8000",
+            "APP_COMMAND_LINE": "python3 main.py",
+            "PYTHON_ENABLE_GUNICORN_MULTIWORKERS": "false"
+          }' \
+          "https://credit-risk-clean-app.scm.azurewebsites.net/api/settings"
+          
+        echo "⚙️ App settings configured"
       
     - name: Wait for deployment completion
       run: |
