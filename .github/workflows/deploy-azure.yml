@@ -1,5 +1,7 @@
 name: Deploy Credit Risk Analysis to Azure (Clean Environment)
 
+# Updated to deploy to credit-risk-clean-app in rg-credit-risk-clean resource group
+
 on:
   push:
     branches: [ main ]
