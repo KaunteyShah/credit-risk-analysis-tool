@@ -1382,9 +1382,9 @@ class SICPredictionApp {
         
         this.workflowRunning = true;
         
-        // Clear existing workflow and stop any running animations
+        // Clear existing workflow and reset progress bar
         $('#sicWorkflowChart').empty();
-        $('.workflow-progress-bar').stop(true, true).css('width', '0%');
+        $('.workflow-progress-bar').css('width', '0%');
         $('.workflow-arrow').removeClass('active');
         
         // Define the 4 SIC prediction agents
@@ -1479,9 +1479,6 @@ class SICPredictionApp {
         let currentStep = 0;
         const totalSteps = steps.length;
         
-        // Stop any existing progress bar animations immediately
-        $('.workflow-progress-bar').stop(true, true);
-        
         const processNextAgent = () => {
             if (currentStep >= totalSteps) {
                 // All agents completed, show final results
@@ -1511,9 +1508,9 @@ class SICPredictionApp {
                 .removeClass('idle completed')
                 .addClass('processing');
             
-            // Simplified progress bar - single smooth animation to completion
+            // Simplified progress bar - use CSS transition instead of jQuery animation
             const completionProgress = ((currentStep + 1) / totalSteps) * 100;
-            $('.workflow-progress-bar').stop(true, true).animate({ width: `${completionProgress}%` }, 1200, 'swing');
+            $('.workflow-progress-bar').css('width', `${completionProgress}%`);
             
             // Mark arrow as active if not the last step - clear any existing active arrows first
             if (currentStep < totalSteps - 1) {

@@ -206,36 +206,7 @@ html, body {
     color: white;
 }
 
-/* Action Buttons */
-.btn-predict {
-    background: linear-gradient(135deg, var(--info-color), #0aa2c0);
-    border: none;
-    color: white;
-    font-weight: 600;
-    transition: var(--transition);
-}
-
-.btn-predict:hover {
-    background: linear-gradient(135deg, #0aa2c0, var(--info-color));
-    color: white;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(13, 202, 240, 0.3);
-}
-
-.btn-update {
-    background: linear-gradient(135deg, var(--warning-color), #e0a800);
-    border: none;
-    color: var(--dark-color);
-    font-weight: 600;
-    transition: var(--transition);
-}
-
-.btn-update:hover {
-    background: linear-gradient(135deg, #e0a800, var(--warning-color));
-    color: var(--dark-color);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
-}
+/* Input field focus styles */
 
 .btn-sm {
     padding: 6px 12px;
@@ -268,7 +239,7 @@ html, body {
 
 /* Agent Dashboard */
 .nav-tabs {
-    border-bottom: 2px solid var(--ey-yellow);
+    border-bottom: 2px solid var(--primary-color);
 }
 
 .nav-tabs .nav-link {
@@ -280,14 +251,14 @@ html, body {
 }
 
 .nav-tabs .nav-link:hover {
-    color: var(--dark-color);
-    background-color: rgba(255, 230, 0, 0.1);
+    color: var(--primary-color);
+    background-color: rgba(13, 110, 253, 0.1);
 }
 
 .nav-tabs .nav-link.active {
-    color: var(--dark-color);
+    color: var(--primary-color);
     background-color: white;
-    border-bottom: 3px solid var(--ey-yellow);
+    border-bottom: 3px solid var(--primary-color);
 }
 
 /* Workflow Chart Container */
@@ -496,20 +467,9 @@ html, body {
     height: 100%;
     background: linear-gradient(90deg, #198754, #20c997, #0d6efd);
     width: 0%;
-    transition: width 0.8s ease;
+    transition: width 0.8s linear;
     border-radius: 3px;
     position: relative;
-}
-
-.workflow-progress-bar::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-    animation: progressShine 2s infinite;
 }
 
 /* Enhanced Animations */
@@ -550,11 +510,6 @@ html, body {
     50% {
         box-shadow: 0 4px 12px rgba(13, 110, 253, 0.6);
     }
-}
-
-@keyframes progressShine {
-    0% { left: -100%; }
-    100% { left: 100%; }
 }
 
 @keyframes slideInUp {
@@ -732,17 +687,15 @@ html, body {
 }
 
 .card-header {
-    background: var(--ey-yellow);
-    color: var(--dark-color);  /* Black text on yellow background */
+    background: linear-gradient(135deg, var(--primary-color), #0a58ca);
+    color: white;
     border-bottom: none;
     padding: 12px 15px;
-    font-weight: 600;
 }
 
 .card-header h6 {
     margin: 0;
     font-weight: 600;
-    color: var(--dark-color);
 }
 
 /* Loading States */
@@ -1092,6 +1045,8 @@ html, body {
     border-radius: 0;
 }
 
+/* Activity Log Enhancements */
+
 /* Range Display Labels */
 .dual-range-container + .row .form-control-sm {
     font-size: 0.8rem;
@@ -1204,21 +1159,30 @@ select[multiple] option:checked {
 
 /* Action Button Styles */
 .btn-predict-sic, .btn-update-revenue {
-    border: none;
+    background: var(--dark-color);
+    border: 1px solid var(--ey-yellow);
+    color: var(--ey-yellow);
     border-radius: 4px;
     padding: 4px 8px;
     font-size: 12px;
+    font-weight: 600;
     transition: var(--transition);
 }
 
 .btn-predict-sic:hover {
+    background: var(--ey-yellow);
+    color: var(--dark-color);
+    border: 1px solid var(--dark-color);
     transform: scale(1.05);
-    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3);
+    box-shadow: 0 2px 8px rgba(255, 230, 0, 0.3);
 }
 
 .btn-update-revenue:hover {
+    background: var(--ey-yellow);
+    color: var(--dark-color);
+    border: 1px solid var(--dark-color);
     transform: scale(1.05);
-    box-shadow: 0 2px 8px rgba(25, 135, 84, 0.3);
+    box-shadow: 0 2px 8px rgba(255, 230, 0, 0.3);
 }
 
 /* Activity Log Enhancements */
