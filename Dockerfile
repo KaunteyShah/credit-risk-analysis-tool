@@ -1,5 +1,5 @@
 # Credit Risk Analysis - Production Docker Image
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
@@ -8,7 +8,6 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
-    software-properties-common \
     git \
     && rm -rf /var/lib/apt/lists/*
 
@@ -21,6 +20,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY app/ ./app/
 COPY data/ ./data/
+COPY config/ ./config/
+COPY utils/ ./utils/
+COPY startup.py .
 COPY main.py .
 
 # Create non-root user
@@ -29,10 +31,10 @@ RUN chown -R appuser:appuser /app
 USER appuser
 
 # Expose port
-EXPOSE 8501
+EXPOSE 8000
 
 # Health check
-HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
+HEALTHCHECK CMD curl --fail http://localhost:8000/health || exit 1
 
-# Start application
-CMD ["streamlit", "run", "app/core/streamlit_app_langgraph_viz.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# Start Flask application  
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--timeout", "600", "--workers", "1", "startup:application"]

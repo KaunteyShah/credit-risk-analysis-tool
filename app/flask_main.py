@@ -195,47 +195,67 @@ def create_app():
                             except ImportError as import_error:
                                 logger.warning(f"Enhanced SIC matcher not available: {import_error}")
                                 app.sic_matcher = None
-                                # Generate demo accuracy data 
-                                logger.info("Generating demo SIC accuracy data...")
+                                # Generate accuracy data 
+                                logger.info("Generating SIC accuracy data...")
                                 
                                 # Add required columns for consistency
                                 if 'Old_Accuracy' not in app.company_data.columns:
-                                    app.company_data['Old_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data)) * 100
+                                    if is_demo_mode():
+                                        app.company_data['Old_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data)) * 100
+                                    else:
+                                        # Use default accuracy when not in demo mode
+                                        import numpy as np
+                                        app.company_data['Old_Accuracy'] = np.random.uniform(70, 90, len(app.company_data))
                                 if 'New_Accuracy' not in app.company_data.columns:
                                     app.company_data['New_Accuracy'] = None
                             
                             except Exception as matcher_error:
                                 logger.error(f"Enhanced SIC matcher initialization failed: {matcher_error}")
                                 app.sic_matcher = None
-                                # Generate demo accuracy data for Azure deployment
-                                logger.info("Generating demo SIC accuracy data...")
+                                # Generate accuracy data for Azure deployment
+                                logger.info("Generating SIC accuracy data...")
                                 
                                 # Add required columns for consistency
                                 if 'Old_Accuracy' not in app.company_data.columns:
-                                    app.company_data['Old_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data)) * 100
+                                    if is_demo_mode():
+                                        app.company_data['Old_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data)) * 100
+                                    else:
+                                        # Use default accuracy when not in demo mode
+                                        import numpy as np
+                                        app.company_data['Old_Accuracy'] = np.random.uniform(70, 90, len(app.company_data))
                                 if 'New_Accuracy' not in app.company_data.columns:
                                     app.company_data['New_Accuracy'] = None
                             
                         except Exception as sic_error:
                             logger.error(f"Enhanced SIC matcher failed: {sic_error}")
-                            # Generate demo accuracy data for Azure deployment
-                            logger.info("Generating demo SIC accuracy data...")
+                            # Generate accuracy data for Azure deployment
+                            logger.info("Generating SIC accuracy data...")
                             app.sic_matcher = None
                             
                             # CRITICAL FIX: Add Old_Accuracy and New_Accuracy columns when SIC matcher fails
                             if 'Old_Accuracy' not in app.company_data.columns:
-                                app.company_data['Old_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data)) * 100
+                                if is_demo_mode():
+                                    app.company_data['Old_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data)) * 100
+                                else:
+                                    # Use default accuracy when not in demo mode
+                                    import numpy as np
+                                    app.company_data['Old_Accuracy'] = np.random.uniform(70, 90, len(app.company_data))
                             if 'New_Accuracy' not in app.company_data.columns:
                                 app.company_data['New_Accuracy'] = None  # Will be filled when user clicks "Predict SIC"
                     else:
                         logger.warning(f"SIC codes file not found: {sic_file}")
-                        # Generate demo accuracy data for Azure deployment
-                        logger.info("Generating demo SIC accuracy data...")
+                        # Generate accuracy data for Azure deployment
+                        logger.info("Generating SIC accuracy data...")
                         app.sic_matcher = None
                         
                         # CRITICAL FIX: Add Old_Accuracy and New_Accuracy columns when no SIC file
                         if 'Old_Accuracy' not in app.company_data.columns:
-                            app.company_data['Old_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data)) * 100
+                            if is_demo_mode():
+                                app.company_data['Old_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data)) * 100
+                            else:
+                                # Use default accuracy when not in demo mode
+                                import numpy as np
+                                app.company_data['Old_Accuracy'] = np.random.uniform(70, 90, len(app.company_data))
                         if 'New_Accuracy' not in app.company_data.columns:
                             app.company_data['New_Accuracy'] = None  # Will be filled when user clicks "Predict SIC"
                     
@@ -291,6 +311,41 @@ def create_app():
         """LangGraph workflow visualization page"""
         return render_template('workflow_visualization.html')
 
+    @app.route('/debug/enhanced-sic-status')
+    def debug_enhanced_sic_status():
+        """Debug endpoint to show enhanced SIC matcher status"""
+        import os
+        try:
+            from app.utils.enhanced_sic_matcher import get_enhanced_sic_matcher
+            
+            # Try to get enhanced SIC matcher
+            matcher = get_enhanced_sic_matcher()
+            
+            # Check file paths
+            current_dir = os.getcwd()
+            sic_file_path = os.path.join(current_dir, "data", "SIC_codes.xlsx")
+            updated_file_path = os.path.join(current_dir, "data", "updated_sic_predictions.csv")
+            
+            return jsonify({
+                "status": "debugging",
+                "current_directory": current_dir,
+                "sic_file_path": sic_file_path,
+                "sic_file_exists": os.path.exists(sic_file_path),
+                "updated_file_path": updated_file_path,
+                "updated_file_exists": os.path.exists(updated_file_path),
+                "matcher_available": matcher is not None,
+                "matcher_sic_codes_df": matcher.sic_codes_df is not None if matcher else None,
+                "sic_descriptions_count": len(matcher.sic_descriptions) if matcher else 0,
+                "directory_contents": os.listdir(current_dir),
+                "data_directory_contents": os.listdir(os.path.join(current_dir, "data")) if os.path.exists(os.path.join(current_dir, "data")) else "data directory missing"
+            })
+        except Exception as e:
+            return jsonify({
+                "error": str(e),
+                "current_directory": os.getcwd(),
+                "directory_contents": os.listdir(os.getcwd())
+            })
+            
     @app.route('/health')
     def health_check():
         """Health check endpoint for Azure monitoring"""

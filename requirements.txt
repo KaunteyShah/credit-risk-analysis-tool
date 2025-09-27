@@ -20,6 +20,7 @@ azure-identity==1.15.0
 beautifulsoup4==4.12.2
 lxml==4.9.3
 rapidfuzz==3.6.1
+portalocker==2.8.2
 
 # OpenAI for AI reasoning agent
 openai>=1.104.2

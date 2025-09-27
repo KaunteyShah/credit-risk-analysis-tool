@@ -33,7 +33,12 @@ class UpdatedDataManager:
         Args:
             updated_data_file: Path to the updated predictions CSV file
         """
-        self.updated_data_file = updated_data_file
+        # Ensure absolute path for container compatibility
+        if not os.path.isabs(updated_data_file):
+            current_dir = os.getcwd()
+            self.updated_data_file = os.path.join(current_dir, updated_data_file)
+        else:
+            self.updated_data_file = updated_data_file
         self.ensure_updated_file_exists()
     
     def ensure_updated_file_exists(self):
@@ -182,14 +187,24 @@ class EnhancedSICMatcher:
         self.sic_codes_df = None
         self.sic_descriptions = {}  # {code: description}
         self.description_to_code = {}  # {description: code}
-        self.updated_data_manager = UpdatedDataManager(updated_data_file)
         
+        # Ensure absolute path for updated data file for container compatibility  
+        if not os.path.isabs(updated_data_file):
+            current_dir = os.getcwd()
+            updated_data_file = os.path.join(current_dir, updated_data_file)
+            
+        self.updated_data_manager = UpdatedDataManager(updated_data_file)
+
         # If no SIC codes file provided, use default
         if not sic_codes_file:
-            sic_codes_file = "data/SIC_codes.xlsx"
+            # Use absolute path from working directory to ensure compatibility in containers
+            current_dir = os.getcwd()
+            sic_codes_file = os.path.join(current_dir, "data", "SIC_codes.xlsx")
+            logger.info(f"🔧 Using default SIC codes file path: {sic_codes_file}")
             
+        logger.info(f"🚀 EnhancedSICMatcher initializing with file: {sic_codes_file}")
         self.load_sic_codes(sic_codes_file)
-    
+
     def load_sic_codes(self, sic_codes_file: str) -> bool:
         """
         Load SIC codes from Excel file.
@@ -201,6 +216,30 @@ class EnhancedSICMatcher:
             bool: True if loaded successfully, False otherwise
         """
         try:
+            # Debug logging for container troubleshooting
+            current_dir = os.getcwd()
+            abs_path = os.path.abspath(sic_codes_file)
+            logger.info(f"🔍 DEBUG - Loading SIC codes...")
+            logger.info(f"🔍 DEBUG - Current working directory: {current_dir}")
+            logger.info(f"🔍 DEBUG - Requested file path: {sic_codes_file}")
+            logger.info(f"🔍 DEBUG - Absolute file path: {abs_path}")
+            logger.info(f"🔍 DEBUG - File exists: {os.path.exists(sic_codes_file)}")
+            
+            # List current directory contents for debugging
+            if os.path.exists(current_dir):
+                try:
+                    dir_contents = os.listdir(current_dir)
+                    logger.info(f"🔍 DEBUG - Current directory contents: {dir_contents[:10]}...")  # Show first 10 items
+                    
+                    # Check if data folder exists
+                    if 'data' in dir_contents:
+                        data_contents = os.listdir(os.path.join(current_dir, 'data'))
+                        logger.info(f"🔍 DEBUG - Data directory contents: {data_contents}")
+                    else:
+                        logger.warning("🔍 DEBUG - Data directory not found in current directory")
+                except Exception as e:
+                    logger.warning(f"🔍 DEBUG - Could not list directory contents: {e}")
+            
             if not os.path.exists(sic_codes_file):
                 logger.error(f"SIC codes file not found: {sic_codes_file}")
                 return False
