@@ -175,3 +175,20 @@ Thumbs.db
 *.bak
 *.backup
 *.orig
+
+# Debug and temporary files
+*.log
+*.zip
+deployment_marker.txt
+LogFiles/
+deployments/
+*debug*.py
+*test*.csv
+*temp*.csv
+local_*.log
+test_*.log
+
+# Azure deployment artifacts
+azure-logs.zip
+deploy.zip
+deploy_fixed.zip

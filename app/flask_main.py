@@ -311,41 +311,6 @@ def create_app():
         """LangGraph workflow visualization page"""
         return render_template('workflow_visualization.html')
 
-    @app.route('/debug/enhanced-sic-status')
-    def debug_enhanced_sic_status():
-        """Debug endpoint to show enhanced SIC matcher status"""
-        import os
-        try:
-            from app.utils.enhanced_sic_matcher import get_enhanced_sic_matcher
-            
-            # Try to get enhanced SIC matcher
-            matcher = get_enhanced_sic_matcher()
-            
-            # Check file paths
-            current_dir = os.getcwd()
-            sic_file_path = os.path.join(current_dir, "data", "SIC_codes.xlsx")
-            updated_file_path = os.path.join(current_dir, "data", "updated_sic_predictions.csv")
-            
-            return jsonify({
-                "status": "debugging",
-                "current_directory": current_dir,
-                "sic_file_path": sic_file_path,
-                "sic_file_exists": os.path.exists(sic_file_path),
-                "updated_file_path": updated_file_path,
-                "updated_file_exists": os.path.exists(updated_file_path),
-                "matcher_available": matcher is not None,
-                "matcher_sic_codes_df": matcher.sic_codes_df is not None if matcher else None,
-                "sic_descriptions_count": len(matcher.sic_descriptions) if matcher else 0,
-                "directory_contents": os.listdir(current_dir),
-                "data_directory_contents": os.listdir(os.path.join(current_dir, "data")) if os.path.exists(os.path.join(current_dir, "data")) else "data directory missing"
-            })
-        except Exception as e:
-            return jsonify({
-                "error": str(e),
-                "current_directory": os.getcwd(),
-                "directory_contents": os.listdir(os.getcwd())
-            })
-            
     @app.route('/health')
     def health_check():
         """Health check endpoint for Azure monitoring"""
@@ -392,137 +357,6 @@ def create_app():
                 'error': str(e),
                 'timestamp': pd.Timestamp.now().isoformat()
             }), 503
-
-    @app.route('/debug')
-    def debug_page():
-        """Debug page to test button functionality"""
-        return """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Debug Buttons</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-</head>
-<body>
-    <div class="container mt-4">
-        <h3>Button Test - Are These Visible?</h3>
-        
-        <div class="alert alert-info">
-            <h5>Static Button Test:</h5>
-            <button class="btn btn-primary btn-sm me-2">
-                <i class="fas fa-robot"></i> Static Predict Button
-            </button>
-            <button class="btn btn-warning btn-sm">
-                <i class="fas fa-sync"></i> Static Update Button
-            </button>
-        </div>
-        
-        <table class="table table-striped table-bordered">
-            <thead class="table-dark">
-                <tr>
-                    <th>Company Name</th>
-                    <th>Country</th>
-                    <th>Employees</th>
-                    <th>Revenue (USD)</th>
-                    <th>Current SIC</th>
-                    <th>SIC Accuracy</th>
-                    <th>Predict SIC</th>
-                    <th>Update Revenue</th>
-                </tr>
-            </thead>
-            <tbody id="testTable">
-                <tr>
-                    <td>Test Company 1</td>
-                    <td>USA</td>
-                    <td>100</td>
-                    <td>$1,000,000</td>
-                    <td>1234</td>
-                    <td>85%</td>
-                    <td>
-                        <button class="btn btn-primary btn-predict btn-sm" data-company-index="0" title="Predict SIC Code">
-                            <i class="fas fa-robot"></i>
-                        </button>
-                    </td>
-                    <td>
-                        <button class="btn btn-warning btn-update btn-sm" data-company-index="0" title="Update Revenue">
-                            <i class="fas fa-sync"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Test Company 2</td>
-                    <td>Canada</td>
-                    <td>200</td>
-                    <td>$2,000,000</td>
-                    <td>5678</td>
-                    <td>92%</td>
-                    <td>
-                        <button class="btn btn-primary btn-predict btn-sm" data-company-index="1" title="Predict SIC Code">
-                            <i class="fas fa-robot"></i>
-                        </button>
-                    </td>
-                    <td>
-                        <button class="btn btn-warning btn-update btn-sm" data-company-index="1" title="Update Revenue">
-                            <i class="fas fa-sync"></i>
-                        </button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        
-        <div id="results"></div>
-    </div>
-
-    <script>
-        $(document).ready(function() {
-            console.log('Debug page loaded');
-            
-            // Check if buttons exist
-            console.log('Predict buttons found:', $('.btn-predict').length);
-            console.log('Update buttons found:', $('.btn-update').length);
-            
-            $('.btn-predict').click(function() {
-                const index = $(this).data('company-index');
-                $('#results').append('<div class="alert alert-info">Predict SIC button ' + index + ' clicked!</div>');
-                
-                fetch('/api/predict_sic', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({company_index: index})
-                })
-                .then(response => response.json())
-                .then(data => {
-                    $('#results').append('<div class="alert alert-success">Predict API Response: ' + JSON.stringify(data) + '</div>');
-                })
-                .catch(error => {
-                    $('#results').append('<div class="alert alert-danger">Predict Error: ' + error + '</div>');
-                });
-            });
-            
-            $('.btn-update').click(function() {
-                const index = $(this).data('company-index');
-                $('#results').append('<div class="alert alert-info">Update Revenue button ' + index + ' clicked!</div>');
-                
-                fetch('/api/update_revenue', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({company_index: index})
-                })
-                .then(response => response.json())
-                .then(data => {
-                    $('#results').append('<div class="alert alert-success">Update API Response: ' + JSON.stringify(data) + '</div>');
-                })
-                .catch(error => {
-                    $('#results').append('<div class="alert alert-danger">Update Error: ' + error + '</div>');
-                });
-            });
-        });
-    </script>
-</body>
-</html>
-        """
 
     @app.route('/api/data')
     def get_data():
@@ -585,32 +419,6 @@ def create_app():
             logger.error(f"Error in /api/data: {str(e)}")
             return jsonify({'error': str(e)}), 500
     
-    @app.route('/api/debug')
-    def debug_data():
-        """Debug endpoint to inspect data structure"""
-        try:
-            if app.company_data is None:
-                return jsonify({
-                    'status': 'error',
-                    'message': 'Company data is None'
-                })
-            
-            return jsonify({
-                'status': 'success',
-                'shape': app.company_data.shape,
-                'columns': list(app.company_data.columns),
-                'dtypes': {col: str(dtype) for col, dtype in app.company_data.dtypes.items()},
-                'first_5_countries': app.company_data['Country'].head().tolist() if 'Country' in app.company_data.columns else 'Country column missing',
-                'country_column_exists': 'Country' in app.company_data.columns,
-                'sample_row': app.company_data.iloc[0].to_dict() if len(app.company_data) > 0 else 'No data'
-            })
-        except Exception as e:
-            return jsonify({
-                'status': 'error',
-                'message': str(e),
-                'error_type': type(e).__name__
-            })
-
     @app.route('/api/filter_options')
     def get_filter_options():
         """Get available filter options"""
@@ -848,56 +656,6 @@ def create_app():
         except Exception as e:
             logger.error(f"Error in /api/companies: {str(e)}")
             return jsonify({'error': str(e)}), 500
-
-    @app.route('/api/data/debug')
-    def debug_data_status():
-        """Detailed data debugging endpoint for production troubleshooting"""
-        try:
-            debug_info = {
-                'timestamp': pd.Timestamp.now().isoformat(),
-                'environment': os.environ.get('ENVIRONMENT', 'development'),
-                'project_root': project_root,
-                'working_directory': os.getcwd(),
-            }
-            
-            # Check data files existence
-            data_files = {
-                'company_file': os.path.join(project_root, 'data', 'Sample_data2.csv'),
-                'sic_file': os.path.join(project_root, 'data', 'SIC_codes.xlsx')
-            }
-            
-            for key, filepath in data_files.items():
-                debug_info[f'{key}_path'] = filepath
-                debug_info[f'{key}_exists'] = os.path.exists(filepath)
-                if os.path.exists(filepath):
-                    debug_info[f'{key}_size'] = os.path.getsize(filepath)
-                    debug_info[f'{key}_modified'] = pd.Timestamp.fromtimestamp(os.path.getmtime(filepath)).isoformat()
-            
-            # Check app data status
-            debug_info['app_company_data_loaded'] = hasattr(app, 'company_data')
-            debug_info['app_company_data_is_none'] = app.company_data is None if hasattr(app, 'company_data') else True
-            
-            if hasattr(app, 'company_data') and app.company_data is not None:
-                debug_info['company_data_length'] = len(app.company_data)
-                debug_info['company_data_columns'] = list(app.company_data.columns)
-                debug_info['company_data_memory_usage'] = app.company_data.memory_usage(deep=True).sum()
-            
-            # Check if data directory exists
-            data_dir = os.path.join(project_root, 'data')
-            debug_info['data_directory_exists'] = os.path.exists(data_dir)
-            if os.path.exists(data_dir):
-                debug_info['data_directory_contents'] = os.listdir(data_dir)
-            
-            # Check API keys (without revealing values)
-            debug_info['api_keys'] = {
-                'COMPANIES_HOUSE_API_KEY': 'SET' if os.environ.get('COMPANIES_HOUSE_API_KEY') else 'MISSING',
-                'OPENAI_API_KEY': 'SET' if os.environ.get('OPENAI_API_KEY') else 'MISSING'
-            }
-            
-            return jsonify(debug_info)
-            
-        except Exception as e:
-            return jsonify({'error': str(e), 'traceback': str(e.__traceback__)}), 500
 
     @app.route('/api/data/reload', methods=['POST'])
     def force_reload_data():
