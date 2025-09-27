@@ -197,7 +197,6 @@ def create_app():
                                 app.sic_matcher = None
                                 # Generate demo accuracy data 
                                 logger.info("Generating demo SIC accuracy data...")
-                                app.company_data['SIC_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data))
                                 
                                 # Add required columns for consistency
                                 if 'Old_Accuracy' not in app.company_data.columns:
@@ -210,7 +209,6 @@ def create_app():
                                 app.sic_matcher = None
                                 # Generate demo accuracy data for Azure deployment
                                 logger.info("Generating demo SIC accuracy data...")
-                                app.company_data['SIC_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data))
                                 
                                 # Add required columns for consistency
                                 if 'Old_Accuracy' not in app.company_data.columns:
@@ -222,7 +220,6 @@ def create_app():
                             logger.error(f"Enhanced SIC matcher failed: {sic_error}")
                             # Generate demo accuracy data for Azure deployment
                             logger.info("Generating demo SIC accuracy data...")
-                            app.company_data['SIC_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data))
                             app.sic_matcher = None
                             
                             # CRITICAL FIX: Add Old_Accuracy and New_Accuracy columns when SIC matcher fails
@@ -234,7 +231,6 @@ def create_app():
                         logger.warning(f"SIC codes file not found: {sic_file}")
                         # Generate demo accuracy data for Azure deployment
                         logger.info("Generating demo SIC accuracy data...")
-                        app.company_data['SIC_Accuracy'] = simulation_service.generate_sic_accuracy(len(app.company_data))
                         app.sic_matcher = None
                         
                         # CRITICAL FIX: Add Old_Accuracy and New_Accuracy columns when no SIC file
@@ -634,7 +630,7 @@ def create_app():
                 'countries': app.company_data['Country'].nunique() if 'Country' in app.company_data.columns else 0,
                 'avg_employees': float(app.company_data['Employees (Total)'].mean()) if 'Employees (Total)' in app.company_data.columns else 0,
                 'avg_revenue': float(app.company_data['Sales (USD)'].mean()) if 'Sales (USD)' in app.company_data.columns else 0,
-                'high_accuracy_count': len(app.company_data[app.company_data['SIC_Accuracy'] >= 0.9])
+                'high_accuracy_count': len(app.company_data[app.company_data['New_Accuracy'] >= 90]) if 'New_Accuracy' in app.company_data.columns else (len(app.company_data[app.company_data['Old_Accuracy'] >= 90]) if 'Old_Accuracy' in app.company_data.columns else 0)
             }
             
             return jsonify(stats)
@@ -652,10 +648,14 @@ def create_app():
             
             # Convert DataFrame to dict records for summary calculation
             if isinstance(app.company_data, pd.DataFrame) and not app.company_data.empty:
+                # Use New_Accuracy if available, otherwise Old_Accuracy
+                accuracy_col = 'New_Accuracy' if 'New_Accuracy' in app.company_data.columns else 'Old_Accuracy'
+                has_accuracy = accuracy_col in app.company_data.columns
+                
                 summary = {
                     'total_companies': len(app.company_data),
-                    'avg_accuracy': float(app.company_data['SIC_Accuracy'].mean()) if 'SIC_Accuracy' in app.company_data.columns else 0.0,
-                    'high_accuracy_count': len(app.company_data[app.company_data['SIC_Accuracy'] > 0.9]) if 'SIC_Accuracy' in app.company_data.columns else 0,
+                    'avg_accuracy': float(app.company_data[accuracy_col].mean()) if has_accuracy else 0.0,
+                    'high_accuracy_count': len(app.company_data[app.company_data[accuracy_col] > 90]) if has_accuracy else 0,
                     'needs_update_count': len(app.company_data[app.company_data['Needs_Revenue_Update']]) if 'Needs_Revenue_Update' in app.company_data.columns else 0,
                     'countries_count': app.company_data['Country'].nunique() if 'Country' in app.company_data.columns else 0
                 }
@@ -777,7 +777,6 @@ def create_app():
                     'Employees (Total)': float(row['Employees (Total)']) if pd.notna(row.get('Employees (Total)')) else None,
                     'Sales (USD)': float(row['Sales (USD)']) if pd.notna(row.get('Sales (USD)')) else None,
                     'UK SIC 2007 Code': str(row.get('UK SIC 2007 Code', '')),
-                    'SIC_Accuracy': float(row.get('SIC_Accuracy', 0)) if pd.notna(row.get('SIC_Accuracy')) else 0,
                     'Old_Accuracy': float(row.get('Old_Accuracy', 0)) if pd.notna(row.get('Old_Accuracy')) else 0,
                     'New_Accuracy': float(row.get('New_Accuracy', 0)) if pd.notna(row.get('New_Accuracy')) else 0
                 }
@@ -1071,12 +1070,8 @@ def create_app():
                     workflow_type = "REAL AGENTS"
                 else:
                     return jsonify({'error': 'Real SIC prediction failed: No suitable match found'}), 500
-            else:
+            elif is_demo_mode():
                 # Use simulation mode (existing behavior)
-                if not is_demo_mode():
-                    return jsonify({'error': 'SIC prediction requires demo mode or real workflow implementation'}), 400
-                
-                # Simulate SIC prediction logic using simulation service
                 simulation_service.simulate_prediction_delay(0.5, 1.5)
                 
                 # Generate a simulated SIC code prediction
@@ -1104,17 +1099,33 @@ def create_app():
                 
                 reasoning = "Simulated prediction with real accuracy calculation"
                 workflow_type = "SIMULATION"
+            else:
+                # Use enhanced SIC matcher (real fuzzy matching mode)
+                logger.info(f"Using enhanced SIC matcher for real fuzzy matching: {company_name}")
+                
+                if not hasattr(app, 'sic_matcher') or not app.sic_matcher:
+                    return jsonify({'error': 'Enhanced SIC matcher not available'}), 500
+                
+                # Use enhanced fuzzy matching to predict SIC
+                matcher_result = app.sic_matcher.calculate_new_accuracy(business_description)
+                predicted_sic = matcher_result.get('predicted_sic_code', current_sic) or current_sic
+                algorithm_accuracy = matcher_result.get('new_accuracy', baseline_accuracy)
+                
+                # Apply max condition: ensure new accuracy is not lower than baseline
+                boosted_accuracy = max(algorithm_accuracy, baseline_accuracy)
+                confidence = boosted_accuracy / 100
+                
+                reasoning = f"Enhanced fuzzy matching with {len(app.sic_matcher.sic_descriptions)} SIC codes"
+                workflow_type = "ENHANCED_FUZZY_MATCHING"
             
             # Update the company data with the prediction (both simulation and real)
             if isinstance(app.company_data, pd.DataFrame):
                 app.company_data.loc[company_index, 'Predicted_SIC'] = predicted_sic
                 app.company_data.loc[company_index, 'SIC_Confidence'] = confidence
-                app.company_data.loc[company_index, 'SIC_Accuracy'] = confidence
                 app.company_data.loc[company_index, 'New_Accuracy'] = boosted_accuracy
             else:
                 app.company_data[company_index]['Predicted_SIC'] = predicted_sic
                 app.company_data[company_index]['SIC_Confidence'] = confidence
-                app.company_data[company_index]['SIC_Accuracy'] = confidence
                 app.company_data[company_index]['New_Accuracy'] = boosted_accuracy
             
             # Generate workflow steps based on the processing type
@@ -1142,6 +1153,33 @@ def create_app():
                         "step": 4,
                         "agent": "Results Compilation Agent",
                         "message": f"New accuracy: {boosted_accuracy:.1f}% (REAL AGENTS)",
+                        "status": "completed"
+                    }
+                ]
+            elif workflow_type == "ENHANCED_FUZZY_MATCHING":
+                workflow_steps = [
+                    {
+                        "step": 1,
+                        "agent": "Data Ingestion Agent",
+                        "message": f"Loading company data for {company_name}...",
+                        "status": "completed"
+                    },
+                    {
+                        "step": 2,
+                        "agent": "Enhanced SIC Matcher",
+                        "message": f"Analyzing business description with 751 SIC codes...",
+                        "status": "completed"
+                    },
+                    {
+                        "step": 3,
+                        "agent": "Fuzzy Matching Algorithm",
+                        "message": f"Best match found: {predicted_sic} (Real Fuzzy Matching)",
+                        "status": "completed"
+                    },
+                    {
+                        "step": 4,
+                        "agent": "Results Compilation Agent",
+                        "message": f"Fuzzy match accuracy: {boosted_accuracy:.1f}%",
                         "status": "completed"
                     }
                 ]
