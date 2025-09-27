@@ -277,7 +277,13 @@ jobs:
         
         # Deploy using Azure CLI (requires AZURE_CREDENTIALS secret)
         echo "🔑 Authenticating with Azure..."
-        echo '${{ secrets.AZURE_CREDENTIALS }}' | az login --service-principal -u $(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId) -p $(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientSecret) --tenant $(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .tenantId)
+        
+        # Parse Azure credentials JSON and authenticate
+        CLIENT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId)
+        CLIENT_SECRET=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientSecret)
+        TENANT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .tenantId)
+        
+        az login --service-principal --username "$CLIENT_ID" --password "$CLIENT_SECRET" --tenant "$TENANT_ID"
         
         # CRITICAL: Set correct startup command BEFORE deployment
         echo "⚙️ Setting correct startup command..."
