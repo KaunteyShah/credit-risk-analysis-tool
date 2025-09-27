@@ -669,11 +669,33 @@ def create_app():
     def get_workflow_structure():
         """Get LangGraph workflow structure for visualization"""
         try:
+            if app.langgraph_workflow is None:
+                # Return mock structure when workflow is not available
+                mock_structure = {
+                    'nodes': [
+                        {'id': 'start', 'type': 'start', 'label': 'Start', 'x': 100, 'y': 100},
+                        {'id': 'data_ingestion', 'type': 'process', 'label': 'Data Ingestion', 'x': 250, 'y': 100},
+                        {'id': 'analysis', 'type': 'process', 'label': 'Analysis', 'x': 400, 'y': 100},
+                        {'id': 'end', 'type': 'end', 'label': 'End', 'x': 550, 'y': 100}
+                    ],
+                    'edges': [
+                        {'from': 'start', 'to': 'data_ingestion'},
+                        {'from': 'data_ingestion', 'to': 'analysis'},
+                        {'from': 'analysis', 'to': 'end'}
+                    ]
+                }
+                return jsonify({
+                    'success': True,
+                    'structure': mock_structure,
+                    'langgraph_available': False,
+                    'message': 'Workflow visualization using mock data (LangGraph not available)'
+                })
+            
             structure = app.langgraph_workflow.get_workflow_visualization()
             return jsonify({
                 'success': True,
                 'structure': structure,
-                'langgraph_available': hasattr(app.langgraph_workflow, 'graph') and app.langgraph_workflow.graph is not None
+                'langgraph_available': True
             })
         except Exception as e:
             logger.error(f"Error getting workflow structure: {str(e)}")
@@ -683,6 +705,14 @@ def create_app():
     def execute_workflow():
         """Execute the LangGraph workflow"""
         try:
+            if app.langgraph_workflow is None:
+                return jsonify({
+                    'success': False,
+                    'error': 'LangGraph workflow not available in this environment',
+                    'message': 'Workflow execution requires LangGraph dependencies',
+                    'status': 'unavailable'
+                }), 503
+            
             # Get request data
             data = request.get_json() or {}
             
@@ -729,6 +759,40 @@ def create_app():
     def get_workflow_visualization():
         """Get workflow visualization data for frontend"""
         try:
+            if app.langgraph_workflow is None:
+                # Return mock visualization when workflow is not available
+                mock_structure = {
+                    'nodes': [
+                        {'id': 'start', 'type': 'start', 'label': 'Start', 'x': 100, 'y': 100, 'current_status': 'idle', 'progress': 0},
+                        {'id': 'data_ingestion', 'type': 'process', 'label': 'Data Ingestion', 'x': 250, 'y': 100, 'current_status': 'idle', 'progress': 0},
+                        {'id': 'analysis', 'type': 'process', 'label': 'Analysis', 'x': 400, 'y': 100, 'current_status': 'idle', 'progress': 0},
+                        {'id': 'end', 'type': 'end', 'label': 'End', 'x': 550, 'y': 100, 'current_status': 'idle', 'progress': 0}
+                    ],
+                    'edges': [
+                        {'from': 'start', 'to': 'data_ingestion'},
+                        {'from': 'data_ingestion', 'to': 'analysis'},
+                        {'from': 'analysis', 'to': 'end'}
+                    ]
+                }
+                
+                execution_history = [
+                    {
+                        'session_id': 'mock_session',
+                        'start_time': '2024-09-25T10:00:00Z',
+                        'end_time': '2024-09-25T10:05:00Z',
+                        'status': 'mock_data',
+                        'nodes_executed': ['data_ingestion', 'analysis']
+                    }
+                ]
+                
+                return jsonify({
+                    'success': True,
+                    'structure': mock_structure,
+                    'execution_history': execution_history,
+                    'langgraph_available': False,
+                    'message': 'Mock visualization data (LangGraph not available)'
+                })
+            
             # Get the workflow structure
             structure = app.langgraph_workflow.get_workflow_visualization()
             
