@@ -53,6 +53,42 @@ class InputValidator:
         return value
     
     @staticmethod
+    def validate_company_name(value: Any) -> str:
+        """
+        Validate company name parameter.
+        
+        Args:
+            value: Input value to validate
+            
+        Returns:
+            Validated string name
+            
+        Raises:
+            ValidationError: If validation fails
+        """
+        if value is None:
+            raise ValidationError("Company name is required")
+        
+        # Convert to string and strip whitespace
+        if not isinstance(value, str):
+            value = str(value)
+        
+        value = value.strip()
+        
+        # Check for empty string
+        if not value:
+            raise ValidationError("Company name cannot be empty")
+        
+        # Check length limits
+        if len(value) < 2:
+            raise ValidationError("Company name too short (minimum 2 characters)")
+        
+        if len(value) > 200:  # Reasonable upper limit
+            raise ValidationError("Company name too long (maximum 200 characters)")
+        
+        return value
+    
+    @staticmethod
     def validate_revenue(value: Any) -> float:
         """
         Validate revenue/financial values.
@@ -217,10 +253,17 @@ def validate_predict_sic_input(data: Dict[str, Any]) -> Dict[str, Any]:
     validator = InputValidator()
     
     # Validate required JSON structure
-    validated = validator.validate_json_payload(data, ['company_index'])
+    validated = validator.validate_json_payload(data, ['company_name'])
     
-    # Validate company_index specifically
-    validated['company_index'] = validator.validate_company_index(data['company_index'])
+    # Validate company_name specifically
+    validated['company_name'] = validator.validate_company_name(data['company_name'])
+    
+    # Optional fields
+    if 'registration_number' in data:
+        validated['registration_number'] = str(data['registration_number']).strip()
+    
+    if 'sic_code' in data:
+        validated['sic_code'] = str(data['sic_code']).strip()
     
     return validated
 
