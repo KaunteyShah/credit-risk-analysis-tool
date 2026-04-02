@@ -1,0 +1,432 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}API Status - Modular Architecture{% endblock %}
+
+{% block brand_title %}📊 Modular API Status Monitor{% endblock %}
+
+{% block navbar_actions %}
+<button class="btn btn-outline-light btn-sm me-2" id="apiStatusRefresh">
+    <i class="fas fa-sync"></i> Refresh
+</button>
+<button class="btn btn-outline-light btn-sm" id="clearApiLogs">
+    <i class="fas fa-trash"></i> Clear Logs
+</button>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+    <!-- API Health Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div class="display-6" id="health-status-icon">
+                        <i class="fas fa-heartbeat text-success"></i>
+                    </div>
+                    <h5 class="card-title">API Health</h5>
+                    <p class="card-text" id="health-status-text">Checking...</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div class="display-6 text-info">
+                        <i class="fas fa-plug"></i>
+                    </div>
+                    <h5 class="card-title">Active Endpoints</h5>
+                    <p class="card-text" id="endpoint-count">--</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div class="display-6 text-warning">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </div>
+                    <h5 class="card-title">Avg Response</h5>
+                    <p class="card-text"><span id="avg-response">--</span>ms</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div class="display-6 text-success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h5 class="card-title">Success Rate</h5>
+                    <p class="card-text"><span id="success-rate-api">--%</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Endpoint Status -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> Modular API Endpoints</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Endpoint</th>
+                                    <th>Method</th>
+                                    <th>Status</th>
+                                    <th>Avg Response</th>
+                                    <th>Last Called</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="endpoints-table-body">
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        <div class="spinner-border spinner-border-sm" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        Loading endpoint status...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Chart -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-chart-line"></i> Response Time Trends</h6>
+                </div>
+                <div class="card-body">
+                    <div id="performance-chart" style="height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-info-circle"></i> Architecture Info</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Architecture Type:</strong><br>
+                        <span class="badge bg-success">100% Modular</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Fallback Mode:</strong><br>
+                        <span class="badge bg-primary">Disabled</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Data Source:</strong><br>
+                        <span class="badge bg-info">File-based Repository</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Service Layer:</strong><br>
+                        <span class="badge bg-warning">Active</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Dependency Injection:</strong><br>
+                        <span class="badge bg-secondary">Enabled</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent API Calls Log -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h6 class="mb-0"><i class="fas fa-history"></i> Recent API Calls</h6>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-outline-secondary btn-sm" id="toggleAutoRefresh">
+                                <i class="fas fa-play"></i> Auto Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" style="max-height: 400px;">
+                        <table class="table table-sm">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Method</th>
+                                    <th>Endpoint</th>
+                                    <th>Status</th>
+                                    <th>Response Time</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="api-calls-log">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">
+                                        No API calls recorded yet
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+let autoRefreshInterval = null;
+
+$(document).ready(function() {
+    loadApiStatus();
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    $('#apiStatusRefresh').on('click', loadApiStatus);
+    $('#clearApiLogs').on('click', clearApiLogs);
+    $('#toggleAutoRefresh').on('click', toggleAutoRefresh);
+    
+    // Listen for ModularCore API calls
+    $(document).on('modular-api-call', function(event, callData) {
+        updateApiCallLog(callData);
+    });
+}
+
+async function loadApiStatus() {
+    try {
+        // Load health data
+        const healthData = await window.ModularCore.makeApiCall('/health');
+        const statsData = await window.ModularCore.makeApiCall('/stats');
+        
+        updateHealthStatus(healthData);
+        updateStatsDisplay(statsData);
+        updateEndpointsTable();
+        updatePerformanceChart();
+        updateApiCallsLog();
+        
+    } catch (error) {
+        console.error('Failed to load API status:', error);
+        showApiError(error.message);
+    }
+}
+
+function updateHealthStatus(healthData) {
+    const statusIcon = $('#health-status-icon i');
+    const statusText = $('#health-status-text');
+    
+    if (healthData.status === 'healthy') {
+        statusIcon.removeClass().addClass('fas fa-heartbeat text-success');
+        statusText.text('Healthy').removeClass().addClass('text-success');
+    } else {
+        statusIcon.removeClass().addClass('fas fa-exclamation-triangle text-danger');
+        statusText.text('Unhealthy').removeClass().addClass('text-danger');
+    }
+}
+
+function updateStatsDisplay(statsData) {
+    $('#endpoint-count').text(statsData.endpoints?.total_modular_endpoints || 0);
+    
+    const metrics = window.ModularCore.getPerformanceMetrics();
+    $('#avg-response').text(metrics.averageResponseTime.toFixed(0));
+    
+    const successCalls = metrics.apiCalls.filter(call => call.status === 200).length;
+    const totalCalls = metrics.apiCalls.length;
+    const successRate = totalCalls > 0 ? (successCalls / totalCalls * 100).toFixed(0) : 0;
+    $('#success-rate-api').text(successRate);
+}
+
+function updateEndpointsTable() {
+    const endpoints = [
+        { path: '/api/modular/health', method: 'GET', description: 'Health check' },
+        { path: '/api/modular/companies', method: 'GET', description: 'Get companies' },
+        { path: '/api/modular/companies/{id}', method: 'GET', description: 'Company details' },
+        { path: '/api/modular/predict-sic', method: 'POST', description: 'SIC prediction' },
+        { path: '/api/modular/stats', method: 'GET', description: 'Architecture stats' },
+        { path: '/api/modular/filter-options', method: 'GET', description: 'Filter options' }
+    ];
+    
+    const tbody = $('#endpoints-table-body');
+    tbody.empty();
+    
+    const metrics = window.ModularCore.getPerformanceMetrics();
+    
+    endpoints.forEach(endpoint => {
+        const endpointCalls = metrics.apiCalls.filter(call => 
+            call.endpoint.includes(endpoint.path.split('/').pop()) || 
+            call.endpoint.includes(endpoint.path.replace('/api/modular', ''))
+        );
+        
+        const avgResponseTime = endpointCalls.length > 0 ? 
+            (endpointCalls.reduce((sum, call) => sum + call.responseTime, 0) / endpointCalls.length).toFixed(0) : 
+            '--';
+            
+        const lastCall = endpointCalls.length > 0 ? 
+            endpointCalls[endpointCalls.length - 1].timestamp.toLocaleTimeString() : 
+            'Never';
+            
+        const status = endpointCalls.length > 0 && endpointCalls[endpointCalls.length - 1].status === 200 ? 
+            'success' : 'secondary';
+            
+        const row = `
+            <tr>
+                <td><code>${endpoint.path}</code></td>
+                <td><span class="badge bg-primary">${endpoint.method}</span></td>
+                <td><span class="badge bg-${status}">${status === 'success' ? 'Active' : 'Inactive'}</span></td>
+                <td>${avgResponseTime}ms</td>
+                <td>${lastCall}</td>
+                <td>
+                    <button class="btn btn-outline-primary btn-sm test-endpoint" 
+                            data-endpoint="${endpoint.path}" 
+                            data-method="${endpoint.method}">
+                        <i class="fas fa-play"></i> Test
+                    </button>
+                </td>
+            </tr>
+        `;
+        
+        tbody.append(row);
+    });
+    
+    // Add test endpoint handlers
+    $('.test-endpoint').on('click', function() {
+        const endpoint = $(this).data('endpoint');
+        const method = $(this).data('method');
+        testEndpoint(endpoint, method);
+    });
+}
+
+async function testEndpoint(endpoint, method) {
+    try {
+        const cleanEndpoint = endpoint.replace('/api/modular', '').replace('{id}', '0');
+        
+        const options = { method };
+        if (method === 'POST' && cleanEndpoint.includes('predict-sic')) {
+            options.body = JSON.stringify({ company_index: 0, use_real_agents: false });
+        }
+        
+        const result = await window.ModularCore.makeApiCall(cleanEndpoint, options);
+        window.ModularCore.showSuccessBanner(`${method} ${endpoint} - Success`);
+        
+    } catch (error) {
+        window.ModularCore.showErrorBanner(`${method} ${endpoint} - Failed: ${error.message}`);
+    }
+}
+
+function updatePerformanceChart() {
+    const metrics = window.ModularCore.getPerformanceMetrics();
+    const recentCalls = metrics.apiCalls.slice(-20); // Last 20 calls
+    
+    if (recentCalls.length === 0) {
+        $('#performance-chart').html('<div class="text-center text-muted mt-5">No API calls to display</div>');
+        return;
+    }
+    
+    const traces = [{
+        x: recentCalls.map(call => call.timestamp),
+        y: recentCalls.map(call => call.responseTime),
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'Response Time',
+        line: { color: '#007bff' },
+        marker: { size: 6 }
+    }];
+    
+    const layout = {
+        title: false,
+        xaxis: { title: 'Time' },
+        yaxis: { title: 'Response Time (ms)' },
+        margin: { l: 50, r: 20, t: 20, b: 50 },
+        showlegend: false
+    };
+    
+    Plotly.newPlot('performance-chart', traces, layout, { responsive: true });
+}
+
+function updateApiCallsLog() {
+    const metrics = window.ModularCore.getPerformanceMetrics();
+    const recentCalls = metrics.apiCalls.slice(-50).reverse(); // Last 50 calls, newest first
+    
+    const tbody = $('#api-calls-log');
+    tbody.empty();
+    
+    if (recentCalls.length === 0) {
+        tbody.append('<tr><td colspan="6" class="text-center text-muted">No API calls recorded yet</td></tr>');
+        return;
+    }
+    
+    recentCalls.forEach(call => {
+        const statusClass = call.status === 200 ? 'success' : 
+                          call.status === 'error' ? 'danger' : 'warning';
+        const statusText = call.status === 200 ? 'Success' : 
+                          call.status === 'error' ? 'Error' : call.status;
+        
+        const row = `
+            <tr>
+                <td>${call.timestamp.toLocaleTimeString()}</td>
+                <td><span class="badge bg-primary">${call.method}</span></td>
+                <td><code>${call.endpoint}</code></td>
+                <td><span class="badge bg-${statusClass}">${statusText}</span></td>
+                <td>${call.responseTime.toFixed(1)}ms</td>
+                <td>
+                    ${call.error ? `<i class="fas fa-exclamation-triangle text-danger" title="${call.error}"></i>` : 
+                                   `<i class="fas fa-check text-success"></i>`}
+                </td>
+            </tr>
+        `;
+        
+        tbody.append(row);
+    });
+}
+
+function toggleAutoRefresh() {
+    const btn = $('#toggleAutoRefresh');
+    const icon = btn.find('i');
+    
+    if (autoRefreshInterval) {
+        // Stop auto refresh
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+        icon.removeClass('fa-pause').addClass('fa-play');
+        btn.find('text').text(' Auto Refresh');
+        window.ModularCore.showSuccessBanner('Auto refresh disabled');
+    } else {
+        // Start auto refresh
+        autoRefreshInterval = setInterval(loadApiStatus, 5000); // Every 5 seconds
+        icon.removeClass('fa-play').addClass('fa-pause');
+        btn.find('text').text(' Auto Refresh');
+        window.ModularCore.showSuccessBanner('Auto refresh enabled (5s interval)');
+    }
+}
+
+function clearApiLogs() {
+    if (window.ModularCore && window.ModularCore.performanceMetrics) {
+        window.ModularCore.performanceMetrics.apiCalls = [];
+        updateApiCallsLog();
+        updatePerformanceChart();
+        window.ModularCore.showSuccessBanner('API logs cleared');
+    }
+}
+
+function showApiError(message) {
+    $('#health-status-icon i').removeClass().addClass('fas fa-exclamation-triangle text-danger');
+    $('#health-status-text').text('Error').removeClass().addClass('text-danger');
+    window.ModularCore.showErrorBanner('API Status Error: ' + message);
+}
+</script>
+{% endblock %}

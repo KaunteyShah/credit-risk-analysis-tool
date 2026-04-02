@@ -1,0 +1,284 @@
+{
+  "summary": {
+    "total_tests": 34,
+    "passed_tests": 20,
+    "failed_tests": 14,
+    "success_rate": 58.82352941176471,
+    "execution_time": 1.224944829940796,
+    "timestamp": "2025-10-02T00:42:57.301525"
+  },
+  "results": [
+    {
+      "test_name": "Database File Exists",
+      "status": "\u2705",
+      "success": true,
+      "details": "Found at data/credit_risk.db",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:56.071790"
+    },
+    {
+      "test_name": "Table api_audit_log",
+      "status": "\u2705",
+      "success": true,
+      "details": "11 columns",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:56.074543"
+    },
+    {
+      "test_name": "Table api_performance_metrics",
+      "status": "\u2705",
+      "success": true,
+      "details": "14 columns",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:56.074580"
+    },
+    {
+      "test_name": "Table system_health_metrics",
+      "status": "\u2705",
+      "success": true,
+      "details": "10 columns",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:56.074606"
+    },
+    {
+      "test_name": "Table api_rate_limits",
+      "status": "\u2705",
+      "success": true,
+      "details": "8 columns",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:56.074629"
+    },
+    {
+      "test_name": "Table error_tracking",
+      "status": "\u2705",
+      "success": true,
+      "details": "13 columns",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:56.074656"
+    },
+    {
+      "test_name": "View v_api_analytics",
+      "status": "\u2705",
+      "success": true,
+      "details": "Created",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:56.074682"
+    },
+    {
+      "test_name": "View v_hourly_performance",
+      "status": "\u2705",
+      "success": true,
+      "details": "Created",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:56.074689"
+    },
+    {
+      "test_name": "View v_top_endpoints",
+      "status": "\u2705",
+      "success": true,
+      "details": "Created",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:56.074695"
+    },
+    {
+      "test_name": "View v_error_analysis",
+      "status": "\u2705",
+      "success": true,
+      "details": "Created",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:56.074701"
+    },
+    {
+      "test_name": "WAL Mode",
+      "status": "\u2705",
+      "success": true,
+      "details": "Mode: wal",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:56.074712"
+    },
+    {
+      "test_name": "Audit Middleware Import",
+      "status": "\u2705",
+      "success": true,
+      "details": "Successfully imported",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:56.243181"
+    },
+    {
+      "test_name": "Performance Monitor Import",
+      "status": "\u2705",
+      "success": true,
+      "details": "Successfully imported",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:56.243216"
+    },
+    {
+      "test_name": "Rate Limiter Import",
+      "status": "\u2705",
+      "success": true,
+      "details": "Successfully imported",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:56.243226"
+    },
+    {
+      "test_name": "System Metrics",
+      "status": "\u2705",
+      "success": true,
+      "details": "CPU: 32.8%",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:57.244517"
+    },
+    {
+      "test_name": "API /api/v2/health",
+      "status": "\u274c",
+      "success": false,
+      "details": "Request failed",
+      "error": "HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: /api/v2/health (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x101cf7590>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+      "timestamp": "2025-10-02T00:42:57.254766"
+    },
+    {
+      "test_name": "API /api/v2/companies/search",
+      "status": "\u274c",
+      "success": false,
+      "details": "Request failed",
+      "error": "HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: /api/v2/companies/search?limit=5 (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x102f012e0>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+      "timestamp": "2025-10-02T00:42:57.256987"
+    },
+    {
+      "test_name": "API /api/v2/analytics/api-usage",
+      "status": "\u274c",
+      "success": false,
+      "details": "Request failed",
+      "error": "HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: /api/v2/analytics/api-usage?days=1 (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x102f01b80>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+      "timestamp": "2025-10-02T00:42:57.258485"
+    },
+    {
+      "test_name": "API /api/v2/analytics/performance",
+      "status": "\u274c",
+      "success": false,
+      "details": "Request failed",
+      "error": "HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: /api/v2/analytics/performance (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x102f02300>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+      "timestamp": "2025-10-02T00:42:57.259542"
+    },
+    {
+      "test_name": "API /api/v2/analytics/errors",
+      "status": "\u274c",
+      "success": false,
+      "details": "Request failed",
+      "error": "HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: /api/v2/analytics/errors (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x102f02a20>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+      "timestamp": "2025-10-02T00:42:57.260541"
+    },
+    {
+      "test_name": "API /api/v2/system/status",
+      "status": "\u274c",
+      "success": false,
+      "details": "Request failed",
+      "error": "HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: /api/v2/system/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x101aa05c0>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+      "timestamp": "2025-10-02T00:42:57.262173"
+    },
+    {
+      "test_name": "Batch Operations",
+      "status": "\u274c",
+      "success": false,
+      "details": "Request failed",
+      "error": "HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: /api/v2/companies/batch (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x102f020f0>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+      "timestamp": "2025-10-02T00:42:57.263500"
+    },
+    {
+      "test_name": "Performance Summary",
+      "status": "\u274c",
+      "success": false,
+      "details": "API performance data available",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:57.275546"
+    },
+    {
+      "test_name": "Real-time Stats",
+      "status": "\u2705",
+      "success": true,
+      "details": "Timestamp: 2025-10-01T23:42:57.282861",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:57.282879"
+    },
+    {
+      "test_name": "Rate Limiting",
+      "status": "\u274c",
+      "success": false,
+      "details": "Rate limiting test failed",
+      "error": "Working outside of request context.\n\nThis typically means that you attempted to use functionality that needed\nan active HTTP request. Consult the documentation on testing for\ninformation about how to avoid this problem.",
+      "timestamp": "2025-10-02T00:42:57.282945"
+    },
+    {
+      "test_name": "Audit Logging",
+      "status": "\u274c",
+      "success": false,
+      "details": "Audit logging test failed",
+      "error": "HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: /api/v2/health (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x102f01700>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+      "timestamp": "2025-10-02T00:42:57.286932"
+    },
+    {
+      "test_name": "View v_api_analytics",
+      "status": "\u2705",
+      "success": true,
+      "details": "0 records available",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:57.288431"
+    },
+    {
+      "test_name": "View v_hourly_performance",
+      "status": "\u2705",
+      "success": true,
+      "details": "0 records available",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:57.288535"
+    },
+    {
+      "test_name": "View v_top_endpoints",
+      "status": "\u2705",
+      "success": true,
+      "details": "0 records available",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:57.288616"
+    },
+    {
+      "test_name": "View v_error_analysis",
+      "status": "\u2705",
+      "success": true,
+      "details": "0 records available",
+      "error": null,
+      "timestamp": "2025-10-02T00:42:57.288686"
+    },
+    {
+      "test_name": "Performance Health Check",
+      "status": "\u274c",
+      "success": false,
+      "details": "Performance test failed",
+      "error": "HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: /api/v2/health (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x102f00e60>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+      "timestamp": "2025-10-02T00:42:57.290087"
+    },
+    {
+      "test_name": "Performance Company Search",
+      "status": "\u274c",
+      "success": false,
+      "details": "Performance test failed",
+      "error": "HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: /api/v2/companies/search?limit=10 (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x102f03140>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+      "timestamp": "2025-10-02T00:42:57.291838"
+    },
+    {
+      "test_name": "Performance System Status",
+      "status": "\u274c",
+      "success": false,
+      "details": "Performance test failed",
+      "error": "HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: /api/v2/system/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x102f039b0>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+      "timestamp": "2025-10-02T00:42:57.294627"
+    },
+    {
+      "test_name": "Monitoring Dashboard",
+      "status": "\u274c",
+      "success": false,
+      "details": "Dashboard test failed",
+      "error": "HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: /monitoring (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x102f02e10>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+      "timestamp": "2025-10-02T00:42:57.296671"
+    }
+  ]
+}

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Risk - Filter Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <h2><i class="fas fa-filter"></i> Credit Risk Filtering Demo</h2>
+        
+        <!-- Filter Controls -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <label class="form-label">🔍 Company Search</label>
+                <input type="text" id="companySearch" class="form-control" placeholder="Search companies..." value="">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">🌍 Country</label>
+                <select id="countryFilter" class="form-select">
+                    <option value="">All Countries</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">📊 Limit</label>
+                <input type="number" id="limitInput" class="form-control" value="10" min="1" max="50">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <button id="searchBtn" class="btn btn-primary d-block w-100">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <button id="clearBtn" class="btn btn-outline-secondary d-block w-100">
+                    <i class="fas fa-times"></i> Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- Field Selector (Collapsible) -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header" data-bs-toggle="collapse" data-bs-target="#fieldSelector" style="cursor: pointer;">
+                        <h6 class="mb-0">
+                            <i class="fas fa-columns"></i> Select Fields to Display 
+                            <span class="badge bg-primary ms-2" id="selectedFieldCount">3 selected</span>
+                            <i class="fas fa-chevron-down float-end" id="toggleIcon"></i>
+                        </h6>
+                    </div>
+                    <div class="collapse" id="fieldSelector">
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- Basic Info -->
+                                <div class="col-md-3">
+                                    <h6 class="text-primary"><i class="fas fa-info-circle"></i> Basic Info</h6>
+                                    <div class="form-check">
+                                        <input class="form-check-input field-selector" type="checkbox" value="company_name" id="field_company_name" checked>
+                                        <label class="form-check-label" for="field_company_name">Company Name</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input field-selector" type="checkbox" value="company_number" id="field_company_number" checked>
+                                        <label class="form-check-label" for="field_company_number">Company Number</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input field-selector" type="checkbox" value="company_type" id="field_company_type">
+                                        <label class="form-check-label" for="field_company_type">Company Type</label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Financial -->
+                                <div class="col-md-3">
+                                    <h6 class="text-success"><i class="fas fa-dollar-sign"></i> Financial</h6>
+                                    <div class="form-check">
+                                        <input class="form-check-input field-selector" type="checkbox" value="sales_usd" id="field_sales_usd">
+                                        <label class="form-check-label" for="field_sales_usd">Sales (USD)</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input field-selector" type="checkbox" value="assets_usd" id="field_assets_usd">
+                                        <label class="form-check-label" for="field_assets_usd">Assets (USD)</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input field-selector" type="checkbox" value="employees_total" id="field_employees_total">
+                                        <label class="form-check-label" for="field_employees_total">Total Employees</label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Status/Dates -->
+                                <div class="col-md-3">
+                                    <h6 class="text-info"><i class="fas fa-calendar"></i> Status/Dates</h6>
+                                    <div class="form-check">
+                                        <input class="form-check-input field-selector" type="checkbox" value="status" id="field_status" checked>
+                                        <label class="form-check-label" for="field_status">Status</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input field-selector" type="checkbox" value="incorporation_date" id="field_incorporation_date">
+                                        <label class="form-check-label" for="field_incorporation_date">Incorporation Date</label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Location -->
+                                <div class="col-md-3">
+                                    <h6 class="text-warning"><i class="fas fa-map-marker-alt"></i> Location</h6>
+                                    <div class="form-check">
+                                        <input class="form-check-input field-selector" type="checkbox" value="jurisdiction" id="field_jurisdiction">
+                                        <label class="form-check-label" for="field_jurisdiction">Jurisdiction</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input field-selector" type="checkbox" value="registered_office_address" id="field_registered_office_address">
+                                        <label class="form-check-label" for="field_registered_office_address">Registered Address</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <button id="selectAllFields" class="btn btn-outline-primary btn-sm me-2">Select All</button>
+                                    <button id="clearAllFields" class="btn btn-outline-secondary btn-sm">Clear All</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="fas fa-building"></i> Results</h5>
+                        <span id="resultCount" class="badge bg-primary">0</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="results">
+                            <p class="text-muted">Click Search to see results...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class EnhancedFilterDemo {
+            constructor() {
+                this.selectedFields = new Set(['company_name', 'company_number', 'status']);
+                this.initializeEventListeners();
+                this.loadFilterOptions();
+                this.updateFieldCount();
+            }
+
+            initializeEventListeners() {
+                // Search and clear buttons
+                document.getElementById('searchBtn').addEventListener('click', () => this.performSearch());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clearAll());
+
+                // Field selector events
+                document.getElementById('selectAllFields').addEventListener('click', () => this.selectAllFields());
+                document.getElementById('clearAllFields').addEventListener('click', () => this.clearAllFields());
+
+                // Field checkboxes
+                document.querySelectorAll('.field-selector').forEach(checkbox => {
+                    checkbox.addEventListener('change', () => {
+                        if (checkbox.checked) {
+                            this.selectedFields.add(checkbox.value);
+                        } else {
+                            this.selectedFields.delete(checkbox.value);
+                        }
+                        this.updateFieldCount();
+                    });
+                });
+
+                // Collapse toggle icon
+                document.getElementById('fieldSelector').addEventListener('show.bs.collapse', () => {
+                    document.getElementById('toggleIcon').classList.remove('fa-chevron-down');
+                    document.getElementById('toggleIcon').classList.add('fa-chevron-up');
+                });
+                
+                document.getElementById('fieldSelector').addEventListener('hide.bs.collapse', () => {
+                    document.getElementById('toggleIcon').classList.remove('fa-chevron-up');
+                    document.getElementById('toggleIcon').classList.add('fa-chevron-down');
+                });
+
+                // Auto-search on Enter
+                document.getElementById('companySearch').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.performSearch();
+                });
+            }
+
+            async loadFilterOptions() {
+                try {
+                    const response = await fetch('/api/modular/filter-options');
+                    const data = await response.json();
+                    
+                    const countrySelect = document.getElementById('countryFilter');
+                    countrySelect.innerHTML = '<option value="">All Countries</option>';
+                    
+                    if (data.countries) {
+                        data.countries.forEach(country => {
+                            const option = document.createElement('option');
+                            option.value = country;
+                            option.textContent = country;
+                            countrySelect.appendChild(option);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error loading filter options:', error);
+                }
+            }
+
+            updateFieldCount() {
+                document.getElementById('selectedFieldCount').textContent = `${this.selectedFields.size} selected`;
+            }
+
+            selectAllFields() {
+                document.querySelectorAll('.field-selector').forEach(checkbox => {
+                    checkbox.checked = true;
+                    this.selectedFields.add(checkbox.value);
+                });
+                this.updateFieldCount();
+            }
+
+            clearAllFields() {
+                document.querySelectorAll('.field-selector').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                this.selectedFields.clear();
+                this.updateFieldCount();
+            }
+
+            async performSearch() {
+                const search = document.getElementById('companySearch').value;
+                const country = document.getElementById('countryFilter').value;
+                const limit = document.getElementById('limitInput').value;
+                
+                const resultsDiv = document.getElementById('results');
+                const countBadge = document.getElementById('resultCount');
+                
+                if (this.selectedFields.size === 0) {
+                    resultsDiv.innerHTML = '<div class="alert alert-warning">Please select at least one field to display.</div>';
+                    return;
+                }
+                
+                resultsDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Searching...</p></div>';
+                
+                try {
+                    let url, data;
+                    
+                    if (search) {
+                        // Use SQLite search for company names
+                        url = `/api/sqlite/companies/search?q=${encodeURIComponent(search)}&limit=${limit}`;
+                        const response = await fetch(url);
+                        const result = await response.json();
+                        data = { results: result.results || [], count: result.count || 0 };
+                    } else {
+                        // Use modular companies endpoint
+                        url = `/api/modular/companies?limit=${limit}`;
+                        if (country) url += `&country=${encodeURIComponent(country)}`;
+                        
+                        const response = await fetch(url);
+                        const result = await response.json();
+                        data = { results: result.data || [], count: (result.data || []).length };
+                    }
+                    
+                    countBadge.textContent = data.count;
+                    this.renderTable(data.results);
+                    
+                } catch (error) {
+                    console.error('Search error:', error);
+                    resultsDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                }
+            }
+
+            renderTable(companies) {
+                const resultsDiv = document.getElementById('results');
+                
+                if (companies.length === 0) {
+                    resultsDiv.innerHTML = '<div class="alert alert-info">No companies found matching your criteria.</div>';
+                    return;
+                }
+
+                // Create table header
+                let html = '<div class="table-responsive"><table class="table table-striped table-hover"><thead class="table-dark"><tr>';
+                
+                const selectedFieldsArray = Array.from(this.selectedFields);
+                selectedFieldsArray.forEach(field => {
+                    html += `<th class="text-nowrap">${this.formatFieldName(field)}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+
+                // Create table rows
+                companies.forEach(company => {
+                    html += '<tr>';
+                    selectedFieldsArray.forEach(field => {
+                        const value = this.getFieldValue(company, field);
+                        html += `<td>${this.formatFieldValue(field, value)}</td>`;
+                    });
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table></div>';
+                resultsDiv.innerHTML = html;
+            }
+
+            formatFieldName(field) {
+                return field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            }
+
+            getFieldValue(company, field) {
+                // Handle different data structures
+                return company[field] || 
+                       company[field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())] ||
+                       'N/A';
+            }
+
+            formatFieldValue(field, value) {
+                if (value === null || value === undefined || value === '') return 'N/A';
+                
+                // Format financial values
+                if (field.includes('usd') && typeof value === 'number') {
+                    return new Intl.NumberFormat('en-US', { 
+                        style: 'currency', 
+                        currency: 'USD',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    }).format(value);
+                }
+                
+                // Format employee counts
+                if (field.includes('employee') && typeof value === 'number') {
+                    return new Intl.NumberFormat().format(value);
+                }
+                
+                // Truncate long text
+                if (typeof value === 'string' && value.length > 100) {
+                    return value.substring(0, 100) + '...';
+                }
+                
+                return value;
+            }
+
+            clearAll() {
+                document.getElementById('companySearch').value = '';
+                document.getElementById('countryFilter').value = '';
+                document.getElementById('limitInput').value = '10';
+                document.getElementById('results').innerHTML = '<p class="text-muted">Click Search to see results...</p>';
+                document.getElementById('resultCount').textContent = '0';
+            }
+        }
+
+        // Initialize the enhanced filter demo
+        document.addEventListener('DOMContentLoaded', () => {
+            new EnhancedFilterDemo();
+
+        searchBtn.addEventListener('click', async () => {
+            const search = document.getElementById('companySearch').value;
+            const country = document.getElementById('countryFilter').value;
+            const limit = document.getElementById('limitInput').value;
+            
+            resultsDiv.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Searching...</p>';
+            
+            try {
+                let url;
+                if (search) {
+                    // Use search API
+                    url = `/api/sqlite/companies/search?q=${encodeURIComponent(search)}&limit=${limit}`;
+                } else {
+                    // Use general companies API
+                    url = `/api/modular/companies?limit=${limit}`;
+                    if (country) url += `&country=${encodeURIComponent(country)}`;
+                }
+                
+                console.log('Fetching:', url);
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                console.log('Response:', data);
+                
+                let companies = [];
+                let total = 0;
+                
+                if (data.results) {
+                    // SQLite search response
+                    companies = data.results;
+                    total = data.count;
+                } else if (data.data) {
+                    // Modular companies response
+                    companies = data.data;
+                    total = companies.length;
+                }
+                
+                countBadge.textContent = total;
+                
+                if (companies.length === 0) {
+                    resultsDiv.innerHTML = '<p class="text-muted">No companies found.</p>';
+                    return;
+                }
+                
+                let html = '<div class="table-responsive"><table class="table table-striped">';
+                html += '<thead><tr><th>Company</th><th>Country</th><th>Sales (USD)</th><th>SIC Code</th></tr></thead><tbody>';
+                
+                companies.forEach(company => {
+                    const name = company['Company Name'] || company.company_name || 'N/A';
+                    const country = company.Country || company.jurisdiction || 'N/A';
+                    const sales = company['Sales (USD)'] || 'N/A';
+                    const sic = company['UK SIC 2007 Code'] || company.uk_sic_2007_code || company.sic_codes || 'N/A';
+                    
+                    html += `<tr>
+                        <td><strong>${name}</strong></td>
+                        <td>${country}</td>
+                        <td>${sales === 'N/A' ? sales : new Intl.NumberFormat().format(sales)}</td>
+                        <td>${sic}</td>
+                    </tr>`;
+                });
+                
+                html += '</tbody></table></div>';
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Search error:', error);
+                resultsDiv.innerHTML = `<p class="text-danger">Error: ${error.message}</p>`;
+            }
+        });
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

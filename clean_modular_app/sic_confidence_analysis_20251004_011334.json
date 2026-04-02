@@ -1,0 +1,170 @@
+{
+  "processing_results": {
+    "total_companies": 509,
+    "processed_successfully": 509,
+    "processing_errors": 0,
+    "confidence_categories": {
+      "Very Poor": 372,
+      "Fair": 94,
+      "Excellent": 23,
+      "Good": 20
+    },
+    "calculation_start": "2025-10-04T01:13:32.721708",
+    "calculation_end": "2025-10-04T01:13:34.840019"
+  },
+  "analysis": {
+    "overall_statistics": {
+      "total_companies": 509,
+      "average_confidence": 15.9,
+      "minimum_confidence": 0.0,
+      "maximum_confidence": 91.4
+    },
+    "category_breakdown": [
+      {
+        "category": "Excellent",
+        "count": 23,
+        "percentage": 4.5
+      },
+      {
+        "category": "Good",
+        "count": 20,
+        "percentage": 3.9
+      },
+      {
+        "category": "Fair",
+        "count": 94,
+        "percentage": 18.5
+      },
+      {
+        "category": "Very Poor",
+        "count": 372,
+        "percentage": 73.1
+      }
+    ],
+    "top_performers": [
+      {
+        "company_name": "CUSHMAN & WAKEFIELD PLC",
+        "existing_sic_code": "64209",
+        "confidence": 91.4,
+        "category": "Excellent"
+      },
+      {
+        "company_name": "LLOYD'S REGISTER FOUNDATION",
+        "existing_sic_code": "64209",
+        "confidence": 91.4,
+        "category": "Excellent"
+      },
+      {
+        "company_name": "ESSO UK LIMITED",
+        "existing_sic_code": "64209",
+        "confidence": 91.4,
+        "category": "Excellent"
+      },
+      {
+        "company_name": "OCTOPUS GROUP HOLDINGS LTD",
+        "existing_sic_code": "64209",
+        "confidence": 91.4,
+        "category": "Excellent"
+      },
+      {
+        "company_name": "HOTEL CHOCOLAT GROUP LIMITED",
+        "existing_sic_code": "64209",
+        "confidence": 91.4,
+        "category": "Excellent"
+      },
+      {
+        "company_name": "AK MANAGEMENT CORPORATION LTD",
+        "existing_sic_code": "64209",
+        "confidence": 91.4,
+        "category": "Excellent"
+      },
+      {
+        "company_name": "ACCELYA GLOBAL LIMITED",
+        "existing_sic_code": "64209",
+        "confidence": 91.4,
+        "category": "Excellent"
+      },
+      {
+        "company_name": "AAA MANAGEMENT CORPORATION LTD",
+        "existing_sic_code": "64209",
+        "confidence": 91.4,
+        "category": "Excellent"
+      },
+      {
+        "company_name": "HARRISON SD HOLDINGS LIMITED",
+        "existing_sic_code": "64209",
+        "confidence": 91.4,
+        "category": "Excellent"
+      },
+      {
+        "company_name": "EDWARDIAN GROUP LIMITED",
+        "existing_sic_code": "64209",
+        "confidence": 91.4,
+        "category": "Excellent"
+      }
+    ],
+    "bottom_performers": [
+      {
+        "company_name": "THE UNIVERSITY OF MANCHESTER",
+        "existing_sic_code": "85421",
+        "confidence": 42.9,
+        "category": "Fair"
+      },
+      {
+        "company_name": "IMPERIAL COLLEGE OF SCIENCE, TECHNOLOGY AND MEDICINE",
+        "existing_sic_code": "85421",
+        "confidence": 42.9,
+        "category": "Fair"
+      },
+      {
+        "company_name": "UNIVERSITY OF WARWICK",
+        "existing_sic_code": "85421",
+        "confidence": 42.9,
+        "category": "Fair"
+      },
+      {
+        "company_name": "UNIVERSITY OF NOTTINGHAM (THE)",
+        "existing_sic_code": "85421",
+        "confidence": 42.9,
+        "category": "Fair"
+      },
+      {
+        "company_name": "BRUNEL UNIVERSITY LONDON",
+        "existing_sic_code": "85421",
+        "confidence": 42.9,
+        "category": "Fair"
+      },
+      {
+        "company_name": "SWANSEA UNIVERSITY",
+        "existing_sic_code": "85421",
+        "confidence": 42.9,
+        "category": "Fair"
+      },
+      {
+        "company_name": "UNIVERSITY OF EXETER",
+        "existing_sic_code": "85421",
+        "confidence": 42.9,
+        "category": "Fair"
+      },
+      {
+        "company_name": "UNIVERSITY OF KENT",
+        "existing_sic_code": "85421",
+        "confidence": 42.9,
+        "category": "Fair"
+      },
+      {
+        "company_name": "UNIVERSITY OF SURREY(THE)",
+        "existing_sic_code": "85421",
+        "confidence": 42.9,
+        "category": "Fair"
+      },
+      {
+        "company_name": "UNIVERSITY OF SALFORD(THE)",
+        "existing_sic_code": "85421",
+        "confidence": 42.9,
+        "category": "Fair"
+      }
+    ]
+  },
+  "timestamp": "2025-10-04T01:13:34.844637"
+}

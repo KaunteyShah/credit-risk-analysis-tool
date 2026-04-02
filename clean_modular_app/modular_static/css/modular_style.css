@@ -1,0 +1,1383 @@
+/* Modular Credit Risk System - CSS Styles */
+
+:root {
+    /* Color Scheme */
+    --primary-color: #2c5aa0;
+    --secondary-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+    --dark-color: #343a40;
+    --light-color: #f8f9fa;
+    
+    /* Modular Architecture Colors */
+    --modular-success: #28a745;
+    --modular-info: #17a2b8;
+    --modular-warning: #ffc107;
+    
+    /* Layout */
+    --sidebar-width: 300px;
+    --navbar-height: 60px;
+    --status-banner-height: 35px;
+}
+
+/* Reset and Base Styles */
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f6fa;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+* {
+    box-sizing: border-box; /* Ensure all elements use border-box */
+}
+
+/* Modular Navbar */
+.modular-navbar {
+    background: linear-gradient(135deg, var(--primary-color), #1e3a5f);
+    color: white;
+    min-height: var(--navbar-height);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.modular-navbar .navbar-brand {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* Architecture Status Banner */
+.modular-status-banner {
+    background: linear-gradient(90deg, #e8f5e8, #e1f3ff);
+    border-bottom: 1px solid #dee2e6;
+    padding: 8px 0;
+    font-size: 0.9rem;
+    min-height: var(--status-banner-height);
+}
+
+.modular-status-banner .badge {
+    font-size: 0.75rem;
+}
+
+/* Responsive Container */
+.container-fluid {
+    max-width: 100vw;
+    padding: 0;
+    margin: 0;
+}
+
+/* Main Content Layout - Responsive */
+.main-content {
+    min-height: calc(100vh - var(--navbar-height) - var(--status-banner-height));
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.main-container {
+    display: flex;
+    height: calc(100vh - var(--navbar-height) - var(--status-banner-height));
+    width: 100%;
+    min-width: 0; /* Allow flex items to shrink */
+}
+
+/* Sidebar Styles - Responsive */
+.sidebar {
+    width: var(--sidebar-width);
+    min-width: 250px;
+    max-width: 350px;
+    background: white;
+    border-right: 1px solid #dee2e6;
+    transition: margin-left 0.3s ease;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex-shrink: 0; /* Don't allow sidebar to shrink */
+}
+
+.sidebar.collapsed {
+    margin-left: calc(-1 * var(--sidebar-width));
+}
+
+.sidebar-content {
+    padding: 1rem;
+    height: 100%;
+}
+
+/* Content Area - Responsive */
+.content-area {
+    flex: 1;
+    padding: 1rem;
+    overflow: hidden;  /* Prevent overflow */
+    background-color: #f8f9fa;
+    min-width: 0; /* Allow content to shrink */
+    width: calc(100% - var(--sidebar-width)); /* Ensure it doesn't overflow */
+    height: 100%;  /* Use full height */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Ensure summary cards don't take too much space */
+.row.mb-4 {
+    flex-shrink: 0;  /* Don't allow summary cards to shrink */
+    margin-bottom: 1rem !important;
+}
+
+/* Ensure the flex-grow-1 row uses remaining space properly */
+.row.flex-grow-1 {
+    flex-grow: 1;
+    min-height: 0;  /* Allow it to shrink */
+    overflow: hidden;
+}
+
+/* Table Container - Responsive */
+.table-container {
+    overflow-x: auto; /* Allow horizontal scroll for table if needed */
+    overflow-y: auto;
+    max-height: calc(100vh - 400px); /* Responsive max height */
+}
+
+.table-responsive {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 400px);
+    width: 100%;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 1200px) {
+    :root {
+        --sidebar-width: 280px;
+    }
+    
+    .content-area {
+        padding: 0.75rem;
+    }
+}
+
+@media (max-width: 992px) {
+    :root {
+        --sidebar-width: 260px;
+    }
+    
+    .main-container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        height: auto;
+        max-height: 300px;
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .content-area {
+        width: 100%;
+        flex: 1;
+        padding: 0.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar.collapsed {
+        margin-left: -100%;
+    }
+    
+    .summary-card {
+        margin-bottom: 1rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.85rem;
+    }
+    
+    .btn-group .btn {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* Summary Cards */
+.summary-card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+.summary-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+}
+
+/* Data Table Styles */
+.table-responsive {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.table th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #343a40 !important;
+    border-color: #454d55;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(44, 90, 160, 0.05);
+}
+
+/* Action Buttons */
+.btn-action {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    margin: 0 2px;
+}
+
+/* Filter Components */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+}
+
+/* Pagination */
+.pagination .page-link {
+    color: var(--primary-color);
+    border-color: #dee2e6;
+}
+
+.pagination .page-link:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Loading States */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+/* Status Indicators */
+.status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+.status-indicator.success { background-color: var(--modular-success); }
+.status-indicator.info { background-color: var(--modular-info); }
+.status-indicator.warning { background-color: var(--modular-warning); }
+.status-indicator.danger { background-color: var(--danger-color); }
+
+/* Modal Enhancements */
+.modal-content {
+    border: none;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--primary-color), #1e3a5f);
+    color: white;
+    border-bottom: none;
+}
+
+.modal-header .btn-close {
+    filter: invert(1);
+}
+
+/* Company Details Styling */
+.company-detail-item {
+    padding: 0.75rem;
+    border-left: 4px solid var(--primary-color);
+    background-color: #f8f9fa;
+    margin-bottom: 0.5rem;
+    border-radius: 0 4px 4px 0;
+}
+
+.company-detail-label {
+    font-weight: 600;
+    color: var(--dark-color);
+    font-size: 0.9rem;
+}
+
+.company-detail-value {
+    color: #555;
+    margin-top: 0.25rem;
+}
+
+/* Resizable Panel Separators */
+.resizer {
+    background-color: #e9ecef;
+    cursor: col-resize;
+    position: relative;
+    transition: background-color 0.2s ease;
+    user-select: none;
+}
+
+.resizer:hover {
+    background-color: #dee2e6;
+}
+
+.resizer:active {
+    background-color: var(--primary-color);
+}
+
+/* Vertical resizer (between sidebar and content) */
+.resizer-vertical {
+    width: 4px;
+    cursor: col-resize;
+    border-left: 1px solid #dee2e6;
+    border-right: 1px solid #dee2e6;
+}
+
+.resizer-vertical:hover::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 40px;
+    background-color: var(--primary-color);
+    border-radius: 2px;
+}
+
+/* Horizontal resizer (between top and bottom panels) */
+.resizer-horizontal {
+    height: 4px;
+    cursor: row-resize;
+    border-top: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+    position: relative;
+}
+
+.resizer-horizontal:hover::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 2px;
+    background-color: var(--primary-color);
+    border-radius: 2px;
+}
+
+/* Panel container with resizers */
+.resizable-container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    position: relative;
+}
+
+.resizable-panel {
+    position: relative;
+    overflow: hidden;
+}
+
+.resizable-panel-content {
+    height: 100%;
+    overflow: auto;
+}
+
+/* Split panel layout */
+.split-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.split-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.split-panel-top {
+    flex: 1;
+    min-height: 300px;
+}
+
+.split-panel-bottom {
+    flex: 0 0 450px;  /* Increased from 350px to 450px for better visibility */
+    min-height: 350px;  /* Increased from 250px to 350px */
+    max-height: 65vh;  /* Increased from 60vh to 65vh */
+}
+
+/* Resize handle visual feedback */
+.resizer-handle {
+    position: absolute;
+    background-color: transparent;
+    z-index: 10;
+}
+
+.resizer-handle:hover {
+    background-color: rgba(44, 90, 160, 0.1);
+}
+
+/* Custom cursor styles for resize operations */
+.resizing-horizontal {
+    cursor: row-resize !important;
+    user-select: none !important;
+}
+
+.resizing-vertical {
+    cursor: col-resize !important;
+    user-select: none !important;
+}
+
+/* SIC Prediction Styling */
+.sic-prediction-result {
+    background: linear-gradient(135deg, #e8f5e8, #f0f9ff);
+    border: 2px solid var(--modular-success);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+}
+
+.sic-prediction-score {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--modular-success);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .content-area {
+        height: auto;
+    }
+    
+    .summary-card {
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .navbar-nav.flex-row .btn {
+        margin: 0 0.25rem;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .modular-status-banner {
+        font-size: 0.8rem;
+    }
+    
+    .summary-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+}
+
+/* Animation Classes */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.pulse {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Utility Classes */
+.text-modular-primary { color: var(--primary-color) !important; }
+.bg-modular-primary { background-color: var(--primary-color) !important; }
+.border-modular-primary { border-color: var(--primary-color) !important; }
+
+.shadow-soft {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08) !important;
+}
+
+.shadow-strong {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
+}
+
+/* Agent Workflow Styles - Matching Original Enhanced App */
+.horizontal-workflow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    padding: 0 10px;
+}
+
+.sic-workflow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+}
+
+.workflow-step-icon {
+    background: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 9px;  /* 10% smaller: 10px * 0.9 = 9px */
+    padding: 14px;  /* 10% smaller: 15px * 0.9 ≈ 14px */
+    text-align: center;
+    min-height: 108px;  /* 10% smaller: 120px * 0.9 = 108px */
+    width: 100%;
+    max-width: 162px;  /* 10% smaller: 180px * 0.9 = 162px */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.workflow-step-icon.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+    animation: pulse 1s infinite;
+}
+
+.workflow-step-icon.completed {
+    background: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.step-icon-display {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.step-title {
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.step-message {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    line-height: 1.2;
+}
+
+.workflow-arrow {
+    position: absolute;
+    right: -15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    color: #6c757d;
+    transition: color 0.3s ease;
+    z-index: 1;
+}
+
+.workflow-arrow.active {
+    color: #007bff;
+}
+
+.workflow-progress {
+    margin: 20px 0;
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.workflow-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #007bff, #0056b3);
+    width: 0%;
+    transition: width 0.5s ease;
+    border-radius: 3px;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(0, 123, 255, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); }
+}
+
+/* LangGraph Workflow Support Styles */
+.langraph-header h6 {
+    margin-bottom: 0;
+    font-weight: 600;
+}
+
+.langraph-node .workflow-step-icon {
+    position: relative;
+}
+
+.langraph-conditions {
+    margin-top: 8px;
+    padding: 4px 8px;
+    background: rgba(0,123,255,0.1);
+    border-radius: 4px;
+    font-size: 0.7rem;
+}
+
+.langraph-edge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.edge-label {
+    font-size: 1.5rem;
+    color: #6c757d;
+    transition: color 0.3s ease;
+}
+
+.condition-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #dee2e6;
+    margin-top: 4px;
+    transition: all 0.3s ease;
+}
+
+.condition-indicator.checking {
+    background: #ffc107;
+    animation: langraph-pulse 1s infinite;
+}
+
+.condition-indicator.satisfied {
+    background: #28a745;
+}
+
+.langraph-executing {
+    border-color: #007bff !important;
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.25) !important;
+}
+
+.langraph-completed {
+    border-color: #28a745 !important;
+    background: linear-gradient(145deg, #28a745, #20c997) !important;
+    color: white !important;
+}
+
+.langraph-progress-bar {
+    height: 6px;
+    background: linear-gradient(90deg, #007bff, #20c997, #28a745);
+    width: 0%;
+    transition: width 0.8s ease;
+    border-radius: 3px;
+}
+
+.langraph-state {
+    font-family: 'Courier New', monospace;
+    background: #f8f9fa;
+    padding: 8px;
+    border-radius: 4px;
+    border-left: 3px solid #007bff;
+}
+
+/* Simple LangGraph Workflow Styles - Fully Responsive */
+.simple-workflow-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;  /* Evenly distribute across available width */
+    gap: 25px;  /* Increased gap for better spacing */
+    padding: 20px 10px;  /* Balanced padding */
+    flex-wrap: nowrap;  /* Keep horizontal layout on desktop */
+    width: 100%;
+    min-height: 140px;  /* Increased for taller nodes */
+    overflow-x: auto;  /* Allow horizontal scroll if needed */
+    overflow-y: hidden;  /* Hide vertical overflow */
+}
+
+/* Make it properly responsive */
+@media (max-width: 992px) {
+    .simple-workflow-container {
+        flex-wrap: wrap;  /* Allow wrapping on smaller screens */
+        justify-content: center;
+        gap: 15px;
+        padding: 15px 5px;
+    }
+}
+
+@media (max-width: 768px) {
+    .simple-workflow-container {
+        flex-direction: column;
+        gap: 18px;
+        padding: 18px 12px;
+        justify-content: center;
+        min-height: 230px;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+}
+
+.simple-workflow-step {
+    display: flex;
+    align-items: center;
+    gap: 18px;  /* Increased gap between nodes and arrows */
+    flex-shrink: 0;
+    flex: 1;  /* Allow steps to expand evenly */
+    justify-content: center;  /* Center content within each step */
+}
+
+.simple-node {
+    padding: 13.8px 17.3px;  /* 11.5px * 1.2 = 13.8px, 14.4px * 1.2 = 17.28px ≈ 17.3px */
+    background: #e9ecef;
+    color: #6c757d;
+    border: 2px solid #dee2e6;  /* Keep border thickness same */
+    border-radius: 15.6px;  /* 13px * 1.2 = 15.6px */
+    font-weight: 700;
+    font-size: 0.84rem;  /* 0.7rem * 1.2 = 0.84rem */
+    text-align: center;
+    min-width: 138px;  /* 115px * 1.2 = 138px */
+    max-width: 172.8px;  /* 144px * 1.2 = 172.8px */
+    min-height: 51.6px;  /* 43px * 1.2 = 51.6px */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s ease;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 0 3.5px 7px rgba(0,0,0,0.1);  /* 2.9px * 1.2 = 3.48px ≈ 3.5px, 5.8px * 1.2 = 6.96px ≈ 7px */
+    line-height: 1.1;
+    flex-shrink: 0;
+}
+
+/* Improve text handling for agent names in smaller container */
+@media (max-width: 1200px) {
+    .simple-node {
+        font-size: 0.78rem;  /* 0.65rem * 1.2 = 0.78rem */
+        min-width: 124.8px;  /* 104px * 1.2 = 124.8px */
+        max-width: 159.6px;  /* 133px * 1.2 = 159.6px */
+        padding: 12px 15.6px;  /* 10px * 1.2 = 12px, 13px * 1.2 = 15.6px */
+        min-height: 48px;  /* 40px * 1.2 = 48px */
+    }
+}
+
+@media (max-width: 992px) {
+    .simple-node {
+        font-size: 0.864rem;  /* 0.72rem * 1.2 = 0.864rem */
+        min-width: 138px;  /* 115px * 1.2 = 138px */
+        max-width: 172.8px;  /* 144px * 1.2 = 172.8px */
+        padding: 13.8px 17.3px;  /* 11.5px * 1.2 = 13.8px, 14.4px * 1.2 = 17.28px ≈ 17.3px */
+        min-height: 58.8px;  /* 49px * 1.2 = 58.8px */
+    }
+}
+
+.simple-node.inactive {
+    background: #f8f9fa;
+    color: #6c757d;
+    border-color: #dee2e6;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+}
+
+.simple-node.active {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);  /* Gradient for active state */
+    color: #856404;
+    border-color: #ffc107;
+    box-shadow: 0 0 0 4.3px rgba(255, 193, 7, 0.3), 0 7px 13.8px rgba(0,0,0,0.18);  /* 3.6px * 1.2 = 4.32px ≈ 4.3px, 5.8px * 1.2 = 6.96px ≈ 7px, 11.5px * 1.2 = 13.8px */
+    animation: pulse-yellow 2s infinite;
+    transform: scale(1.036);  /* Slightly increased scale for larger nodes */
+}
+
+.simple-node.completed {
+    background: linear-gradient(135deg, #d4edda, #a3e9a4);  /* Gradient for completed state */
+    color: #155724;
+    border-color: #28a745;
+    box-shadow: 0 4.3px 8.6px rgba(40, 167, 69, 0.25);  /* 3.6px * 1.2 = 4.32px ≈ 4.3px, 7.2px * 1.2 = 8.64px ≈ 8.6px */
+}
+
+.simple-arrow {
+    font-size: 1.7rem;  /* Maintain arrow size */
+    color: #495057;  /* Darker color for better visibility */
+    font-weight: bold;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);  /* Subtle shadow */
+    margin: 0 5px;  /* Add margin for better spacing */
+}
+
+@keyframes pulse-yellow {
+    0% { transform: scale(1.036); box-shadow: 0 0 0 4.3px rgba(255, 193, 7, 0.3), 0 7px 13.8px rgba(0,0,0,0.18); }
+    50% { transform: scale(1.072); box-shadow: 0 0 0 6px rgba(255, 193, 7, 0.4), 0 8.6px 17.3px rgba(0,0,0,0.22); }  /* 1.06 * 1.2 ≈ 1.272, adjusted to 1.072 for readability, 5px * 1.2 = 6px, 7.2px * 1.2 = 8.64px ≈ 8.6px, 14.4px * 1.2 = 17.28px ≈ 17.3px */
+    100% { transform: scale(1.036); box-shadow: 0 0 0 4.3px rgba(255, 193, 7, 0.3), 0 7px 13.8px rgba(0,0,0,0.18); }
+}
+
+/* Enhanced responsive design for smaller, optimized nodes */
+.langraph-workflow {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;  /* Completely fixed - no scrolling */
+    background: transparent !important;
+    position: relative;
+    flex-grow: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: none !important;  /* Remove any inherited borders */
+    padding: 0 !important;  /* Remove any inherited padding */
+    box-shadow: none !important;  /* Remove any inherited shadows */
+    border-radius: 0 !important;  /* Remove any inherited border radius */
+}
+
+/* Ensure content within LangGraph workflow displays properly */
+.langraph-workflow > * {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.langraph-workflow .text-center {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+/* When workflow is rendered with actual nodes */
+.langraph-workflow .simple-workflow-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+}
+
+/* Fix agent workflow container to prevent header overlap */
+.agent-workflow-container {
+    background: #f8f9fa;  /* Very light grey background for LangGraph section */
+    border: 2px solid #dee2e6;  /* Make border more visible */
+    border-radius: 8px;  /* Subtle rounded corners */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);  /* Enhanced shadow for better visibility */
+    padding: 1rem !important;  /* Better padding */
+    height: 100% !important;
+    max-height: 100% !important;  /* Stay within boundaries */
+    overflow: hidden !important;  /* Absolutely no scrolling - completely fixed */
+    display: flex !important;
+    flex-direction: column !important;  /* Stack header and content vertically */
+}
+
+/* Ensure workflow container headers are at the top and don't overlap */
+.agent-workflow-container h6 {
+    flex-shrink: 0 !important;  /* Headers don't shrink */
+    margin-bottom: 0.5rem !important;
+    position: relative !important;  /* Ensure proper positioning */
+    z-index: 2 !important;  /* Above the workflow content */
+}
+
+.agent-results h6 {
+    flex-shrink: 0 !important;  /* Headers don't shrink */
+    margin-bottom: 0.5rem !important;
+}
+
+/* Responsive design for optimized node dimensions */
+@media (max-width: 768px) {
+    .simple-workflow-container {
+        flex-direction: column;
+        gap: 15.6px;  /* 13px * 1.2 = 15.6px */
+        padding: 15.6px 10.8px;  /* 13px * 1.2 = 15.6px, 9px * 1.2 = 10.8px */
+        justify-content: center;
+        min-height: 199.2px;  /* 166px * 1.2 = 199.2px */
+    }
+    
+    .simple-workflow-step {
+        flex-direction: column;
+        gap: 10.8px;  /* 9px * 1.2 = 10.8px */
+        width: 100%;
+        align-items: center;
+        flex: none;
+    }
+    
+    .simple-node {
+        min-width: 184.8px;  /* 154px * 1.2 = 184.8px */
+        max-width: 259.2px;  /* 216px * 1.2 = 259.2px */
+        font-size: 0.907rem;  /* 0.756rem * 1.2 = 0.9072rem ≈ 0.907rem */
+        padding: 15.6px 19.2px;  /* 13px * 1.2 = 15.6px, 16px * 1.2 = 19.2px */
+        min-height: 52.8px;  /* 44px * 1.2 = 52.8px */
+        white-space: normal;
+        line-height: 1.1;
+    }
+    
+    .simple-arrow {
+        transform: rotate(90deg);
+        font-size: 1.296rem;  /* 1.08rem * 1.2 = 1.296rem */
+        margin: 7.2px 0;  /* 6px * 1.2 = 7.2px */
+    }
+}
+
+@media (max-width: 480px) {
+    .simple-workflow-container {
+        min-height: 181.2px;  /* 151px * 1.2 = 181.2px */
+        padding: 13.2px 8.4px;  /* 11px * 1.2 = 13.2px, 7px * 1.2 = 8.4px */
+    }
+    
+    .simple-node {
+        font-size: 0.864rem;  /* 0.72rem * 1.2 = 0.864rem */
+        padding: 13.8px 17.3px;  /* 11.5px * 1.2 = 13.8px, 14.4px * 1.2 = 17.28px ≈ 17.3px */
+        min-width: 147.6px;  /* 123px * 1.2 = 147.6px */
+        max-width: 222px;  /* 185px * 1.2 = 222px */
+        min-height: 52.8px;  /* 44px * 1.2 = 52.8px */
+        white-space: normal;
+        line-height: 1.1;
+    }
+    
+    .simple-arrow {
+        font-size: 1.193rem;  /* 0.994rem * 1.2 = 1.1928rem ≈ 1.193rem */
+        margin: 4.8px 0;  /* 4px * 1.2 = 4.8px */
+    }
+}
+
+/* Agent results container - ONLY this section scrolls */
+.agent-results {
+    background: #f5f5f5;  /* Slightly different light grey for results section */
+    border: 2px solid #dee2e6;  /* Make border more visible */
+    border-radius: 8px;  /* Subtle rounded corners */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);  /* Enhanced shadow for better visibility */
+    padding: 1rem !important;  /* Better padding */
+    height: 100% !important;
+    max-height: 100% !important;  /* Stay within boundaries */
+    overflow: hidden !important;  /* Container itself doesn't scroll */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Results container - ONLY this scrolls within agent-results */
+.results-container {
+    overflow-y: auto !important;  /* Allow vertical scrolling ONLY for results */
+    overflow-x: hidden !important;  /* No horizontal scrolling */
+    height: 100% !important;
+    max-height: 100% !important;  /* Stay within boundaries */
+    flex-grow: 1;  /* Take available space */
+    padding-right: 8px;  /* Space for scrollbar */
+}
+
+/* Fix tab content height and ensure everything stays within agentTabContent boundaries */
+.split-panel-bottom .tab-content {
+    height: calc(100% - 50px) !important;  /* Account for tab headers */
+    max-height: calc(100% - 50px) !important;  /* Strict boundary enforcement */
+    overflow: hidden !important;  /* Container itself doesn't scroll */
+}
+
+.split-panel-bottom .tab-pane {
+    height: 100% !important;
+    max-height: 100% !important;  /* Stay within tab content boundaries */
+    overflow: hidden !important;  /* Tab panes don't scroll */
+}
+
+.split-panel-bottom .card-body {
+    padding: 0.5rem !important;  /* Reduced padding */
+    height: calc(100% - 60px) !important;  /* Account for card header */
+    max-height: calc(100% - 60px) !important;  /* Strict boundary enforcement */
+    overflow: hidden !important;  /* Card body doesn't scroll */
+}
+
+.split-panel-bottom .nav-tabs {
+    margin-bottom: 0.5rem !important;  /* Reduced margin */
+    flex-shrink: 0;  /* Tabs don't shrink */
+}
+
+/* Ensure SIC panel row and columns stay within boundaries */
+#sic-panel .row {
+    height: 100% !important;
+    max-height: 100% !important;
+    margin: 0 !important;  /* Remove any default margin */
+}
+
+#sic-panel .col-md-6 {
+    height: 100% !important;
+    max-height: 100% !important;
+    padding: 0 !important;  /* Remove default padding to use custom padding */
+}
+
+/* Specific styling for workflow and results containers within SIC panel */
+#sic-panel .agent-workflow-container {
+    margin: 0.5rem;  /* Add small margin instead of column padding */
+    height: calc(100% - 1rem) !important;  /* Account for margin */
+    max-height: calc(100% - 1rem) !important;
+}
+
+#sic-panel .agent-results {
+    margin: 0.5rem;  /* Add small margin instead of column padding */
+    height: calc(100% - 1rem) !important;  /* Account for margin */
+    max-height: calc(100% - 1rem) !important;
+}
+
+.agent-results {
+    background: #f5f5f5;  /* Slightly different light grey for results section */
+    border: 2px solid #dee2e6;  /* Make border more visible */
+    border-radius: 8px;  /* Subtle rounded corners */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);  /* Enhanced shadow for better visibility */
+    padding: 1rem !important;  /* Better padding */
+    height: 100%;
+}
+
+/* Ensure LangGraph workflow stays fixed and visible */
+.langraph-workflow {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden !important;  /* Never allow scrolling */
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    position: relative;
+}
+
+/* Results container with independent scrolling */
+.results-container {
+    overflow-y: auto !important;  /* Allow vertical scrolling only for results */
+    overflow-x: hidden !important;  /* Prevent horizontal scrolling */
+    padding-right: 8px;  /* Space for scrollbar */
+}
+
+/* Make tab content fully responsive to panel height */
+.split-panel-bottom .tab-content {
+    height: calc(100% - 60px) !important;  /* Account for tab headers */
+    overflow: hidden;
+}
+
+.split-panel-bottom .tab-pane {
+    height: 100%;
+}
+
+/* Custom scrollbar for results */
+.results-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.results-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.results-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.results-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Result boxes styling */
+.result-box {
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+    border: 1px solid #ced4da !important;  /* Ensure border is visible */
+}
+
+.result-box:hover {
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+    transform: translateY(-2px);
+    border-color: #adb5bd !important;
+}
+
+.result-placeholder {
+    font-weight: 600;
+    color: #6c757d;
+}
+
+/* Ensure proper panel heights and overflow handling */
+.split-panel-bottom {
+    min-height: 200px !important;  /* Allow smaller minimum */
+    max-height: 600px !important;  /* Allow larger maximum */
+    overflow: hidden;
+    flex-shrink: 0;  /* Prevent shrinking below min height */
+}
+
+.split-panel-top {
+    min-height: 250px !important;  /* Smaller minimum for top panel */
+    overflow: hidden;
+    flex-grow: 1;  /* Allow top panel to grow */
+}
+
+.split-panel {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 220px) !important;  /* Ensure it fits in viewport */
+    overflow: hidden;
+}
+
+.split-panel-bottom .card-body {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.split-panel-bottom .tab-content {
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+/* Resizer styles for better functionality */
+.resizer {
+    background-color: #dee2e6;
+    border: 1px solid #adb5bd;
+    transition: background-color 0.2s ease;
+    position: relative;
+}
+
+.resizer:hover {
+    background-color: #007bff;
+    cursor: row-resize;
+}
+
+.resizer:active {
+    background-color: #0056b3;
+}
+
+.resizer-horizontal {
+    height: 8px;
+    cursor: row-resize;
+    margin: 4px 0;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.resizer-horizontal::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 30px;
+    height: 2px;
+    background-color: rgba(255,255,255,0.7);
+    border-radius: 1px;
+}
+
+.resizer-vertical {
+    width: 8px;
+    cursor: col-resize;
+    margin: 0 4px;
+    border-radius: 4px;
+}
+
+.resizer-vertical::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 30px;
+    background-color: rgba(255,255,255,0.7);
+    border-radius: 1px;
+}
+
+/* Resizing states */
+body.resizing-horizontal {
+    cursor: row-resize;
+    user-select: none;
+}
+
+body.resizing-vertical {
+    cursor: col-resize;
+    user-select: none;
+}
+
+.workflow-chart {
+    background: transparent !important;  /* Remove background */
+    border: none !important;  /* Remove border */
+    min-height: 150px;  /* Maintain height for bigger nodes */
+}
+
+/* Make LangGraph workflow fully responsive */
+.langraph-workflow {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    min-height: 170px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+/* Remove any container backgrounds for clean look */
+.langraph-header {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+@keyframes langraph-pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+}
+.split-panel-top .table-responsive {
+    max-height: calc(100vh - 350px) !important;
+    overflow-y: auto;
+}
+
+.split-panel-top .card-body {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.split-panel-top .table {
+    margin-bottom: 0 !important;
+}
+
+.workflow-step-container {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.workflow-step-icon {
+    transition: all 0.3s ease;
+    border: 2px solid #dee2e6;
+    min-height: 108px;  /* 10% smaller: 120px * 0.9 = 108px */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.workflow-step-icon.bg-primary {
+    border-color: var(--primary-color);
+    animation: pulse 1s infinite;
+}
+
+.workflow-step-icon.bg-success {
+    border-color: var(--success-color);
+}
+
+.workflow-arrow {
+    position: absolute;
+    right: -15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    transition: color 0.3s ease;
+}
+
+.workflow-arrow.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.workflow-progress {
+    margin: 20px 0;
+}
+
+.workflow-progress-bar {
+    transition: width 0.5s ease;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.prediction-results .alert {
+    border: none;
+    border-radius: 10px;
+}
+
+.agent-workflow-container {
+    height: 100%;
+}
+
+.workflow-chart {
+    min-height: 300px;
+}
+
+/* Force 10% smaller agent icons - High specificity override */
+.horizontal-workflow .workflow-step-icon,
+.agent-workflow-container .workflow-step-icon,
+div.workflow-step-icon {
+    min-height: 108px !important;  /* 10% smaller: 120px * 0.9 = 108px */
+    max-width: 162px !important;   /* 10% smaller: 180px * 0.9 = 162px */
+    padding: 14px !important;      /* 10% smaller: 15px * 0.9 ≈ 14px */
+    border-radius: 9px !important; /* 10% smaller: 10px * 0.9 = 9px */
+}
+
+/* Real-time Update Animations */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.real-time-notification {
+    animation: slideInRight 0.3s ease-out;
+    border-left: 4px solid var(--info-color);
+}
+
+.real-time-notification .fa-spin {
+    color: var(--info-color);
+}

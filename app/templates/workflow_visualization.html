@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LangGraph Workflow Visualization</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .workflow-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .workflow-node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .workflow-node:hover {
+            filter: brightness(1.1);
+        }
+        
+        .node-agent { fill: #007bff; }
+        .node-summary { fill: #28a745; }
+        .node-running { fill: #ffc107; stroke: #ff6b6b; stroke-width: 3px; }
+        .node-completed { fill: #28a745; }
+        .node-idle { fill: #6c757d; }
+        .node-error { fill: #dc3545; }
+        
+        .workflow-edge {
+            stroke: #495057;
+            stroke-width: 2;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+        
+        .workflow-edge.conditional {
+            stroke-dasharray: 5,5;
+            stroke: #fd7e14;
+        }
+        
+        .node-text {
+            fill: white;
+            text-anchor: middle;
+            font-family: 'Arial', sans-serif;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .legend {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            margin-right: 10px;
+        }
+        
+        #workflow-info {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        
+        .control-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center py-3">
+                    <h2><i class="fas fa-project-diagram"></i> LangGraph Workflow Visualization</h2>
+                    <a href="/" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="row">
+            <div class="col-12">
+                <div class="control-panel">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-play-circle"></i> Workflow Controls</h5>
+                            <div class="btn-group" role="group">
+                                <button id="start-workflow" class="btn btn-success">
+                                    <i class="fas fa-play"></i> Start Workflow
+                                </button>
+                                <button id="refresh-status" class="btn btn-outline-primary">
+                                    <i class="fas fa-sync"></i> Refresh Status
+                                </button>
+                                <button id="view-logs" class="btn btn-outline-info">
+                                    <i class="fas fa-file-alt"></i> View Logs
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-info-circle"></i> Workflow Status</h5>
+                            <div id="workflow-status" class="alert alert-info">
+                                <strong>Status:</strong> <span id="status-text">Idle</span><br>
+                                <strong>LangGraph:</strong> <span id="langgraph-status">Checking...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="row">
+            <!-- Workflow Visualization -->
+            <div class="col-md-8">
+                <div class="workflow-container">
+                    <h4><i class="fas fa-sitemap"></i> Multi-Agent Workflow</h4>
+                    <div id="workflow-svg-container">
+                        <svg id="workflow-svg" width="100%" height="600"></svg>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Legend and Info Panel -->
+            <div class="col-md-4">
+                <!-- Legend -->
+                <div class="legend">
+                    <h5><i class="fas fa-legend"></i> Legend</h5>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #007bff;"></div>
+                        <span>Agent Node</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #28a745;"></div>
+                        <span>Summary Node</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #ffc107;"></div>
+                        <span>Running</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #6c757d;"></div>
+                        <span>Idle</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #dc3545;"></div>
+                        <span>Error</span>
+                    </div>
+                    <hr>
+                    <div class="legend-item">
+                        <div style="width: 30px; height: 2px; background-color: #495057; margin-right: 10px;"></div>
+                        <span>Standard Flow</span>
+                    </div>
+                    <div class="legend-item">
+                        <div style="width: 30px; height: 2px; background-color: #fd7e14; border-top: 2px dashed #fd7e14; margin-right: 10px;"></div>
+                        <span>Conditional Flow</span>
+                    </div>
+                </div>
+                
+                <!-- Workflow Information -->
+                <div id="workflow-info">
+                    <h5><i class="fas fa-info"></i> Node Information</h5>
+                    <div id="node-details">
+                        <p class="text-muted">Click on a node to see details</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Execution History -->
+        <div class="row">
+            <div class="col-12">
+                <div class="workflow-container">
+                    <h4><i class="fas fa-history"></i> Execution History</h4>
+                    <div id="execution-history">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Session ID</th>
+                                    <th>Start Time</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                    <th>Nodes Executed</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body">
+                                <!-- History items will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Workflow Visualization Script -->
+    <script>
+        class WorkflowVisualizer {
+            constructor() {
+                this.svg = d3.select("#workflow-svg");
+                this.width = 800;
+                this.height = 600;
+                this.nodes = [];
+                this.edges = [];
+                
+                this.svg.attr("viewBox", `0 0 ${this.width} ${this.height}`)
+                       .style("background", "linear-gradient(135deg, #667eea 0%, #764ba2 100%)")
+                       .style("border-radius", "10px");
+                
+                // Add arrow marker definition
+                this.svg.append("defs")
+                    .append("marker")
+                    .attr("id", "arrowhead")
+                    .attr("viewBox", "0 -5 10 10")
+                    .attr("refX", 8)
+                    .attr("refY", 0)
+                    .attr("markerWidth", 4)
+                    .attr("markerHeight", 4)
+                    .attr("orient", "auto")
+                    .append("path")
+                    .attr("d", "M0,-5L10,0L0,5")
+                    .attr("fill", "#495057");
+                
+                this.loadWorkflowStructure();
+                this.setupEventListeners();
+            }
+            
+            async loadWorkflowStructure() {
+                try {
+                    const response = await fetch('/api/workflow/structure');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.nodes = data.structure.nodes;
+                        this.edges = data.structure.edges;
+                        this.drawWorkflow();
+                        
+                        // Update LangGraph status
+                        document.getElementById('langgraph-status').textContent = 
+                            data.langgraph_available ? '✅ Available' : '⚠️ Fallback Mode';
+                    } else {
+                        console.error('Failed to load workflow structure:', data.error);
+                        this.showError('Failed to load workflow structure');
+                    }
+                } catch (error) {
+                    console.error('Error loading workflow structure:', error);
+                    this.showError('Error loading workflow structure');
+                }
+            }
+            
+            drawWorkflow() {
+                // Clear existing content
+                this.svg.selectAll("*").remove();
+                
+                // Re-add defs for arrows
+                this.svg.append("defs")
+                    .append("marker")
+                    .attr("id", "arrowhead")
+                    .attr("viewBox", "0 -5 10 10")
+                    .attr("refX", 8)
+                    .attr("refY", 0)
+                    .attr("markerWidth", 4)
+                    .attr("markerHeight", 4)
+                    .attr("orient", "auto")
+                    .append("path")
+                    .attr("d", "M0,-5L10,0L0,5")
+                    .attr("fill", "#495057");
+                
+                // Calculate positions (simple grid layout)
+                const nodePositions = this.calculateNodePositions();
+                
+                // Draw edges first (so they appear behind nodes)
+                this.drawEdges(nodePositions);
+                
+                // Draw nodes
+                this.drawNodes(nodePositions);
+            }
+            
+            calculateNodePositions() {
+                const positions = {};
+                const levels = {
+                    'data_ingestion': 0,
+                    'anomaly_detection': 1,
+                    'document_processing': 2,
+                    'financial_extraction': 3,
+                    'rag_analysis': 4,
+                    'sector_classification': 2,
+                    'turnover_estimation': 3,
+                    'workflow_summary': 4
+                };
+                
+                // Group nodes by level
+                const nodesByLevel = {};
+                this.nodes.forEach(node => {
+                    const level = levels[node.id] || 0;
+                    if (!nodesByLevel[level]) nodesByLevel[level] = [];
+                    nodesByLevel[level].push(node);
+                });
+                
+                // Position nodes
+                Object.keys(nodesByLevel).forEach(level => {
+                    const nodesInLevel = nodesByLevel[level];
+                    const levelX = 100 + (parseInt(level) * 150);
+                    
+                    nodesInLevel.forEach((node, index) => {
+                        const spacing = 120;
+                        const startY = (this.height - (nodesInLevel.length * spacing)) / 2;
+                        
+                        positions[node.id] = {
+                            x: levelX,
+                            y: startY + (index * spacing)
+                        };
+                    });
+                });
+                
+                return positions;
+            }
+            
+            drawNodes(positions) {
+                const nodeGroup = this.svg.selectAll(".workflow-node")
+                    .data(this.nodes)
+                    .enter()
+                    .append("g")
+                    .attr("class", "workflow-node")
+                    .attr("transform", d => `translate(${positions[d.id].x}, ${positions[d.id].y})`)
+                    .on("click", (event, d) => this.showNodeDetails(d))
+                    .on("mouseover", (event, d) => this.highlightNode(d.id))
+                    .on("mouseout", () => this.unhighlightNodes());
+                
+                // Add circles for nodes
+                nodeGroup.append("circle")
+                    .attr("r", 40)
+                    .attr("class", d => `node-${d.type}`)
+                    .attr("fill", d => this.getNodeColor(d))
+                    .attr("stroke", "#fff")
+                    .attr("stroke-width", 2);
+                
+                // Add text labels
+                nodeGroup.append("text")
+                    .attr("class", "node-text")
+                    .attr("dy", ".35em")
+                    .text(d => this.truncateText(d.label, 10))
+                    .each(function(d) {
+                        const text = d3.select(this);
+                        const words = d.label.split(' ');
+                        if (words.length > 1) {
+                            text.text('');
+                            words.forEach((word, i) => {
+                                text.append('tspan')
+                                    .attr('x', 0)
+                                    .attr('dy', i === 0 ? '-0.2em' : '1.1em')
+                                    .text(word);
+                            });
+                        }
+                    });
+            }
+            
+            drawEdges(positions) {
+                this.edges.forEach(edge => {
+                    const sourcePos = positions[edge.from];
+                    const targetPos = positions[edge.to];
+                    
+                    if (sourcePos && targetPos) {
+                        this.svg.append("path")
+                            .attr("class", `workflow-edge ${edge.condition ? 'conditional' : ''}`)
+                            .attr("d", this.createEdgePath(sourcePos, targetPos))
+                            .attr("marker-end", "url(#arrowhead)");
+                        
+                        // Add condition label if exists
+                        if (edge.condition) {
+                            const midX = (sourcePos.x + targetPos.x) / 2;
+                            const midY = (sourcePos.y + targetPos.y) / 2;
+                            
+                            this.svg.append("text")
+                                .attr("x", midX)
+                                .attr("y", midY - 10)
+                                .attr("text-anchor", "middle")
+                                .attr("fill", "#fd7e14")
+                                .attr("font-size", "10px")
+                                .attr("font-weight", "bold")
+                                .text(edge.condition.replace(/_/g, ' '));
+                        }
+                    }
+                });
+            }
+            
+            createEdgePath(source, target) {
+                const dx = target.x - source.x;
+                const dy = target.y - source.y;
+                const dr = Math.sqrt(dx * dx + dy * dy);
+                
+                return `M${source.x},${source.y}A${dr},${dr} 0 0,1 ${target.x},${target.y}`;
+            }
+            
+            getNodeColor(node) {
+                const status = node.current_status || 'idle';
+                const colors = {
+                    'idle': '#6c757d',
+                    'running': '#ffc107',
+                    'completed': '#28a745',
+                    'error': '#dc3545'
+                };
+                
+                if (node.type === 'summary') return '#198754';
+                return colors[status] || '#007bff';
+            }
+            
+            truncateText(text, maxLength) {
+                return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+            }
+            
+            showNodeDetails(node) {
+                const detailsDiv = document.getElementById('node-details');
+                detailsDiv.innerHTML = `
+                    <h6>${node.label}</h6>
+                    <p><strong>Type:</strong> ${node.type}</p>
+                    <p><strong>Status:</strong> ${node.current_status || 'idle'}</p>
+                    <p><strong>Progress:</strong> ${node.progress || 0}%</p>
+                    <p><strong>Last Execution:</strong> ${node.last_execution || 'Never'}</p>
+                `;
+            }
+            
+            highlightNode(nodeId) {
+                this.svg.selectAll(".workflow-node")
+                    .style("opacity", d => d.id === nodeId ? 1 : 0.5);
+            }
+            
+            unhighlightNodes() {
+                this.svg.selectAll(".workflow-node")
+                    .style("opacity", 1);
+            }
+            
+            showError(message) {
+                const container = document.getElementById('workflow-svg-container');
+                container.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Error:</strong> ${message}
+                    </div>
+                `;
+            }
+            
+            setupEventListeners() {
+                // Start workflow button
+                document.getElementById('start-workflow').addEventListener('click', async () => {
+                    try {
+                        document.getElementById('status-text').textContent = 'Starting...';
+                        const response = await fetch('/api/workflow/execute', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({})
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            document.getElementById('status-text').textContent = 'Running...';
+                            this.updateWorkflowStatus(result);
+                        } else {
+                            document.getElementById('status-text').textContent = 'Error';
+                            alert('Error starting workflow: ' + result.error);
+                        }
+                    } catch (error) {
+                        console.error('Error starting workflow:', error);
+                        document.getElementById('status-text').textContent = 'Error';
+                        alert('Error starting workflow: ' + error.message);
+                    }
+                });
+                
+                // Refresh status button
+                document.getElementById('refresh-status').addEventListener('click', () => {
+                    this.loadWorkflowStructure();
+                });
+                
+                // View logs button
+                document.getElementById('view-logs').addEventListener('click', () => {
+                    alert('Log viewing feature coming soon!');
+                });
+            }
+            
+            updateWorkflowStatus(result) {
+                // Update the visualization with new status
+                if (result.workflow_progress) {
+                    Object.keys(result.workflow_progress).forEach(nodeId => {
+                        const progress = result.workflow_progress[nodeId];
+                        // Update node status in visualization
+                        // This would typically involve updating the node colors and progress
+                    });
+                }
+                
+                document.getElementById('status-text').textContent = 
+                    result.current_stage || 'Unknown';
+            }
+        }
+        
+        // Initialize the visualizer when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new WorkflowVisualizer();
+        });
+    </script>
+</body>
+</html>

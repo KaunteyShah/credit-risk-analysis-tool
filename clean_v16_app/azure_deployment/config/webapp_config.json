@@ -1,0 +1,291 @@
+{
+  "name": "credit-risk-final",
+  "description": "Credit Risk Analysis Application with SIC Prediction and Revenue Extraction",
+  "version": "2.0.0",
+  "runtime": {
+    "name": "python",
+    "version": "3.11"
+  },
+  "appServicePlan": {
+    "name": "credit-risk-final-plan",
+    "resourceGroup": "rg-credit-risk-clean",
+    "sku": "B3",
+    "tier": "Basic",
+    "capacity": 1,
+    "location": "uksouth",
+    "properties": {
+      "perSiteScaling": false,
+      "maximumElasticWorkerCount": 1,
+      "reserved": true,
+      "isXenon": false,
+      "hyperV": false,
+      "targetWorkerCount": 0,
+      "targetWorkerSizeId": 0
+    }
+  },
+  "webApp": {
+    "name": "credit-risk-final",
+    "resourceGroup": "rg-credit-risk-clean",
+    "location": "uksouth",
+    "properties": {
+      "serverFarmId": "/subscriptions/c09f5850-099b-4458-ac6d-f31d69f68ae7/resourceGroups/rg-credit-risk-clean/providers/Microsoft.Web/serverfarms/credit-risk-final-plan",
+      "reserved": true,
+      "isXenon": false,
+      "hyperV": false,
+      "siteConfig": {
+        "numberOfWorkers": 1,
+        "linuxFxVersion": "PYTHON|3.11",
+        "acrUseManagedIdentityCreds": false,
+        "alwaysOn": true,
+        "http20Enabled": true,
+        "functionAppScaleLimit": 0,
+        "minimumElasticInstanceCount": 0,
+        "healthCheckPath": "/api/modular/health"
+      },
+      "scmSiteAlsoStopped": false,
+      "clientAffinityEnabled": false,
+      "clientCertEnabled": false,
+      "hostNamesDisabled": false,
+      "containerSize": 0,
+      "dailyMemoryTimeQuota": 0,
+      "httpsOnly": true,
+      "redundancyMode": "None",
+      "storageAccountRequired": false,
+      "keyVaultReferenceIdentity": "SystemAssigned"
+    }
+  },
+  "deployment": {
+    "method": "zipdeploy",
+    "source": {
+      "type": "local",
+      "path": ".",
+      "include": [
+        "main.py",
+        "app_modules/**",
+        "config/**",
+        "data/credit_risk.db",
+        "requirements.txt",
+        "requirements-dev.txt"
+      ],
+      "exclude": [
+        ".git",
+        ".github",
+        "azure_deployment",
+        "tests",
+        "batch",
+        "docs",
+        "logs",
+        "utilities",
+        "*.pyc",
+        "__pycache__",
+        ".env",
+        ".venv",
+        "venv",
+        "*.log",
+        "test_*.py",
+        "debug_*.py",
+        "phase*.py",
+        "*.html",
+        "*.json",
+        "*.md"
+      ]
+    },
+    "startup": {
+      "command": "python app_modules/scripts/startup.py",
+      "file": "app_modules/scripts/startup.py"
+    },
+    "buildCommands": [
+      "pip install --upgrade pip",
+      "pip install -r requirements.txt"
+    ]
+  },
+  "appSettings": {
+    "SCM_DO_BUILD_DURING_DEPLOYMENT": "true",
+    "ENABLE_ORYX_BUILD": "true",
+    "POST_BUILD_COMMAND": "",
+    "PRE_BUILD_COMMAND": "",
+    "WEBSITES_ENABLE_APP_SERVICE_STORAGE": "true",
+    "WEBSITES_PORT": "5002",
+    "WEBSITE_HTTPLOGGING_RETENTION_DAYS": "7",
+    "WEBSITE_TIME_ZONE": "GMT Standard Time",
+    "WEBSITE_RUN_FROM_PACKAGE": "0",
+    "FLASK_APP": "main.py",
+    "FLASK_ENV": "production",
+    "FLASK_PORT": "5002",
+    "WEB_CONCURRENCY": "2",
+    "GUNICORN_WORKERS": "2",
+    "GUNICORN_TIMEOUT": "0",
+    "GUNICORN_BIND": "0.0.0.0:5002",
+    "LOG_LEVEL": "INFO",
+    "ENABLE_AGENTIC_WORKFLOWS": "true",
+    "ENABLE_VECTOR_SEARCH": "true",
+    "ENABLE_RAG": "true",
+    "ENABLE_PDF_PROCESSING": "true",
+    "BYPASS_AZURE_KEYVAULT": "true",
+    "DEBUG": "false",
+    "TESTING": "false",
+    "DEVELOPMENT": "false"
+  },
+  "storage": {
+    "accounts": [
+      {
+        "name": "creditriskstorageacc",
+        "resourceGroup": "rg-credit-risk-clean",
+        "location": "ukwest",
+        "sku": "Standard_LRS",
+        "kind": "StorageV2",
+        "accessTier": "Hot",
+        "fileShares": [
+          {
+            "name": "credit-risk-db",
+            "quota": 5,
+            "mountPath": "/home/data",
+            "readOnly": false,
+            "description": "Main SQLite database (credit_risk.db)"
+          },
+          {
+            "name": "credit-risk-vector-db",
+            "quota": 5,
+            "mountPath": "/home/vector_data",
+            "readOnly": false,
+            "description": "Vector database for embeddings (vector_database.db)"
+          }
+        ],
+        "blobContainers": [
+          {
+            "name": "credit-risk-documents",
+            "publicAccess": "None",
+            "description": "PDF documents for RAG processing"
+          }
+        ]
+      }
+    ]
+  },
+  "networking": {
+    "allowedOrigins": [
+      "https://credit-risk-final.azurewebsites.net",
+      "http://localhost:3000"
+    ],
+    "ipSecurityRestrictions": [],
+    "virtualNetwork": {
+      "enabled": false
+    }
+  },
+  "monitoring": {
+    "applicationInsights": {
+      "enabled": true,
+      "resourceGroup": "rg-credit-risk-clean",
+      "location": "uksouth"
+    },
+    "logAnalytics": {
+      "workspaceId": "workspace-rgcreditriskcleanSOiN",
+      "resourceGroup": "rg-credit-risk-clean"
+    },
+    "diagnosticSettings": {
+      "logs": [
+        "AppServiceHTTPLogs",
+        "AppServiceConsoleLogs",
+        "AppServiceAppLogs",
+        "AppServiceAuditLogs",
+        "AppServiceIPSecRestrictionLogs",
+        "AppServicePlatformLogs"
+      ],
+      "metrics": [
+        "AllMetrics"
+      ]
+    }
+  },
+  "scaling": {
+    "autoScale": {
+      "enabled": false,
+      "minInstances": 1,
+      "maxInstances": 3,
+      "rules": [
+        {
+          "name": "CPU-based scaling",
+          "metric": "CpuPercentage",
+          "operator": "GreaterThan",
+          "threshold": 75,
+          "duration": "PT5M",
+          "scaleAction": "Increase",
+          "cooldown": "PT5M"
+        },
+        {
+          "name": "Memory-based scaling",
+          "metric": "MemoryPercentage",
+          "operator": "GreaterThan",
+          "threshold": 80,
+          "duration": "PT5M",
+          "scaleAction": "Increase",
+          "cooldown": "PT5M"
+        }
+      ]
+    }
+  },
+  "backup": {
+    "enabled": false,
+    "schedule": {
+      "frequencyInterval": 1,
+      "frequencyUnit": "Day",
+      "retentionPeriodInDays": 7,
+      "startTime": "2024-01-01T02:00:00Z"
+    }
+  },
+  "security": {
+    "httpsOnly": true,
+    "minTlsVersion": "1.2",
+    "ftpsState": "FtpsOnly",
+    "managedIdentity": {
+      "enabled": true,
+      "type": "SystemAssigned"
+    },
+    "cors": {
+      "allowedOrigins": [
+        "https://credit-risk-final.azurewebsites.net"
+      ],
+      "supportCredentials": false
+    }
+  },
+  "healthCheck": {
+    "path": "/api/modular/health",
+    "interval": 30,
+    "timeout": 5,
+    "unhealthyThreshold": 3,
+    "expectedStatusCode": 200
+  },
+  "dependencies": {
+    "azureOpenAI": {
+      "name": "data-risk-modernisation-OAI",
+      "resourceGroup": "rg-credit-risk-clean",
+      "endpoint": "https://data-risk-modernisation-OAI.openai.azure.com/",
+      "deployments": [
+        {
+          "name": "gpt-4o",
+          "model": "gpt-4o",
+          "version": "2024-05-13"
+        },
+        {
+          "name": "text-embedding-3-large",
+          "model": "text-embedding-3-large",
+          "version": "1"
+        }
+      ]
+    },
+    "externalAPIs": [
+      {
+        "name": "Companies House API",
+        "endpoint": "https://api.company-information.service.gov.uk",
+        "authType": "ApiKey",
+        "description": "UK Companies House data for company lookups"
+      }
+    ]
+  },
+  "tags": {
+    "Environment": "Production",
+    "Project": "Credit Risk Analysis",
+    "ManagedBy": "Azure CLI",
+    "CostCenter": "EY",
+    "Application": "Credit Risk Clean App",
+    "Version": "2.0.0"
+  }
+}

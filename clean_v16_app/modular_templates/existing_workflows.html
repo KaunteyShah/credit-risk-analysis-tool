@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Existing Agent Workflows - Credit Risk Analysis</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .main-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin: 20px;
+            min-height: calc(100vh - 40px);
+            overflow: hidden;
+        }
+        
+        .header-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .workflow-tabs {
+            border-bottom: 2px solid #e9ecef;
+            background: #f8f9fa;
+            padding: 0;
+        }
+        
+        .workflow-tabs .nav-link {
+            color: #6c757d;
+            font-weight: 500;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 0;
+            margin-right: 2px;
+        }
+        
+        .workflow-tabs .nav-link.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .workflow-canvas {
+            min-height: 400px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            position: relative;
+            margin: 15px;
+            padding: 20px;
+        }
+        
+        /* Horizontal Workflow Container - Matching Front Page Style */
+        .horizontal-workflow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 20px 0;
+        }
+        
+        .workflow-step {
+            flex: 1;
+            position: relative;
+            min-width: 140px;
+            max-width: 160px;
+        }
+        
+        /* Agent Step Icon - Smaller Size Like Front Page */
+        .workflow-step-icon {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 7px;  /* 10% smaller: 8px * 0.9 ≈ 7px */
+            padding: 11px;  /* 10% smaller: 12px * 0.9 ≈ 11px */
+            text-align: center;
+            min-height: 72px;  /* 10% smaller: 80px * 0.9 = 72px */
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .workflow-step-icon:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .workflow-step-icon.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+            animation: pulse 2s infinite;
+        }
+        
+        .workflow-step-icon.completed {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        /* Agent Icon Display */
+        .step-icon-display {
+            font-size: 1.8rem;
+            margin-bottom: 6px;
+        }
+        
+        .step-title {
+            font-weight: 600;
+            font-size: 0.8rem;
+            margin-bottom: 2px;
+            line-height: 1.1;
+        }
+        
+        .step-message {
+            font-size: 0.65rem;
+            opacity: 0.8;
+            line-height: 1.1;
+        }
+        
+        /* Workflow Arrows Between Steps */
+        .workflow-arrow {
+            position: absolute;
+            right: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+            color: #6c757d;
+            transition: color 0.3s ease;
+            z-index: 1;
+        }
+        
+        .workflow-arrow.active {
+            color: #007bff;
+        }
+        
+        .workflow-step:last-child .workflow-arrow {
+            display: none;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .horizontal-workflow {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .workflow-step {
+                max-width: 100%;
+            }
+            
+            .workflow-arrow {
+                display: none;
+            }
+        }
+        
+        .workflow-info {
+            background: white;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .agent-details-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .btn-execute {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border: none;
+            color: white;
+            border-radius: 25px;
+            padding: 8px 20px;
+            font-weight: 500;
+        }
+        
+        .btn-execute:hover {
+            background: linear-gradient(135deg, #218838, #17a2b8);
+            color: white;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            min-width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <div class="header-section">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-project-diagram me-3"></i>Existing Agent Workflows</h2>
+                    <p class="mb-0 opacity-75">Click on agents to view and edit their instructions</p>
+                </div>
+                <div class="text-end">
+                    <a href="/" class="btn btn-light btn-sm">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Workflow Tabs -->
+        <ul class="nav nav-tabs workflow-tabs" id="workflowTabs">
+            <li class="nav-item">
+                <a class="nav-link active" id="sic-tab" data-bs-toggle="tab" href="#sic-workflow">
+                    <i class="fas fa-chart-pie me-2"></i>SIC Code Prediction
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="revenue-tab" data-bs-toggle="tab" href="#revenue-workflow">
+                    <i class="fas fa-dollar-sign me-2"></i>Revenue Update
+                </a>
+            </li>
+        </ul>
+        
+        <!-- Workflow Content -->
+        <div class="tab-content" id="workflowTabsContent">
+            <!-- SIC Prediction Workflow -->
+            <div class="tab-pane fade show active" id="sic-workflow" role="tabpanel">
+                <div class="row g-0" style="height: calc(100vh - 200px);">
+                    <div class="col-md-9">
+                        <div class="workflow-info">
+                            <h5><i class="fas fa-info-circle me-2 text-primary"></i>SIC Code Prediction Workflow</h5>
+                            <p class="mb-0">Multi-agent orchestration for automated SIC code prediction using AI reasoning and classification</p>
+                        </div>
+                        <div id="sic-canvas" class="workflow-canvas"></div>
+                    </div>
+                    <div class="col-md-3 border-start">
+                        <div class="agent-details-panel">
+                            <h6><i class="fas fa-robot me-2"></i>Agent Details</h6>
+                            <div id="sic-agent-details">
+                                <p class="text-muted">Click on an agent to view its details and edit instructions</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Revenue Update Workflow -->
+            <div class="tab-pane fade" id="revenue-workflow" role="tabpanel">
+                <div class="row g-0" style="height: calc(100vh - 200px);">
+                    <div class="col-md-9">
+                        <div class="workflow-info">
+                            <h5><i class="fas fa-info-circle me-2 text-primary"></i>Revenue Update Workflow</h5>
+                            <p class="mb-0">Multi-agent process for validating and updating company revenue information</p>
+                        </div>
+                        <div id="revenue-canvas" class="workflow-canvas"></div>
+                    </div>
+                    <div class="col-md-3 border-start">
+                        <div class="agent-details-panel">
+                            <h6><i class="fas fa-robot me-2"></i>Agent Details</h6>
+                            <div id="revenue-agent-details">
+                                <p class="text-muted">Click on an agent to view its details and edit instructions</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Agent Modal -->
+    <div class="modal fade" id="editAgentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" style="font-size: 1.6rem;">
+                        <i class="fas fa-edit me-2"></i>Edit Agent Instructions
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" style="font-size: 1.25rem;">
+                    <form id="editAgentForm">
+                        <input type="hidden" id="editWorkflowId">
+                        <input type="hidden" id="editAgentId">
+                        
+                        <div class="mb-3">
+                            <label for="editAgentName" class="form-label" style="font-size: 1.25rem;">Agent Name</label>
+                            <input type="text" class="form-control" id="editAgentName" readonly style="font-size: 1.25rem;">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editAgentDescription" class="form-label" style="font-size: 1.25rem;">Description</label>
+                            <textarea class="form-control" id="editAgentDescription" rows="3" style="font-size: 1.25rem;"></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editAgentInstructions" class="form-label" style="font-size: 1.25rem;">Instructions</label>
+                            <textarea class="form-control" id="editAgentInstructions" rows="4" 
+                                      placeholder="Enter detailed instructions for this agent..." style="font-size: 1.25rem;"></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editAgentType" class="form-label" style="font-size: 1.25rem;">Agent Type</label>
+                            <select class="form-select" id="editAgentType" disabled style="font-size: 1.25rem;">
+                                <option value="data-ingestion">Data Ingestion</option>
+                                <option value="document-processing">Document Processing</option>
+                                <option value="ai-reasoning">AI Reasoning</option>
+                                <option value="classification">Classification</option>
+                                <option value="anomaly-detection">Anomaly Detection</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="font-size: 1.3rem; padding: 0.875rem 1.375rem;">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" id="saveAgentBtn" style="font-size: 1.3rem; padding: 0.875rem 1.375rem;">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+    class ExistingWorkflowViewer {
+        constructor() {
+            this.workflows = {};
+            this.currentWorkflow = 'sic_prediction';
+            this.selectedAgent = null;
+            this.init();
+        }
+        
+        async init() {
+            await this.loadWorkflows();
+            this.setupEventListeners();
+            
+            // Initial render with delay to ensure DOM is ready
+            setTimeout(() => {
+                this.renderWorkflow('sic_prediction', 'sic-canvas', 'sic-agent-details');
+            }, 200);
+        }
+        
+        async loadWorkflows() {
+            try {
+                const response = await fetch('/api/modular/workflows');
+                this.workflows = await response.json();
+                console.log('Loaded workflows:', this.workflows);
+            } catch (error) {
+                console.error('Error loading workflows:', error);
+                this.showNotification('Failed to load workflows', 'error');
+            }
+        }
+        
+        setupEventListeners() {
+            const self = this;
+            
+            // Tab switching with debouncing to prevent multiple renders
+            let renderTimeout;
+            
+            document.getElementById('sic-tab').addEventListener('click', (e) => {
+                e.preventDefault();
+                this.currentWorkflow = 'sic_prediction';
+                clearTimeout(renderTimeout);
+                renderTimeout = setTimeout(() => {
+                    this.renderWorkflow('sic_prediction', 'sic-canvas', 'sic-agent-details');
+                }, 150);
+            });
+            
+            document.getElementById('revenue-tab').addEventListener('click', (e) => {
+                e.preventDefault();
+                this.currentWorkflow = 'revenue_update';
+                clearTimeout(renderTimeout);
+                renderTimeout = setTimeout(() => {
+                    this.renderWorkflow('revenue_update', 'revenue-canvas', 'revenue-agent-details');
+                }, 150);
+            });
+            
+            // Save agent changes
+            document.getElementById('saveAgentBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                this.saveAgentChanges();
+            });
+            
+            // Prevent default behavior on tab content
+            document.addEventListener('click', function(e) {
+                if (e.target.matches('.nav-link')) {
+                    e.stopPropagation();
+                }
+            });
+        }
+        
+        renderWorkflow(workflowId, canvasId, detailsId) {
+            const workflow = this.workflows[workflowId];
+            if (!workflow) {
+                console.error('Workflow not found:', workflowId);
+                return;
+            }
+            
+            const canvas = document.getElementById(canvasId);
+            canvas.innerHTML = ''; // Clear previous content
+            
+            // Create horizontal workflow container
+            const workflowContainer = document.createElement('div');
+            workflowContainer.className = 'horizontal-workflow';
+            
+            // Create agent steps
+            const agents = workflow.agents || [];
+            agents.forEach((agent, index) => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'workflow-step';
+                stepDiv.dataset.agentId = agent.id;
+                
+                // Create step icon
+                const stepIcon = document.createElement('div');
+                stepIcon.className = 'workflow-step-icon';
+                stepIcon.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Agent clicked:', agent.name);
+                    this.selectAgent(agent, workflowId, detailsId);
+                };
+                
+                // Icon display
+                const iconDisplay = document.createElement('div');
+                iconDisplay.className = 'step-icon-display';
+                iconDisplay.textContent = this.getAgentIcon(agent.type);
+                
+                // Step title
+                const stepTitle = document.createElement('div');
+                stepTitle.className = 'step-title';
+                stepTitle.textContent = agent.name;
+                
+                // Step message
+                const stepMessage = document.createElement('div');
+                stepMessage.className = 'step-message';
+                stepMessage.textContent = agent.description;
+                
+                stepIcon.appendChild(iconDisplay);
+                stepIcon.appendChild(stepTitle);
+                stepIcon.appendChild(stepMessage);
+                
+                // Add arrow (except for last step)
+                if (index < agents.length - 1) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'workflow-arrow';
+                    arrow.innerHTML = '<i class="fas fa-arrow-right"></i>';
+                    stepIcon.appendChild(arrow);
+                }
+                
+                stepDiv.appendChild(stepIcon);
+                workflowContainer.appendChild(stepDiv);
+            });
+            
+            canvas.appendChild(workflowContainer);
+            
+            console.log(`Rendered ${agents.length} agents for workflow: ${workflowId}`);
+        }
+        
+        getAgentIcon(type) {
+            const icons = {
+                'data-ingestion': '📊',
+                'document-processing': '📄',
+                'ai-reasoning': '🧠',
+                'classification': '🎯',
+                'anomaly-detection': '⚠️',
+                'orchestrator': '🎭'
+            };
+            return icons[type] || '🤖';
+        }
+        
+        selectAgent(agent, workflowId, detailsId) {
+            this.selectedAgent = agent;
+            
+            const detailsContainer = document.getElementById(detailsId);
+            detailsContainer.innerHTML = `
+                <div class="agent-info mb-3">
+                    <h6><span class="me-2">${this.getAgentIcon(agent.type)}</span>${agent.name}</h6>
+                    <p class="text-muted small mb-2">${agent.description}</p>
+                    <p class="mb-3"><strong>Current Instructions:</strong><br>
+                        <span class="text-muted">${agent.instructions || 'No specific instructions set'}</span>
+                    </p>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary btn-sm" onclick="workflowViewer.editAgent('${agent.id}', '${workflowId}')">
+                        <i class="fas fa-edit me-2"></i>Edit Instructions
+                    </button>
+                    <button class="btn btn-execute btn-sm" onclick="workflowViewer.executeAgent('${agent.id}', '${workflowId}', '${agent.type}')">
+                        <i class="fas fa-play me-2"></i>Test Execute
+                    </button>
+                </div>
+                
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Click "Edit Instructions" to customize this agent's behavior
+                    </small>
+                </div>
+            `;
+        }
+        
+        editAgent(agentId, workflowId) {
+            const workflow = this.workflows[workflowId];
+            const agent = workflow.agents.find(a => a.id === agentId);
+            
+            if (!agent) return;
+            
+            // Populate form
+            document.getElementById('editWorkflowId').value = workflowId;
+            document.getElementById('editAgentId').value = agentId;
+            document.getElementById('editAgentName').value = agent.name;
+            document.getElementById('editAgentDescription').value = agent.description;
+            document.getElementById('editAgentInstructions').value = agent.instructions || '';
+            document.getElementById('editAgentType').value = agent.type;
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('editAgentModal'));
+            modal.show();
+        }
+        
+        async saveAgentChanges() {
+            const workflowId = document.getElementById('editWorkflowId').value;
+            const agentId = document.getElementById('editAgentId').value;
+            const updates = {
+                description: document.getElementById('editAgentDescription').value,
+                instructions: document.getElementById('editAgentInstructions').value
+            };
+            
+            try {
+                const response = await fetch('/api/modular/workflow/agents', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        workflow_id: workflowId,
+                        agent_id: agentId,
+                        updates: updates
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    this.showNotification('Agent updated successfully!', 'success');
+                    
+                    // Update local data
+                    const agent = this.workflows[workflowId].agents.find(a => a.id === agentId);
+                    if (agent) {
+                        Object.assign(agent, updates);
+                    }
+                    
+                    // Hide modal and refresh view
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editAgentModal'));
+                    modal.hide();
+                    
+                    // Refresh the current workflow view
+                    const canvasId = workflowId === 'sic_prediction' ? 'sic-canvas' : 'revenue-canvas';
+                    const detailsId = workflowId === 'sic_prediction' ? 'sic-agent-details' : 'revenue-agent-details';
+                    this.renderWorkflow(workflowId, canvasId, detailsId);
+                } else {
+                    this.showNotification('Failed to update agent: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error saving agent changes:', error);
+                this.showNotification('Error saving changes: ' + error.message, 'error');
+            }
+        }
+        
+        async executeAgent(agentId, workflowId, agentType) {
+            try {
+                // Visual feedback - mark agent as active
+                const agentStep = document.querySelector(`[data-agent-id="${agentId}"] .workflow-step-icon`);
+                if (agentStep) {
+                    agentStep.classList.add('active');
+                }
+                
+                this.showNotification('Executing agent...', 'info');
+                
+                const response = await fetch('/api/modular/workflow/execute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        workflow_id: workflowId,
+                        agent_id: agentId,
+                        agent_type: agentType
+                    })
+                });
+                
+                const result = await response.json();
+                
+                // Update visual state
+                if (agentStep) {
+                    agentStep.classList.remove('active');
+                    if (result.status === 'completed') {
+                        agentStep.classList.add('completed');
+                        // Remove completed class after 3 seconds
+                        setTimeout(() => {
+                            agentStep.classList.remove('completed');
+                        }, 3000);
+                    }
+                }
+                
+                if (result.status === 'completed') {
+                    this.showNotification(`Agent executed successfully! ${result.message}`, 'success');
+                } else {
+                    this.showNotification('Agent execution failed: ' + result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error executing agent:', error);
+                this.showNotification('Error executing agent: ' + error.message, 'error');
+                
+                // Remove active state on error
+                const agentStep = document.querySelector(`[data-agent-id="${agentId}"] .workflow-step-icon`);
+                if (agentStep) {
+                    agentStep.classList.remove('active');
+                }
+            }
+        }
+        
+        showNotification(message, type = 'info') {
+            const alertType = type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info';
+            const iconType = type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle';
+            
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${alertType} alert-dismissible fade show notification`;
+            notification.innerHTML = `
+                <i class="fas fa-${iconType} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+    }
+    
+    // Initialize when page loads
+    let workflowViewer;
+    document.addEventListener('DOMContentLoaded', () => {
+        workflowViewer = new ExistingWorkflowViewer();
+    });
+    </script>
+</body>
+</html>

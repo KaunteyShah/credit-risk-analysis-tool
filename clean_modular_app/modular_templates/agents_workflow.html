@@ -1,0 +1,470 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Agent Workflow - Credit Risk Analysis{% endblock %}
+
+{% block brand_title %}🤖 Agent Orchestration Workflow{% endblock %}
+
+{% block navbar_actions %}
+<button class="btn btn-outline-light btn-sm me-2" id="refreshAgents">
+    <i class="fas fa-sync"></i> Refresh
+</button>
+<button class="btn btn-outline-light btn-sm" id="clearAgentLogs">
+    <i class="fas fa-trash"></i> Clear Logs
+</button>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+    <!-- Agent Overview Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4><i class="fas fa-robot"></i> Multi-Agent Credit Risk Analysis System</h4>
+                    <p class="text-muted mb-0">
+                        Orchestrated AI agents working together to analyze company data, predict SIC codes, estimate turnover, 
+                        detect anomalies, and provide comprehensive credit risk assessments.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agent Status Grid -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-tachometer-alt"></i> Agent Status Dashboard</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="agent-status-card p-3 border rounded">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="fas fa-search text-primary"></i> 
+                                            SIC Classification
+                                        </h6>
+                                        <small class="text-muted">Sector prediction & analysis</small>
+                                    </div>
+                                    <span class="badge bg-success" id="sicAgentStatus">Ready</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="agent-status-card p-3 border rounded">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="fas fa-dollar-sign text-success"></i> 
+                                            Turnover Estimation
+                                        </h6>
+                                        <small class="text-muted">Revenue & financial analysis</small>
+                                    </div>
+                                    <span class="badge bg-success" id="turnoverAgentStatus">Ready</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="agent-status-card p-3 border rounded">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="fas fa-exclamation-triangle text-warning"></i> 
+                                            Anomaly Detection
+                                        </h6>
+                                        <small class="text-muted">Risk pattern identification</small>
+                                    </div>
+                                    <span class="badge bg-success" id="anomalyAgentStatus">Ready</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="agent-status-card p-3 border rounded">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="fas fa-brain text-info"></i> 
+                                            AI Reasoning
+                                        </h6>
+                                        <small class="text-muted">Decision analysis & insights</small>
+                                    </div>
+                                    <span class="badge bg-success" id="aiReasoningStatus">Ready</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Agent Workflow Interface -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card" style="height: 600px;">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="agentWorkflowTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="sic-workflow-tab" data-bs-toggle="tab" data-bs-target="#sic-workflow-panel" type="button" role="tab">
+                                <i class="fas fa-search"></i> SIC Prediction Workflow
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="revenue-workflow-tab" data-bs-toggle="tab" data-bs-target="#revenue-workflow-panel" type="button" role="tab">
+                                <i class="fas fa-dollar-sign"></i> Revenue Analysis
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="risk-workflow-tab" data-bs-toggle="tab" data-bs-target="#risk-workflow-panel" type="button" role="tab">
+                                <i class="fas fa-shield-alt"></i> Risk Assessment
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="orchestrator-tab" data-bs-toggle="tab" data-bs-target="#orchestrator-panel" type="button" role="tab">
+                                <i class="fas fa-cogs"></i> Orchestrator
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body p-0">
+                    <div class="tab-content h-100" id="agentWorkflowContent">
+                        <!-- SIC Prediction Workflow Panel -->
+                        <div class="tab-pane fade show active h-100" id="sic-workflow-panel" role="tabpanel">
+                            <div class="row h-100 g-0">
+                                <div class="col-md-6 border-end">
+                                    <div class="p-3 h-100 d-flex flex-column">
+                                        <h6 class="mb-3">
+                                            <i class="fas fa-project-diagram"></i> SIC Workflow Visualization
+                                        </h6>
+                                        <div class="flex-grow-1">
+                                            <div id="sicWorkflowChart" class="workflow-visualization h-100 d-flex align-items-center justify-content-center bg-light rounded">
+                                                <div class="text-center text-muted">
+                                                    <i class="fas fa-play-circle fa-3x mb-3"></i>
+                                                    <p class="mb-2">Click "Start SIC Analysis" to begin workflow</p>
+                                                    <button class="btn btn-primary btn-sm" id="startSicWorkflow">
+                                                        <i class="fas fa-play"></i> Start SIC Analysis
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-3 h-100 d-flex flex-column">
+                                        <h6 class="mb-3">
+                                            <i class="fas fa-chart-line"></i> Analysis Results
+                                        </h6>
+                                        <div class="flex-grow-1">
+                                            <div id="sicWorkflowResults" class="results-container h-100">
+                                                <div class="bg-light rounded p-3 h-100 d-flex align-items-center justify-content-center">
+                                                    <div class="text-center text-muted">
+                                                        <i class="fas fa-clipboard-list fa-2x mb-3"></i>
+                                                        <p class="mb-0">Results will appear here after analysis</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Revenue Analysis Panel -->
+                        <div class="tab-pane fade h-100" id="revenue-workflow-panel" role="tabpanel">
+                            <div class="row h-100 g-0">
+                                <div class="col-md-6 border-end">
+                                    <div class="p-3 h-100 d-flex flex-column">
+                                        <h6 class="mb-3">
+                                            <i class="fas fa-money-bill-wave"></i> Revenue Estimation Workflow
+                                        </h6>
+                                        <div class="flex-grow-1">
+                                            <div id="revenueWorkflowChart" class="workflow-visualization h-100 d-flex align-items-center justify-content-center bg-light rounded">
+                                                <div class="text-center text-muted">
+                                                    <i class="fas fa-calculator fa-3x mb-3"></i>
+                                                    <p class="mb-2">Click "Start Revenue Analysis" to begin</p>
+                                                    <button class="btn btn-success btn-sm" id="startRevenueWorkflow">
+                                                        <i class="fas fa-play"></i> Start Revenue Analysis
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-3 h-100 d-flex flex-column">
+                                        <h6 class="mb-3">
+                                            <i class="fas fa-chart-bar"></i> Financial Insights
+                                        </h6>
+                                        <div class="flex-grow-1">
+                                            <div id="revenueWorkflowResults" class="results-container h-100">
+                                                <div class="bg-light rounded p-3 h-100 d-flex align-items-center justify-content-center">
+                                                    <div class="text-center text-muted">
+                                                        <i class="fas fa-dollar-sign fa-2x mb-3"></i>
+                                                        <p class="mb-0">Financial analysis results will appear here</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Risk Assessment Panel -->
+                        <div class="tab-pane fade h-100" id="risk-workflow-panel" role="tabpanel">
+                            <div class="row h-100 g-0">
+                                <div class="col-md-6 border-end">
+                                    <div class="p-3 h-100 d-flex flex-column">
+                                        <h6 class="mb-3">
+                                            <i class="fas fa-shield-alt"></i> Risk Assessment Workflow
+                                        </h6>
+                                        <div class="flex-grow-1">
+                                            <div id="riskWorkflowChart" class="workflow-visualization h-100 d-flex align-items-center justify-content-center bg-light rounded">
+                                                <div class="text-center text-muted">
+                                                    <i class="fas fa-shield-virus fa-3x mb-3"></i>
+                                                    <p class="mb-2">Click "Start Risk Analysis" to begin</p>
+                                                    <button class="btn btn-warning btn-sm" id="startRiskWorkflow">
+                                                        <i class="fas fa-play"></i> Start Risk Analysis
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-3 h-100 d-flex flex-column">
+                                        <h6 class="mb-3">
+                                            <i class="fas fa-exclamation-triangle"></i> Risk Indicators
+                                        </h6>
+                                        <div class="flex-grow-1">
+                                            <div id="riskWorkflowResults" class="results-container h-100">
+                                                <div class="bg-light rounded p-3 h-100 d-flex align-items-center justify-content-center">
+                                                    <div class="text-center text-muted">
+                                                        <i class="fas fa-search fa-2x mb-3"></i>
+                                                        <p class="mb-0">Risk assessment results will appear here</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Orchestrator Panel -->
+                        <div class="tab-pane fade h-100" id="orchestrator-panel" role="tabpanel">
+                            <div class="p-3 h-100 d-flex flex-column">
+                                <h6 class="mb-3">
+                                    <i class="fas fa-cogs"></i> Agent Orchestrator Dashboard
+                                </h6>
+                                <div class="row flex-grow-1">
+                                    <div class="col-md-8">
+                                        <div class="card h-100">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">
+                                                    <i class="fas fa-sitemap"></i> Agent Coordination Flow
+                                                </h6>
+                                            </div>
+                                            <div class="card-body d-flex align-items-center justify-content-center">
+                                                <div id="orchestratorFlow" class="text-center text-muted">
+                                                    <i class="fas fa-network-wired fa-3x mb-3"></i>
+                                                    <p class="mb-0">Agent orchestration flow will be visualized here</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card h-100">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">
+                                                    <i class="fas fa-list"></i> Activity Logs
+                                                </h6>
+                                            </div>
+                                            <div class="card-body p-2" style="overflow-y: auto;">
+                                                <div id="orchestratorLogs" class="logs-container">
+                                                    <div class="log-entry text-muted small p-2">
+                                                        <i class="fas fa-info-circle"></i>
+                                                        System ready - waiting for agent activities
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Agent Workflow JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🤖 Agent Workflow Dashboard Loaded');
+    
+    // Initialize agent status monitoring
+    function updateAgentStatus() {
+        // This would connect to actual agent status endpoints
+        console.log('Updating agent status...');
+    }
+    
+    // Start workflow functions
+    document.getElementById('startSicWorkflow')?.addEventListener('click', function() {
+        console.log('Starting SIC workflow...');
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running...';
+        this.disabled = true;
+        
+        // Simulate workflow execution
+        setTimeout(() => {
+            this.innerHTML = '<i class="fas fa-play"></i> Start SIC Analysis';
+            this.disabled = false;
+            
+            // Show sample results
+            const resultsContainer = document.getElementById('sicWorkflowResults');
+            resultsContainer.innerHTML = `
+                <div class="p-3">
+                    <div class="alert alert-success mb-3">
+                        <i class="fas fa-check-circle"></i> SIC Analysis Complete
+                    </div>
+                    <div class="mb-2">
+                        <strong>Predicted SIC Code:</strong> 62012
+                    </div>
+                    <div class="mb-2">
+                        <strong>Description:</strong> Business and domestic software development
+                    </div>
+                    <div class="mb-2">
+                        <strong>Confidence:</strong> 
+                        <span class="badge bg-success">87.3%</span>
+                    </div>
+                </div>
+            `;
+        }, 2000);
+    });
+    
+    document.getElementById('startRevenueWorkflow')?.addEventListener('click', function() {
+        console.log('Starting revenue workflow...');
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+        this.disabled = true;
+        
+        setTimeout(() => {
+            this.innerHTML = '<i class="fas fa-play"></i> Start Revenue Analysis';
+            this.disabled = false;
+            
+            const resultsContainer = document.getElementById('revenueWorkflowResults');
+            resultsContainer.innerHTML = `
+                <div class="p-3">
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-calculator"></i> Revenue Analysis Complete
+                    </div>
+                    <div class="mb-2">
+                        <strong>Estimated Revenue:</strong> £2.4M - £3.1M
+                    </div>
+                    <div class="mb-2">
+                        <strong>Growth Rate:</strong> 
+                        <span class="badge bg-success">+12.5%</span>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Risk Level:</strong> 
+                        <span class="badge bg-warning">Medium</span>
+                    </div>
+                </div>
+            `;
+        }, 3000);
+    });
+    
+    document.getElementById('startRiskWorkflow')?.addEventListener('click', function() {
+        console.log('Starting risk assessment...');
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Assessing...';
+        this.disabled = true;
+        
+        setTimeout(() => {
+            this.innerHTML = '<i class="fas fa-play"></i> Start Risk Analysis';
+            this.disabled = false;
+            
+            const resultsContainer = document.getElementById('riskWorkflowResults');
+            resultsContainer.innerHTML = `
+                <div class="p-3">
+                    <div class="alert alert-warning mb-3">
+                        <i class="fas fa-shield-alt"></i> Risk Assessment Complete
+                    </div>
+                    <div class="mb-2">
+                        <strong>Overall Risk Score:</strong> 
+                        <span class="badge bg-warning">6.2/10</span>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Key Factors:</strong>
+                        <ul class="small mt-1">
+                            <li>Financial stability: Good</li>
+                            <li>Industry volatility: Medium</li>
+                            <li>Credit history: Limited data</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }, 2500);
+    });
+    
+    // Refresh agents
+    document.getElementById('refreshAgents')?.addEventListener('click', function() {
+        updateAgentStatus();
+        console.log('Refreshing agent status...');
+    });
+    
+    // Clear logs
+    document.getElementById('clearAgentLogs')?.addEventListener('click', function() {
+        const logsContainer = document.getElementById('orchestratorLogs');
+        if (logsContainer) {
+            logsContainer.innerHTML = `
+                <div class="log-entry text-muted small p-2">
+                    <i class="fas fa-info-circle"></i>
+                    Logs cleared - system ready
+                </div>
+            `;
+        }
+        console.log('Agent logs cleared');
+    });
+    
+    // Initialize status update
+    updateAgentStatus();
+});
+</script>
+
+<style>
+.agent-status-card {
+    transition: all 0.3s ease;
+}
+
+.agent-status-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.workflow-visualization {
+    border: 2px dashed #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.workflow-visualization:hover {
+    border-color: #007bff;
+}
+
+.results-container {
+    font-family: 'Consolas', monospace;
+}
+
+.log-entry {
+    border-bottom: 1px solid #f8f9fa;
+    font-size: 0.85em;
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+</style>
+{% endblock %}

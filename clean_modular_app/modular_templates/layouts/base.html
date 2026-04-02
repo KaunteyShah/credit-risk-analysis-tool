@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Modular Credit Risk Analysis{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <!-- Split.js for resizable panels -->
+    <script src="https://cdn.jsdelivr.net/npm/split.js@1.6.5/dist/split.min.js"></script>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modular_style.css') }}">
+    {% block additional_css %}{% endblock %}
+</head>
+<body>
+    <div class="container-fluid p-0 h-100">
+        <!-- Header -->
+        <nav class="navbar modular-navbar">
+            <div class="container-fluid">
+                <span class="navbar-brand mb-0 h1">
+                    <i class="fas fa-cubes"></i>
+                    {% block brand_title %}Modular Credit Risk Analysis System{% endblock %}
+                </span>
+                <div class="navbar-nav flex-row">
+                    {% block navbar_actions %}
+                    <a href="{{ url_for('workflow_agents') }}" class="btn btn-outline-light btn-sm me-2">
+                        <i class="fas fa-robot"></i> Agents
+                    </a>
+                    <button class="btn btn-outline-light btn-sm me-2" id="openDatabase">
+                        <i class="fas fa-database"></i> Database
+                    </button>
+                    <button class="btn btn-outline-light btn-sm me-2" id="toggleFilters">
+                        <i class="fas fa-filter"></i> Filters
+                    </button>
+                    <button class="btn btn-outline-light btn-sm" id="resetFilters">
+                        <i class="fas fa-refresh"></i> Reset
+                    </button>
+                    {% endblock %}
+                </div>
+            </div>
+        </nav>
+
+        <!-- Architecture Status Banner -->
+        <div class="modular-status-banner">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-success me-2" id="architecture-status">
+                                <i class="fas fa-check-circle"></i> Modular Architecture: Active
+                            </span>
+                            <small class="text-muted">
+                                Components: <span id="component-count">Loading...</span> • 
+                                Backend: <span id="backend-status">Initializing...</span> • 
+                                Last Updated: <span id="last-updated">--</span>
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="d-none alert alert-danger alert-dismissible p-2 mb-0" id="error-banner" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span id="error-message">System error</span>
+                            <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            {% block main_content %}
+            <div class="container-fluid h-100">
+                <div class="row h-100">
+                    <div class="col-12 h-100">
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <div class="text-center">
+                                <h3>Welcome to Modular Credit Risk Analysis</h3>
+                                <p class="text-muted">Select a page from the navigation above.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endblock %}
+        </main>
+    </div>
+
+    <!-- Loading Modal -->
+    <div class="modal fade" id="loadingModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 mb-0">Processing...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Modular JavaScript -->
+    <script src="{{ url_for('static', filename='js/modular_core.js') }}"></script>
+    {% block additional_js %}{% endblock %}
+
+    <script>
+        // Initialize modular architecture when DOM is ready
+        $(document).ready(function() {
+            // Ensure ModularCore exists and initialize it
+            if (window.ModularCore) {
+                window.ModularCore.initialize().catch(error => {
+                    console.warn('ModularCore initialization failed:', error);
+                });
+            } else {
+                console.error('ModularCore not loaded');
+            }
+        });
+    </script>
+</body>
+</html>

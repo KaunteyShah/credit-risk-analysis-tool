@@ -1,0 +1,26 @@
+# Development Dependencies for Batch Processing
+# Use these locally for pre-processing, NOT on Azure
+
+# PDF Processing (Local batch processing only)
+PyMuPDF>=1.24.0
+
+# Machine Learning (Local batch processing only)  
+sentence-transformers>=2.2.2
+numpy>=1.26.4
+
+# RAG & LLM Integration for Financial Documents
+llama-index>=0.10.0
+llama-index-embeddings-huggingface>=0.2.0
+llama-index-llms-openai>=0.1.0
+
+# Data Processing
+pandas>=2.2.3
+openpyxl==3.1.2
+
+# Development utilities
+python-dotenv==1.0.0
+requests==2.31.0
+
+# Note: These dependencies are for LOCAL development and batch processing
+# Azure production uses requirements-production.txt (ultra-light)
+# Run batch processing locally or via GitHub Actions, deploy pre-computed results

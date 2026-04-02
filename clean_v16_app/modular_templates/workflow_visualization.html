@@ -1,0 +1,404 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Workflow Visualization - Modular Architecture{% endblock %}
+
+{% block brand_title %}🔄 Modular Workflow Visualization{% endblock %}
+
+{% block navbar_actions %}
+<button class="btn btn-outline-light btn-sm me-2" id="workflowRefresh">
+    <i class="fas fa-sync"></i> Refresh
+</button>
+<button class="btn btn-outline-light btn-sm" id="workflowReset">
+    <i class="fas fa-power-off"></i> Reset
+</button>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+    <!-- Workflow Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4><i class="fas fa-project-diagram"></i> Modular Architecture Workflow</h4>
+                    <p class="text-muted mb-0">
+                        This visualization shows the flow of data and operations through the modular architecture components.
+                        All operations use the repository pattern, service layer, and dependency injection.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Architecture Flow -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-sitemap"></i> Architecture Flow</h5>
+                </div>
+                <div class="card-body">
+                    <div class="workflow-container">
+                        <!-- Frontend Layer -->
+                        <div class="workflow-layer">
+                            <h6 class="text-center mb-3">Frontend Layer</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="workflow-component bg-primary">
+                                        <i class="fas fa-desktop"></i>
+                                        <h6>Web Interface</h6>
+                                        <small>HTML Templates + CSS + JavaScript</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="workflow-component bg-info">
+                                        <i class="fas fa-code"></i>
+                                        <h6>ModularCore.js</h6>
+                                        <small>API Communication & Status</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="workflow-component bg-success">
+                                        <i class="fas fa-table"></i>
+                                        <h6>Dashboard.js</h6>
+                                        <small>Data Display & Interactions</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- API Layer -->
+                        <div class="workflow-arrow">
+                            <i class="fas fa-arrow-down fa-2x text-muted"></i>
+                        </div>
+
+                        <div class="workflow-layer">
+                            <h6 class="text-center mb-3">API Layer</h6>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="workflow-component bg-warning">
+                                        <i class="fas fa-route"></i>
+                                        <h6>Web Routes</h6>
+                                        <small>/, /workflow, /api-status</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="workflow-component bg-dark text-white">
+                                        <i class="fas fa-plug"></i>
+                                        <h6>API Routes</h6>
+                                        <small>/api/modular/*</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="workflow-component bg-secondary text-white">
+                                        <i class="fas fa-heartbeat"></i>
+                                        <h6>Health Check</h6>
+                                        <small>/health</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="workflow-component bg-danger">
+                                        <i class="fas fa-filter"></i>
+                                        <h6>Filter Options</h6>
+                                        <small>/filter-options</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Service Layer -->
+                        <div class="workflow-arrow">
+                            <i class="fas fa-arrow-down fa-2x text-muted"></i>
+                        </div>
+
+                        <div class="workflow-layer">
+                            <h6 class="text-center mb-3">Service Layer</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="workflow-component bg-info">
+                                        <i class="fas fa-building"></i>
+                                        <h6>CompanyService</h6>
+                                        <small>Business Logic for Companies</small>
+                                        <div class="mt-2">
+                                            <div class="badge bg-light text-dark">get_companies_paginated()</div>
+                                            <div class="badge bg-light text-dark">get_company_details_with_reasoning()</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="workflow-component bg-success">
+                                        <i class="fas fa-magic"></i>
+                                        <h6>SICPredictionService</h6>
+                                        <small>Business Logic for SIC Prediction</small>
+                                        <div class="mt-2">
+                                            <div class="badge bg-light text-dark">predict_sic_for_company()</div>
+                                            <div class="badge bg-light text-dark">generate_workflow()</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Repository Layer -->
+                        <div class="workflow-arrow">
+                            <i class="fas fa-arrow-down fa-2x text-muted"></i>
+                        </div>
+
+                        <div class="workflow-layer">
+                            <h6 class="text-center mb-3">Repository Layer</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="workflow-component bg-primary">
+                                        <i class="fas fa-database"></i>
+                                        <h6>FileCompanyRepository</h6>
+                                        <small>Data Access for Companies</small>
+                                        <div class="mt-2">
+                                            <div class="badge bg-light text-dark">get_companies_paginated()</div>
+                                            <div class="badge bg-light text-dark">get_company_by_index()</div>
+                                            <div class="badge bg-light text-dark">get_companies_count()</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="workflow-component bg-warning">
+                                        <i class="fas fa-file-csv"></i>
+                                        <h6>FileSICPredictionRepository</h6>
+                                        <small>Data Access for SIC Prediction</small>
+                                        <div class="mt-2">
+                                            <div class="badge bg-light text-dark">get_company_data()</div>
+                                            <div class="badge bg-light text-dark">get_sic_codes()</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Data Layer -->
+                        <div class="workflow-arrow">
+                            <i class="fas fa-arrow-down fa-2x text-muted"></i>
+                        </div>
+
+                        <div class="workflow-layer">
+                            <h6 class="text-center mb-3">Data Layer</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="workflow-component bg-light">
+                                        <i class="fas fa-file-excel"></i>
+                                        <h6>Sample_data2.csv</h6>
+                                        <small>509 companies</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="workflow-component bg-light">
+                                        <i class="fas fa-file-excel"></i>
+                                        <h6>SIC_codes.xlsx</h6>
+                                        <small>751 SIC codes</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="workflow-component bg-light">
+                                        <i class="fas fa-cogs"></i>
+                                        <h6>Enhanced SIC Matcher</h6>
+                                        <small>Fuzzy matching logic</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Component Status -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-check-circle"></i> Component Status</h6>
+                </div>
+                <div class="card-body">
+                    <div id="component-status-list">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="status-indicator" id="company-service-status"></span>
+                            <strong>CompanyService:</strong>
+                            <span class="ms-auto" id="company-service-text">Checking...</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="status-indicator" id="sic-service-status"></span>
+                            <strong>SICPredictionService:</strong>
+                            <span class="ms-auto" id="sic-service-text">Checking...</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="status-indicator" id="company-repo-status"></span>
+                            <strong>FileCompanyRepository:</strong>
+                            <span class="ms-auto" id="company-repo-text">Checking...</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="status-indicator" id="sic-repo-status"></span>
+                            <strong>FileSICPredictionRepository:</strong>
+                            <span class="ms-auto" id="sic-repo-text">Checking...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-chart-bar"></i> Performance Metrics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h4 id="companies-loaded-count">--</h4>
+                                <small class="text-muted">Companies Loaded</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h4><span id="avg-response-time-workflow">--</span>ms</h4>
+                                <small class="text-muted">Avg Response Time</small>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h4 id="api-calls-count">--</h4>
+                                <small class="text-muted">API Calls Made</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h4 id="success-rate">--%</h4>
+                                <small class="text-muted">Success Rate</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_css %}
+<style>
+    .workflow-container {
+        padding: 2rem 0;
+    }
+    
+    .workflow-layer {
+        margin: 2rem 0;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border: 2px dashed #dee2e6;
+    }
+    
+    .workflow-component {
+        text-align: center;
+        padding: 1.5rem;
+        border-radius: 8px;
+        color: white;
+        margin-bottom: 1rem;
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        transition: transform 0.2s ease;
+    }
+    
+    .workflow-component:hover {
+        transform: translateY(-5px);
+    }
+    
+    .workflow-component i {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+    
+    .workflow-component h6 {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .workflow-component .badge {
+        margin: 2px;
+        font-size: 0.7rem;
+    }
+    
+    .workflow-arrow {
+        text-align: center;
+        margin: 1rem 0;
+    }
+    
+    .status-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+        background-color: #6c757d;
+    }
+    
+    .status-indicator.success { background-color: #28a745; }
+    .status-indicator.error { background-color: #dc3545; }
+</style>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+$(document).ready(function() {
+    loadWorkflowStatus();
+    
+    $('#workflowRefresh').on('click', loadWorkflowStatus);
+});
+
+async function loadWorkflowStatus() {
+    try {
+        // Get component status
+        const healthData = await window.ModularCore.makeApiCall('/health');
+        const statsData = await window.ModularCore.makeApiCall('/stats');
+        
+        updateComponentStatus(healthData);
+        updatePerformanceMetrics(statsData);
+        
+    } catch (error) {
+        console.error('Failed to load workflow status:', error);
+    }
+}
+
+function updateComponentStatus(healthData) {
+    // Company Service
+    $('#company-service-status').addClass(healthData.components.company_service.status === 'operational' ? 'success' : 'error');
+    $('#company-service-text').text(healthData.components.company_service.status);
+    
+    // SIC Prediction Service  
+    $('#sic-service-status').addClass(healthData.components.sic_prediction_service.status === 'operational' ? 'success' : 'error');
+    $('#sic-service-text').text(healthData.components.sic_prediction_service.status);
+    
+    // Repositories (based on service status)
+    $('#company-repo-status').addClass(healthData.components.company_service.status === 'operational' ? 'success' : 'error');
+    $('#company-repo-text').text('Active');
+    
+    $('#sic-repo-status').addClass(healthData.components.sic_prediction_service.status === 'operational' ? 'success' : 'error');  
+    $('#sic-repo-text').text('Active');
+}
+
+function updatePerformanceMetrics(statsData) {
+    $('#companies-loaded-count').text(statsData.data.companies_loaded);
+    
+    const metrics = window.ModularCore.getPerformanceMetrics();
+    $('#avg-response-time-workflow').text(metrics.averageResponseTime.toFixed(0));
+    $('#api-calls-count').text(metrics.apiCalls.length);
+    
+    const successCalls = metrics.apiCalls.filter(call => call.status === 200).length;
+    const successRate = metrics.apiCalls.length > 0 ? (successCalls / metrics.apiCalls.length * 100).toFixed(0) : 0;
+    $('#success-rate').text(successRate);
+}
+</script>
+{% endblock %}

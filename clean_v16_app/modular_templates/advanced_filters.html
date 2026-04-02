@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Risk - Advanced Filter & Field Selector</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .field-group {
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            margin-bottom: 0.5rem;
+        }
+        .field-group-header {
+            background-color: #f8f9fa;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #dee2e6;
+            cursor: pointer;
+            user-select: none;
+        }
+        .field-group-header:hover {
+            background-color: #e9ecef;
+        }
+        .field-group-body {
+            padding: 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .field-checkbox {
+            margin-bottom: 0.25rem;
+        }
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .results-header {
+            position: sticky;
+            top: 0;
+            background-color: white;
+            z-index: 10;
+        }
+        .field-count-badge {
+            font-size: 0.7rem;
+        }
+        .collapse-icon {
+            transition: transform 0.3s;
+        }
+        .collapsed .collapse-icon {
+            transform: rotate(-90deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-3">
+        <div class="row">
+            <!-- Left Panel - Filters & Field Selector -->
+            <div class="col-md-3">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-filter"></i> Filters & Fields
+                        </h5>
+                    </div>
+                    <div class="card-body p-2" style="overflow-y: auto; max-height: 80vh;">
+                        
+                        <!-- Search & Basic Filters -->
+                        <div class="mb-3">
+                            <h6 class="text-muted">🔍 Search & Filters</h6>
+                            <div class="mb-2">
+                                <input type="text" id="companySearch" class="form-control form-control-sm" 
+                                       placeholder="Company name..." value="">
+                            </div>
+                            <div class="mb-2">
+                                <select id="countryFilter" class="form-select form-select-sm">
+                                    <option value="">All Countries</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <input type="number" id="limitInput" class="form-control form-control-sm" 
+                                       value="10" min="1" max="100" placeholder="Limit">
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Field Selector -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="text-muted mb-0">📋 Table Fields</h6>
+                                <div>
+                                    <button id="selectAllFields" class="btn btn-outline-primary btn-sm me-1" title="Select All">
+                                        <i class="fas fa-check-double"></i>
+                                    </button>
+                                    <button id="clearAllFields" class="btn btn-outline-secondary btn-sm" title="Clear All">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Basic Info Fields -->
+                            <div class="field-group">
+                                <div class="field-group-header" data-bs-toggle="collapse" data-bs-target="#basicInfoFields">
+                                    <i class="fas fa-chevron-down collapse-icon"></i>
+                                    <i class="fas fa-info-circle text-primary"></i>
+                                    Basic Info <span class="badge bg-primary field-count-badge ms-1" id="basicCount">0</span>
+                                </div>
+                                <div class="collapse show" id="basicInfoFields">
+                                    <div class="field-group-body">
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="company_name" id="field_company_name" checked>
+                                            <label class="form-check-label" for="field_company_name">Company Name</label>
+                                        </div>
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="company_number" id="field_company_number" checked>
+                                            <label class="form-check-label" for="field_company_number">Company Number</label>
+                                        </div>
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="company_type" id="field_company_type">
+                                            <label class="form-check-label" for="field_company_type">Company Type</label>
+                                        </div>
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="entity_type" id="field_entity_type">
+                                            <label class="form-check-label" for="field_entity_type">Entity Type</label>
+                                        </div>
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="ownership_type" id="field_ownership_type">
+                                            <label class="form-check-label" for="field_ownership_type">Ownership Type</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Financial Fields -->
+                            <div class="field-group">
+                                <div class="field-group-header collapsed" data-bs-toggle="collapse" data-bs-target="#financialFields">
+                                    <i class="fas fa-chevron-down collapse-icon"></i>
+                                    <i class="fas fa-dollar-sign text-success"></i>
+                                    Financial <span class="badge bg-success field-count-badge ms-1" id="financialCount">0</span>
+                                </div>
+                                <div class="collapse" id="financialFields">
+                                    <div class="field-group-body">
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="sales_gbp" id="field_sales_gbp">
+                                            <label class="form-check-label" for="field_sales_gbp">Sales (GBP)</label>
+                                        </div>
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="pre_tax_profit_usd" id="field_pre_tax_profit_usd">
+                                            <label class="form-check-label" for="field_pre_tax_profit_usd">Pre-Tax Profit (USD)</label>
+                                        </div>
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="assets_usd" id="field_assets_usd">
+                                            <label class="form-check-label" for="field_assets_usd">Assets (USD)</label>
+                                        </div>
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="employees_total" id="field_employees_total">
+                                            <label class="form-check-label" for="field_employees_total">Total Employees</label>
+                                        </div>
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="employees_single_site" id="field_employees_single_site">
+                                            <label class="form-check-label" for="field_employees_single_site">Single Site Employees</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Industry/SIC Fields -->
+                            <div class="field-group">
+                                <div class="field-group-header collapsed" data-bs-toggle="collapse" data-bs-target="#industryFields">
+                                    <i class="fas fa-chevron-down collapse-icon"></i>
+                                    <i class="fas fa-industry text-warning"></i>
+                                    Industry/SIC <span class="badge bg-warning field-count-badge ms-1" id="industryCount">0</span>
+                                </div>
+                                <div class="collapse" id="industryFields">
+                                    <div class="field-group-body">
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="sic_codes" id="field_sic_codes">
+                                            <label class="form-check-label" for="field_sic_codes">SIC Codes</label>
+                                        </div>
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="business_description" id="field_business_description">
+                                            <label class="form-check-label" for="field_business_description">Business Description</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Status/Dates Fields -->
+                            <div class="field-group">
+                                <div class="field-group-header collapsed" data-bs-toggle="collapse" data-bs-target="#statusFields">
+                                    <i class="fas fa-chevron-down collapse-icon"></i>
+                                    <i class="fas fa-calendar text-info"></i>
+                                    Status/Dates <span class="badge bg-info field-count-badge ms-1" id="statusCount">0</span>
+                                </div>
+                                <div class="collapse" id="statusFields">
+                                    <div class="field-group-body">
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="status" id="field_status" checked>
+                                            <label class="form-check-label" for="field_status">Status</label>
+                                        </div>
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="incorporation_date" id="field_incorporation_date">
+                                            <label class="form-check-label" for="field_incorporation_date">Incorporation Date</label>
+                                        </div>
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="has_been_liquidated" id="field_has_been_liquidated">
+                                            <label class="form-check-label" for="field_has_been_liquidated">Has Been Liquidated</label>
+                                        </div>
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="has_charges" id="field_has_charges">
+                                            <label class="form-check-label" for="field_has_charges">Has Charges</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Contact/Location Fields -->
+                            <div class="field-group">
+                                <div class="field-group-header collapsed" data-bs-toggle="collapse" data-bs-target="#contactFields">
+                                    <i class="fas fa-chevron-down collapse-icon"></i>
+                                    <i class="fas fa-map-marker-alt text-danger"></i>
+                                    Contact/Location <span class="badge bg-danger field-count-badge ms-1" id="contactCount">0</span>
+                                </div>
+                                <div class="collapse" id="contactFields">
+                                    <div class="field-group-body">
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="jurisdiction" id="field_jurisdiction">
+                                            <label class="form-check-label" for="field_jurisdiction">Jurisdiction</label>
+                                        </div>
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="registered_office_address" id="field_registered_office_address">
+                                            <label class="form-check-label" for="field_registered_office_address">Registered Office Address</label>
+                                        </div>
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="phone" id="field_phone">
+                                            <label class="form-check-label" for="field_phone">Phone</label>
+                                        </div>
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="email" id="field_email">
+                                            <label class="form-check-label" for="field_email">Email</label>
+                                        </div>
+                                        <div class="field-checkbox">
+                                            <input class="form-check-input field-selector" type="checkbox" value="website" id="field_website">
+                                            <label class="form-check-label" for="field_website">Website</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2">
+                            <button id="searchBtn" class="btn btn-primary btn-sm">
+                                <i class="fas fa-search"></i> Apply Filters
+                            </button>
+                            <button id="clearBtn" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-times"></i> Clear All
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Results -->
+            <div class="col-md-9">
+                <div class="card h-100">
+                    <div class="card-header results-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-table"></i> Results</h5>
+                        <div>
+                            <span id="resultCount" class="badge bg-primary">0</span>
+                            <span id="fieldCount" class="badge bg-secondary ms-1">0 fields</span>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-container">
+                            <div id="results">
+                                <div class="text-center p-4 text-muted">
+                                    <i class="fas fa-search fa-2x mb-2"></i>
+                                    <p>Select fields and click "Apply Filters" to see results...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        class AdvancedFilterManager {
+            constructor() {
+                this.selectedFields = new Set(['company_name', 'company_number', 'status']);
+                this.initializeEventListeners();
+                this.loadFilterOptions();
+                this.updateFieldCounts();
+            }
+
+            initializeEventListeners() {
+                // Search and filter buttons
+                document.getElementById('searchBtn').addEventListener('click', () => this.performSearch());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clearAll());
+
+                // Field selector events
+                document.getElementById('selectAllFields').addEventListener('click', () => this.selectAllFields());
+                document.getElementById('clearAllFields').addEventListener('click', () => this.clearAllFields());
+
+                // Field checkboxes
+                document.querySelectorAll('.field-selector').forEach(checkbox => {
+                    checkbox.addEventListener('change', () => {
+                        if (checkbox.checked) {
+                            this.selectedFields.add(checkbox.value);
+                        } else {
+                            this.selectedFields.delete(checkbox.value);
+                        }
+                        this.updateFieldCounts();
+                    });
+                });
+
+                // Auto-search on Enter
+                document.getElementById('companySearch').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.performSearch();
+                });
+
+                // Update collapse icons
+                document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(trigger => {
+                    trigger.addEventListener('click', (e) => {
+                        setTimeout(() => {
+                            const icon = trigger.querySelector('.collapse-icon');
+                            const target = document.querySelector(trigger.getAttribute('data-bs-target'));
+                            if (target.classList.contains('show')) {
+                                trigger.classList.remove('collapsed');
+                            } else {
+                                trigger.classList.add('collapsed');
+                            }
+                        }, 50);
+                    });
+                });
+            }
+
+            async loadFilterOptions() {
+                try {
+                    const response = await fetch('/api/modular/filter-options');
+                    const data = await response.json();
+                    
+                    const countrySelect = document.getElementById('countryFilter');
+                    countrySelect.innerHTML = '<option value="">All Countries</option>';
+                    
+                    if (data.countries) {
+                        data.countries.forEach(country => {
+                            const option = document.createElement('option');
+                            option.value = country;
+                            option.textContent = country;
+                            countrySelect.appendChild(option);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error loading filter options:', error);
+                }
+            }
+
+            updateFieldCounts() {
+                const groups = {
+                    'basicCount': ['company_name', 'company_number', 'company_type', 'entity_type', 'ownership_type'],
+                    'financialCount': ['sales_gbp', 'pre_tax_profit_usd', 'assets_usd', 'employees_total', 'employees_single_site'],
+                    'industryCount': ['sic_codes', 'business_description'],
+                    'statusCount': ['status', 'incorporation_date', 'has_been_liquidated', 'has_charges'],
+                    'contactCount': ['jurisdiction', 'registered_office_address', 'phone', 'email', 'website']
+                };
+
+                Object.entries(groups).forEach(([countId, fields]) => {
+                    const selectedCount = fields.filter(field => this.selectedFields.has(field)).length;
+                    document.getElementById(countId).textContent = selectedCount;
+                });
+
+                // Update total field count
+                document.getElementById('fieldCount').textContent = `${this.selectedFields.size} fields`;
+            }
+
+            selectAllFields() {
+                document.querySelectorAll('.field-selector').forEach(checkbox => {
+                    checkbox.checked = true;
+                    this.selectedFields.add(checkbox.value);
+                });
+                this.updateFieldCounts();
+            }
+
+            clearAllFields() {
+                document.querySelectorAll('.field-selector').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                this.selectedFields.clear();
+                this.updateFieldCounts();
+            }
+
+            async performSearch() {
+                const search = document.getElementById('companySearch').value;
+                const country = document.getElementById('countryFilter').value;
+                const limit = document.getElementById('limitInput').value;
+                
+                const resultsDiv = document.getElementById('results');
+                const countBadge = document.getElementById('resultCount');
+                
+                if (this.selectedFields.size === 0) {
+                    resultsDiv.innerHTML = '<div class="alert alert-warning m-3">Please select at least one field to display.</div>';
+                    return;
+                }
+                
+                resultsDiv.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Searching...</p></div>';
+                
+                try {
+                    let url, data;
+                    
+                    if (search) {
+                        // Use SQLite search for company names
+                        url = `/api/sqlite/companies/search?q=${encodeURIComponent(search)}&limit=${limit}`;
+                        const response = await fetch(url);
+                        const result = await response.json();
+                        data = { results: result.results || [], count: result.count || 0 };
+                    } else {
+                        // Use CSV data endpoint
+                        url = `/api/modular/companies?limit=${limit}`;
+                        if (country) url += `&country=${encodeURIComponent(country)}`;
+                        
+                        const response = await fetch(url);
+                        const result = await response.json();
+                        data = { results: result.data || [], count: (result.data || []).length };
+                    }
+                    
+                    countBadge.textContent = data.count;
+                    this.renderTable(data.results);
+                    
+                } catch (error) {
+                    console.error('Search error:', error);
+                    resultsDiv.innerHTML = `<div class="alert alert-danger m-3">Error: ${error.message}</div>`;
+                }
+            }
+
+            renderTable(companies) {
+                const resultsDiv = document.getElementById('results');
+                
+                if (companies.length === 0) {
+                    resultsDiv.innerHTML = '<div class="alert alert-info m-3">No companies found matching your criteria.</div>';
+                    return;
+                }
+
+                // Create table header
+                let html = '<table class="table table-striped table-hover mb-0"><thead class="table-dark"><tr>';
+                
+                const selectedFieldsArray = Array.from(this.selectedFields);
+                selectedFieldsArray.forEach(field => {
+                    html += `<th class="text-nowrap">${this.formatFieldName(field)}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+
+                // Create table rows
+                companies.forEach(company => {
+                    html += '<tr>';
+                    selectedFieldsArray.forEach(field => {
+                        const value = this.getFieldValue(company, field);
+                        html += `<td>${this.formatFieldValue(field, value)}</td>`;
+                    });
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table>';
+                resultsDiv.innerHTML = html;
+            }
+
+            formatFieldName(field) {
+                return field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            }
+
+            getFieldValue(company, field) {
+                // Handle different data structures (both old CSV and new SQLite schema)
+                return company[field] || 
+                       company[field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())] ||
+                       company['Company Name'] || company.company_name ||
+                       company['UK SIC 2007 Code'] || company.uk_sic_2007_code ||
+                       company['Registration number'] || company.company_number ||
+                       'N/A';
+            }
+
+            formatFieldValue(field, value) {
+                if (value === null || value === undefined || value === '') return 'N/A';
+                
+                // Format financial values
+                if (field.includes('usd') && typeof value === 'number') {
+                    return new Intl.NumberFormat('en-US', { 
+                        style: 'currency', 
+                        currency: 'USD',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    }).format(value);
+                }
+                
+                // Format employee counts
+                if (field.includes('employee') && typeof value === 'number') {
+                    return new Intl.NumberFormat().format(value);
+                }
+                
+                // Truncate long text
+                if (typeof value === 'string' && value.length > 100) {
+                    return value.substring(0, 100) + '...';
+                }
+                
+                return value;
+            }
+
+            clearAll() {
+                document.getElementById('companySearch').value = '';
+                document.getElementById('countryFilter').value = '';
+                document.getElementById('limitInput').value = '10';
+                document.getElementById('results').innerHTML = '<div class="text-center p-4 text-muted"><i class="fas fa-search fa-2x mb-2"></i><p>Select fields and click "Apply Filters" to see results...</p></div>';
+                document.getElementById('resultCount').textContent = '0';
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new AdvancedFilterManager();
+        });
+    </script>
+</body>
+</html>

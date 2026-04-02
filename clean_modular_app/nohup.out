@@ -1,0 +1,80 @@
+2025-10-03 19:35:49,891 - __main__ - INFO - Creating Flask application...
+🚀 Starting Stable Credit Risk Analysis Server
+==================================================
+🔧 Loaded environment variables from: /Users/kaunteyshah/Databricks/Credit_Risk/clean_modular_app/.env
+[2025-10-03T19:35:51] credit_risk_system (INFO): Logging configuration applied for environment: development
+[2025-10-03T19:35:51] credit_risk_system (INFO): Log files location: /Users/kaunteyshah/Databricks/Credit_Risk/clean_modular_app/logs
+[2025-10-03T19:35:51] credit_risk_system (INFO): Console log level: INFO
+[2025-10-03T19:35:51] credit_risk_system (INFO): File log level: INFO
+2025-10-03 19:35:51,366 - app_modules.utils.config_manager - INFO - 🔑 Azure Key Vault is available and connected
+[2025-10-03T19:35:51] app_modules.utils.config_manager (INFO): 🔑 Azure Key Vault is available and connected
+2025-10-03 19:35:51,367 - app_modules.utils.config_manager - INFO - ✅ Successfully loaded secrets: ['COMPANIES_HOUSE_API_KEY', 'OPENAI_API_KEY']
+[2025-10-03T19:35:51] app_modules.utils.config_manager (INFO): ✅ Successfully loaded secrets: ['COMPANIES_HOUSE_API_KEY', 'OPENAI_API_KEY']
+✅ CORS enabled
+[2025-10-03T19:35:51] app_modules.utils.logger (INFO): Initializing database-only Flask app (no CSV dependencies)
+[2025-10-03T19:35:51] credit_risk_system (INFO): Logging configuration applied for environment: development
+[2025-10-03T19:35:51] credit_risk_system (INFO): Log files location: /Users/kaunteyshah/Databricks/Credit_Risk/clean_modular_app/logs
+[2025-10-03T19:35:51] credit_risk_system (INFO): Console log level: INFO
+[2025-10-03T19:35:51] credit_risk_system (INFO): File log level: INFO
+[2025-10-03T19:35:51] app_modules.config.app_config (INFO): Configuration loaded - Environment: development
+[2025-10-03T19:35:51] app_modules.config.app_config (INFO): Project root: /Users/kaunteyshah/Databricks/Credit_Risk/clean_modular_app
+[2025-10-03T19:35:51] app_modules.config.app_config (INFO): Database path: /Users/kaunteyshah/Databricks/Credit_Risk/clean_modular_app/data/credit_risk.db
+[2025-10-03T19:35:51] app_modules.config.app_config (INFO): Container mode: False
+[2025-10-03T19:35:51] app_modules.utils.enhanced_sic_matcher (INFO): 🚀 EnhancedSICMatcher initializing with database: /Users/kaunteyshah/Databricks/Credit_Risk/clean_modular_app/data/credit_risk.db
+[2025-10-03T19:35:51] app_modules.utils.enhanced_sic_matcher (INFO): 🔍 DEBUG - Loading SIC codes from database: /Users/kaunteyshah/Databricks/Credit_Risk/clean_modular_app/data/credit_risk.db
+[2025-10-03T19:35:51] app_modules.utils.enhanced_sic_matcher (INFO): 🔍 DEBUG - Database exists: True
+[2025-10-03T19:35:51] app_modules.utils.enhanced_sic_matcher (INFO): ✅ Loaded 751 SIC codes from database
+[2025-10-03T19:35:51] app_modules.utils.logger (INFO): ✅ Enhanced SIC matcher initialized successfully with database-only approach
+[2025-10-03T19:35:51] app_modules.utils.logger (INFO): Simple SQLite API routes registered successfully
+[2025-10-03T19:35:51] app_modules.utils.logger (INFO): Database verified: 509 companies, 751 SIC codes
+[2025-10-03T19:35:51] app_modules.utils.logger (INFO): ✅ Modular architecture components available
+[2025-10-03T19:35:51] app_modules.utils.logger (INFO): 🚀 Modular architecture enhancements integrated successfully
+[2025-10-03T19:35:51] app_modules.utils.logger (INFO):    Enhanced endpoints: /api/v2/health, /api/v2/demo, /api/v2/companies
+[2025-10-03T19:35:51] app_modules.utils.logger (INFO):    Your existing endpoints: Fully preserved and functional
+[2025-10-03T19:35:51] app_modules.utils.logger (INFO): 🔄 Workflow API endpoints added
+[2025-10-03T19:35:51] app_modules.utils.logger (INFO):    Workflow endpoints: /api/modular/workflows, /api/modular/workflow/agents, /api/modular/workflow/execute
+[2025-10-03T19:35:51] __main__ (INFO): ✅ Flask application created successfully
+🎯 Stable server starting at: http://localhost:5002
+📊 Database: SQLite (509 companies, 751 SIC codes)
+🔧 Configuration: Production-ready, no reloader
+==================================================
+💡 Press Ctrl+C to stop the server
+
+[2025-10-03T19:35:51] __main__ (INFO): Starting server on port 5002...
+ * Serving Flask app 'app_modules.flask_main'
+ * Debug mode: off
+[2025-10-03T19:35:56] app_modules.utils.logger (INFO): 🔍 Extracted from DB - Company: 'BAE SYSTEMS PLC', Business Desc: 'BAE Systems Plc (BAE) is a developer and manufactu...'
+[2025-10-03T19:35:56] app_modules.config.app_config (INFO): Configuration loaded - Environment: development
+[2025-10-03T19:35:56] app_modules.config.app_config (INFO): Project root: /Users/kaunteyshah/Databricks/Credit_Risk/clean_modular_app
+[2025-10-03T19:35:56] app_modules.config.app_config (INFO): Database path: /Users/kaunteyshah/Databricks/Credit_Risk/clean_modular_app/data/credit_risk.db
+[2025-10-03T19:35:56] app_modules.config.app_config (INFO): Container mode: False
+[2025-10-03T19:35:56] app_modules.utils.enhanced_sic_matcher (INFO): 🚀 EnhancedSICMatcher initializing with database: /Users/kaunteyshah/Databricks/Credit_Risk/clean_modular_app/data/credit_risk.db
+[2025-10-03T19:35:56] app_modules.utils.enhanced_sic_matcher (INFO): 🔍 DEBUG - Loading SIC codes from database: /Users/kaunteyshah/Databricks/Credit_Risk/clean_modular_app/data/credit_risk.db
+[2025-10-03T19:35:56] app_modules.utils.enhanced_sic_matcher (INFO): 🔍 DEBUG - Database exists: True
+[2025-10-03T19:35:56] app_modules.utils.enhanced_sic_matcher (INFO): ✅ Loaded 751 SIC codes from database
+[2025-10-03T19:35:56] app_modules.utils.logger (INFO): 🔍 About to generate AI reasoning for: business_description='BAE Systems Plc (BAE) is a developer and manufactu...', predicted_sic='25400', confidence=95.0
+[2025-10-03T19:35:56] app_modules.utils.logger (INFO): 🤖 Generated AI reasoning (length=188): Selected SIC 25400 (Manufacture of weapons and ammunition) with very high confidence (95.0%). Predic...
+[2025-10-03T19:35:56] app_modules.utils.enhanced_sic_matcher (INFO): ✅ Saved prediction for BAE SYSTEMS PLC to database with AI reasoning
+[2025-10-03T19:35:56] app_modules.utils.logger (INFO): ✅ Manually approved prediction saved for BAE SYSTEMS PLC: 25400
+[2025-10-03T19:36:09] app_modules.utils.logger (INFO): Dependency injection container initialized
+[2025-10-03T19:36:10] app_modules.utils.logger (INFO): SQLite database type configured (not implemented yet)
+[2025-10-03T19:36:10] app_modules.utils.logger (INFO): Registered singleton factory: company_repository
+[2025-10-03T19:36:10] app_modules.utils.logger (INFO): Registered singleton factory: company_service
+[2025-10-03T19:36:10] app_modules.utils.logger (INFO): DI container configured with database_type: sqlite
+[2025-10-03T19:36:16] app_modules.utils.logger (INFO): 🔍 Extracted from DB - Company: 'BAE SYSTEMS PLC', Business Desc: 'BAE Systems Plc (BAE) is a developer and manufactu...'
+[2025-10-03T19:36:16] app_modules.config.app_config (INFO): Configuration loaded - Environment: development
+[2025-10-03T19:36:16] app_modules.config.app_config (INFO): Project root: /Users/kaunteyshah/Databricks/Credit_Risk/clean_modular_app
+[2025-10-03T19:36:16] app_modules.config.app_config (INFO): Database path: /Users/kaunteyshah/Databricks/Credit_Risk/clean_modular_app/data/credit_risk.db
+[2025-10-03T19:36:16] app_modules.config.app_config (INFO): Container mode: False
+[2025-10-03T19:36:16] app_modules.utils.enhanced_sic_matcher (INFO): 🚀 EnhancedSICMatcher initializing with database: /Users/kaunteyshah/Databricks/Credit_Risk/clean_modular_app/data/credit_risk.db
+[2025-10-03T19:36:16] app_modules.utils.enhanced_sic_matcher (INFO): 🔍 DEBUG - Loading SIC codes from database: /Users/kaunteyshah/Databricks/Credit_Risk/clean_modular_app/data/credit_risk.db
+[2025-10-03T19:36:16] app_modules.utils.enhanced_sic_matcher (INFO): 🔍 DEBUG - Database exists: True
+[2025-10-03T19:36:16] app_modules.utils.enhanced_sic_matcher (INFO): ✅ Loaded 751 SIC codes from database
+[2025-10-03T19:36:16] app_modules.utils.logger (INFO): 🔍 About to generate AI reasoning for: business_description='BAE Systems Plc (BAE) is a developer and manufactu...', predicted_sic='25400', confidence=95.0
+[2025-10-03T19:36:16] app_modules.utils.logger (INFO): 🤖 Generated AI reasoning (length=188): Selected SIC 25400 (Manufacture of weapons and ammunition) with very high confidence (95.0%). Predic...
+[2025-10-03T19:36:16] app_modules.utils.enhanced_sic_matcher (INFO): ✅ Saved prediction for BAE SYSTEMS PLC to database with AI reasoning
+[2025-10-03T19:36:16] app_modules.utils.logger (INFO): ✅ Manually approved prediction saved for BAE SYSTEMS PLC: 25400
+[2025-10-03T19:37:06] app_modules.config.app_config (INFO): Configuration loaded - Environment: development
+[2025-10-03T19:37:06] app_modules.config.app_config (INFO): Project root: /Users/kaunteyshah/Databricks/Credit_Risk/clean_modular_app
+[2025-10-03T19:37:06] app_modules.config.app_config (INFO): Database path: /Users/kaunteyshah/Databricks/Credit_Risk/clean_modular_app/data/credit_risk.db
+[2025-10-03T19:37:06] app_modules.config.app_config (INFO): Container mode: False

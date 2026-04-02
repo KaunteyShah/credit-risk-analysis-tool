@@ -1,0 +1,322 @@
+{
+  "storageAccount": {
+    "name": "creditriskstorageacc",
+    "resourceGroup": "rg-credit-risk-clean",
+    "location": "ukwest",
+    "sku": {
+      "name": "Standard_LRS",
+      "tier": "Standard"
+    },
+    "kind": "StorageV2",
+    "accessTier": "Hot",
+    "properties": {
+      "supportsHttpsTrafficOnly": true,
+      "minimumTlsVersion": "TLS1_2",
+      "allowBlobPublicAccess": false,
+      "allowSharedKeyAccess": true,
+      "networkAcls": {
+        "bypass": "AzureServices",
+        "defaultAction": "Allow",
+        "ipRules": [],
+        "virtualNetworkRules": []
+      },
+      "encryption": {
+        "services": {
+          "file": {
+            "enabled": true,
+            "keyType": "Account"
+          },
+          "blob": {
+            "enabled": true,
+            "keyType": "Account"
+          }
+        },
+        "keySource": "Microsoft.Storage"
+      }
+    }
+  },
+  "fileShares": [
+    {
+      "name": "credit-risk-db",
+      "quota": 5,
+      "enabledProtocols": "SMB",
+      "purpose": "Main SQLite database storage",
+      "description": "Stores the primary credit_risk.db SQLite database with company data, SIC predictions, and activity logs",
+      "files": [
+        {
+          "name": "credit_risk.db",
+          "size": "1.9 MB",
+          "description": "Main application database",
+          "schema": "Companies, SIC predictions, activity logs, user data"
+        }
+      ],
+      "mountPath": "/home/data",
+      "mountOptions": "dir_mode=0777,file_mode=0777,uid=0,gid=0",
+      "backupStrategy": {
+        "enabled": true,
+        "frequency": "daily",
+        "retentionDays": 7,
+        "backupPath": "/home/data/backups"
+      },
+      "accessControl": {
+        "readAccess": ["Web App", "SQLite Browser"],
+        "writeAccess": ["Web App"],
+        "adminAccess": ["SQLite Browser", "Manual Scripts"]
+      }
+    },
+    {
+      "name": "credit-risk-vector-db",
+      "quota": 5,
+      "enabledProtocols": "SMB",
+      "purpose": "Vector database for embeddings",
+      "description": "Stores vector_database.db with document embeddings for RAG and semantic search",
+      "files": [
+        {
+          "name": "vector_database.db",
+          "size": "30 MB",
+          "description": "Vector embeddings database using sqlite-vec",
+          "schema": "Document embeddings (3072 dimensions), metadata, search indexes"
+        }
+      ],
+      "mountPath": "/home/vector_data",
+      "mountOptions": "dir_mode=0777,file_mode=0777,uid=0,gid=0",
+      "backupStrategy": {
+        "enabled": true,
+        "frequency": "weekly",
+        "retentionDays": 14,
+        "backupPath": "/home/vector_data/backups"
+      },
+      "accessControl": {
+        "readAccess": ["Web App"],
+        "writeAccess": ["Web App"],
+        "adminAccess": ["Manual Scripts"]
+      },
+      "performance": {
+        "expectedQPS": 10,
+        "averageLatency": "50-100ms",
+        "indexType": "HNSW"
+      }
+    }
+  ],
+  "blobContainers": [
+    {
+      "name": "credit-risk-documents",
+      "publicAccess": "None",
+      "purpose": "PDF document storage",
+      "description": "Stores downloaded company financial documents (PDFs) for RAG processing and revenue extraction",
+      "structure": {
+        "rootPath": "/",
+        "folders": [
+          {
+            "name": "pdfs",
+            "description": "Raw PDF files downloaded from Companies House",
+            "expectedSize": "39 MB",
+            "fileCount": "~100-500 files"
+          },
+          {
+            "name": "processed",
+            "description": "Processed/extracted content from PDFs",
+            "expectedSize": "Variable"
+          },
+          {
+            "name": "archived",
+            "description": "Archived old documents",
+            "expectedSize": "Variable"
+          }
+        ]
+      },
+      "lifecycle": {
+        "enabled": true,
+        "rules": [
+          {
+            "name": "ArchiveOldDocuments",
+            "enabled": true,
+            "type": "Lifecycle",
+            "definition": {
+              "actions": {
+                "baseBlob": {
+                  "tierToCool": {
+                    "daysAfterModificationGreaterThan": 90
+                  },
+                  "tierToArchive": {
+                    "daysAfterModificationGreaterThan": 180
+                  },
+                  "delete": {
+                    "daysAfterModificationGreaterThan": 365
+                  }
+                }
+              },
+              "filters": {
+                "blobTypes": ["blockBlob"],
+                "prefixMatch": ["pdfs/"]
+              }
+            }
+          }
+        ]
+      },
+      "accessControl": {
+        "readAccess": ["Web App"],
+        "writeAccess": ["Web App"],
+        "deleteAccess": ["Admin Only"]
+      },
+      "metadata": {
+        "documentTypes": ["Annual Reports", "Financial Statements", "Company Accounts"],
+        "sources": ["Companies House API"],
+        "retention": "1 year (active), archive after 6 months"
+      }
+    }
+  ],
+  "dataFlow": {
+    "architecture": "3-tier storage separation",
+    "tiers": [
+      {
+        "tier": 1,
+        "name": "Main Database",
+        "storage": "File Share (credit-risk-db)",
+        "size": "1.9 MB",
+        "purpose": "Structured relational data",
+        "access": "High frequency read/write"
+      },
+      {
+        "tier": 2,
+        "name": "Vector Database",
+        "storage": "File Share (credit-risk-vector-db)",
+        "size": "30 MB",
+        "purpose": "Embeddings and semantic search",
+        "access": "Medium frequency read, low frequency write"
+      },
+      {
+        "tier": 3,
+        "name": "Document Storage",
+        "storage": "Blob Container (credit-risk-documents)",
+        "size": "39 MB",
+        "purpose": "Raw PDF files and archives",
+        "access": "Low frequency read, medium frequency write"
+      }
+    ],
+    "rationale": {
+      "separation": "Separates hot data (main DB), warm data (vectors), and cold data (PDFs)",
+      "performance": "File shares for frequent access, blobs for archival storage",
+      "cost": "Optimizes costs by using appropriate storage tier for each data type",
+      "scalability": "Each tier can scale independently based on usage patterns"
+    }
+  },
+  "costEstimates": {
+    "fileShares": {
+      "credit-risk-db": {
+        "quota": "5 GB",
+        "actualUsage": "1.9 MB",
+        "costPerMonth": "~£0.10",
+        "tier": "Transaction optimized"
+      },
+      "credit-risk-vector-db": {
+        "quota": "5 GB",
+        "actualUsage": "30 MB",
+        "costPerMonth": "~£0.10",
+        "tier": "Transaction optimized"
+      }
+    },
+    "blobStorage": {
+      "credit-risk-documents": {
+        "estimatedSize": "50 GB (max)",
+        "actualUsage": "39 MB",
+        "costPerMonth": "~£0.80 (hot tier), £0.40 (cool tier after 90 days)",
+        "tier": "Hot (with lifecycle to cool/archive)"
+      }
+    },
+    "total": {
+      "currentMonthly": "~£1.00",
+      "projectedMonthly": "~£2.00 (with growth)",
+      "savings": "~£19/month from removing unused ACRs"
+    }
+  },
+  "monitoring": {
+    "metrics": [
+      "Storage capacity used",
+      "Transaction count",
+      "Ingress/Egress bandwidth",
+      "Latency (P50, P95, P99)",
+      "Error rate"
+    ],
+    "alerts": [
+      {
+        "name": "HighStorageUsage",
+        "condition": "UsedCapacity > 80% of quota",
+        "action": "Email notification"
+      },
+      {
+        "name": "HighLatency",
+        "condition": "AverageLatency > 1000ms",
+        "action": "Email notification"
+      },
+      {
+        "name": "HighErrorRate",
+        "condition": "ErrorRate > 5%",
+        "action": "Email notification + alert"
+      }
+    ]
+  },
+  "security": {
+    "encryption": {
+      "atRest": "Microsoft-managed keys (MMK)",
+      "inTransit": "TLS 1.2+"
+    },
+    "accessControl": {
+      "method": "Storage Account Keys + SAS tokens",
+      "keyRotation": "Every 90 days (recommended)",
+      "minimumTlsVersion": "TLS1_2"
+    },
+    "networkSecurity": {
+      "firewallEnabled": false,
+      "virtualNetworkEnabled": false,
+      "allowAzureServices": true
+    }
+  },
+  "disaster_recovery": {
+    "replication": "Locally Redundant Storage (LRS)",
+    "backups": {
+      "mainDB": {
+        "frequency": "Daily",
+        "retention": "7 days",
+        "method": "Manual script + Azure backup"
+      },
+      "vectorDB": {
+        "frequency": "Weekly",
+        "retention": "14 days",
+        "method": "Manual script"
+      },
+      "documents": {
+        "frequency": "None (re-downloadable from source)",
+        "retention": "N/A",
+        "method": "Source API"
+      }
+    },
+    "rpo": "24 hours",
+    "rto": "1 hour"
+  },
+  "migration": {
+    "currentState": {
+      "mainDB": "Already in credit-risk-db file share",
+      "vectorDB": "Local only (needs upload)",
+      "documents": "Local only (needs upload)"
+    },
+    "migrationSteps": [
+      "1. Create credit-risk-vector-db file share",
+      "2. Create credit-risk-documents blob container",
+      "3. Upload vector_database.db to new file share",
+      "4. Upload PDFs to new blob container",
+      "5. Update app configuration to use new paths",
+      "6. Test connectivity and access",
+      "7. Verify data integrity",
+      "8. Enable monitoring and alerts"
+    ]
+  },
+  "tags": {
+    "Environment": "Production",
+    "Project": "Credit Risk Analysis",
+    "ManagedBy": "Azure CLI",
+    "CostCenter": "EY",
+    "DataClassification": "Internal",
+    "BackupRequired": "Yes"
+  }
+}

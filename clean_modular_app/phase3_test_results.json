@@ -1,0 +1,51 @@
+[
+  {
+    "test": "SQLite Health Check",
+    "success": false,
+    "message": "Connection failed: HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: /api/sqlite/health (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x104ebff20>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+    "timestamp": "2025-10-02T00:12:59.874428",
+    "data": null
+  },
+  {
+    "test": "SIC Hierarchy",
+    "success": false,
+    "message": "Request failed: HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: /api/sqlite/sic-codes/hierarchy (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x104ef06b0>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+    "timestamp": "2025-10-02T00:12:59.876397",
+    "data": null
+  },
+  {
+    "test": "Countries Endpoint",
+    "success": false,
+    "message": "Request failed: HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: /api/sqlite/countries (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x104ef0dd0>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+    "timestamp": "2025-10-02T00:12:59.878584",
+    "data": null
+  },
+  {
+    "test": "Companies Endpoint",
+    "success": false,
+    "message": "Request failed: HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: /api/sqlite/companies?limit=10 (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x104ef1490>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+    "timestamp": "2025-10-02T00:12:59.881514",
+    "data": null
+  },
+  {
+    "test": "Advanced Search",
+    "success": false,
+    "message": "Request failed: HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: /api/sqlite/advanced-search?search=limited&limit=5 (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x104ef1be0>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+    "timestamp": "2025-10-02T00:12:59.882907",
+    "data": null
+  },
+  {
+    "test": "UI Accessibility",
+    "success": false,
+    "message": "Request failed: HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x104ef2300>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+    "timestamp": "2025-10-02T00:12:59.884882",
+    "data": null
+  },
+  {
+    "test": "JavaScript Loading",
+    "success": false,
+    "message": "Request failed: HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: /static/js/enhanced_app.js (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x104ef1550>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+    "timestamp": "2025-10-02T00:12:59.885861",
+    "data": null
+  }
+]
