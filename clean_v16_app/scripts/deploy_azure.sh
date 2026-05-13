@@ -63,6 +63,78 @@ check_login() {
   ok "Logged in. Subscription: $SUBSCRIPTION"
 }
 
+# ── Pre-deploy DB validation ──────────────────────────────────────────────────
+# Creates a clean VACUUM INTO copy in DELETE journal mode that is safe for
+# Azure File Share (SMB). WAL mode is incompatible with SMB network mounts
+# and causes "database disk image is malformed" errors.
+validate_and_prepare_db() {
+  local src="$1" out="$2" label="$3"
+  info "Validating and preparing ${label} for upload..."
+
+  python3 - <<PYEOF
+import sqlite3, os, sys
+
+src = "${src}"
+out = "${out}"
+label = "${label}"
+
+if not os.path.exists(src):
+    print(f"  ❌ FATAL: {src} not found — aborting deploy")
+    sys.exit(1)
+
+# 1) Flush any pending WAL on the source
+con = sqlite3.connect(src)
+con.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+con.close()
+
+# 2) VACUUM INTO: rewrites every page — cleanest possible copy
+if os.path.exists(out):
+    os.remove(out)
+con = sqlite3.connect(src)
+con.execute(f"VACUUM INTO '{out}'")
+con.close()
+
+# 3) Switch copy to DELETE journal mode so SMB mounts work safely
+con = sqlite3.connect(out)
+mode = con.execute("PRAGMA journal_mode=DELETE").fetchone()[0]
+con.close()
+
+# 4) Verify header bytes: write_version must be 1 (DELETE/rollback), not 2 (WAL)
+with open(out, "rb") as f:
+    hdr = f.read(100)
+wv, rv = hdr[18], hdr[19]
+
+# 5) Integrity check + basic row counts
+con = sqlite3.connect(out)
+integrity = con.execute("PRAGMA integrity_check").fetchone()[0]
+con.close()
+
+size_kb = os.path.getsize(out) // 1024
+
+print(f"  journal_mode  : {mode}  (write_ver={wv}, read_ver={rv})")
+print(f"  integrity     : {integrity}")
+print(f"  size          : {size_kb} KB")
+print(f"  output        : {out}")
+
+errors = []
+if mode != "delete":
+    errors.append(f"journal_mode is '{mode}', expected 'delete'")
+if wv != 1 or rv != 1:
+    errors.append(f"header write/read version is {wv}/{rv}, expected 1/1 (not WAL mode)")
+if integrity != "ok":
+    errors.append(f"integrity_check: {integrity}")
+if size_kb < 100:
+    errors.append(f"suspiciously small file: {size_kb} KB")
+
+if errors:
+    for e in errors:
+        print(f"  ❌ {e}")
+    sys.exit(1)
+
+print(f"  ✅ {label} ready for upload")
+PYEOF
+}
+
 resource_exists() {
   # Usage: resource_exists <az show command...>
   "$@" > /dev/null 2>&1
@@ -109,52 +181,26 @@ setup_infrastructure() {
   fi
 
   # ── Upload databases ─────────────────────────────────────────────────────────
-  # credit_risk.db  — always re-uploaded (changes with every approval)
-  # vector_database.db — only re-uploaded if local size differs (rarely changes)
   info "Uploading databases to file share"
 
-  # credit_risk.db: checkpoint WAL first so the uploaded file is self-contained
-  info "  Checkpointing credit_risk.db (flushing WAL)..."
-  python3 -c "
-import sqlite3, os
-conn = sqlite3.connect('data/credit_risk.db')
-conn.execute('PRAGMA wal_checkpoint(TRUNCATE)')
-conn.close()
-# Write clean backup without any WAL dependency
-src = sqlite3.connect('data/credit_risk.db')
-dst = sqlite3.connect('/tmp/credit_risk_upload.db')
-src.backup(dst)
-dst.close(); src.close()
-print('  Checkpoint complete, clean backup at /tmp/credit_risk_upload.db')
-"
+  validate_and_prepare_db "data/credit_risk.db" "/tmp/credit_risk_upload.db" "credit_risk.db" \
+    || die "credit_risk.db validation failed — fix the database before deploying"
   az storage file upload \
     --share-name "$SHARE" --source /tmp/credit_risk_upload.db --path credit_risk.db \
     --account-name "$STORAGE" --account-key "$STORAGE_KEY" \
     --output none
-  ok "Uploaded credit_risk.db (clean, WAL-free)"
+  ok "Uploaded credit_risk.db (clean, WAL-free, DELETE mode)"
   rm -f /tmp/credit_risk_upload.db
 
-  # vector_database.db: always checkpoint WAL + re-upload (same as credit_risk.db)
-  # Size-check alone doesn't detect corruption from prior container writes.
   VEC_LOCAL="data/vector_database.db"
   if [[ -f "$VEC_LOCAL" ]]; then
-    info "  Checkpointing vector_database.db (flushing WAL)..."
-    python3 - <<'PYEOF'
-import sqlite3
-conn = sqlite3.connect('data/vector_database.db')
-conn.execute('PRAGMA wal_checkpoint(TRUNCATE)')
-conn.close()
-src = sqlite3.connect('data/vector_database.db')
-dst = sqlite3.connect('/tmp/vector_db_upload.db')
-src.backup(dst)
-dst.close(); src.close()
-print('  Checkpoint complete, clean backup at /tmp/vector_db_upload.db')
-PYEOF
+    validate_and_prepare_db "$VEC_LOCAL" "/tmp/vector_db_upload.db" "vector_database.db" \
+      || die "vector_database.db validation failed — fix the database before deploying"
     az storage file upload \
       --share-name "$SHARE" --source /tmp/vector_db_upload.db --path vector_database.db \
       --account-name "$STORAGE" --account-key "$STORAGE_KEY" \
       --output none
-    ok "Uploaded vector_database.db (clean, WAL-free)"
+    ok "Uploaded vector_database.db (clean, WAL-free, DELETE mode)"
     rm -f /tmp/vector_db_upload.db
   fi
 
@@ -269,57 +315,43 @@ deploy_app() {
   done < <(az container list --resource-group "$RG" \
     --query "[?starts_with(name,'${CONTAINER_PREFIX}')].name" -o tsv 2>/dev/null || true)
 
-  # Give ACI a moment to release the SMB file handles
-  sleep 5
+  # Give ACI time to fully release all SMB file handles before we touch the share
+  info "Waiting 15s for SMB file handles to release..."
+  sleep 15
 
   # ── Upload DBs — now safe, no container has the file share open ─────────────
-  info "Uploading credit_risk.db (WAL checkpoint → clean upload)"
-  python3 -c "
-import sqlite3
-conn = sqlite3.connect('data/credit_risk.db')
-conn.execute('PRAGMA wal_checkpoint(TRUNCATE)')
-conn.close()
-src = sqlite3.connect('data/credit_risk.db')
-dst = sqlite3.connect('/tmp/credit_risk_upload.db')
-src.backup(dst)
-dst.close(); src.close()
-print('  Clean backup ready')
-"
+  # Run VACUUM INTO + DELETE mode on each DB before upload.
+  # This ensures: no WAL header, all pages rewritten, integrity verified.
+  validate_and_prepare_db "data/credit_risk.db" "/tmp/credit_risk_upload.db" "credit_risk.db" \
+    || die "credit_risk.db validation failed — deploy aborted"
+
   az storage file upload \
     --share-name "$SHARE" --source /tmp/credit_risk_upload.db --path credit_risk.db \
     --account-name "$STORAGE" --account-key "$STORAGE_KEY" \
     --output none
   rm -f /tmp/credit_risk_upload.db
-  # Delete stale WAL/SHM files so the new container doesn't replay old transactions
+
+  # Delete any stale WAL/SHM files left by the previous container run
   az storage file delete --share-name "$SHARE" --path "credit_risk.db-wal" \
     --account-name "$STORAGE" --account-key "$STORAGE_KEY" --output none 2>/dev/null || true
   az storage file delete --share-name "$SHARE" --path "credit_risk.db-shm" \
     --account-name "$STORAGE" --account-key "$STORAGE_KEY" --output none 2>/dev/null || true
-  ok "credit_risk.db uploaded"
+  ok "credit_risk.db uploaded (VACUUM'd, DELETE mode, no WAL/SHM)"
 
-  info "Uploading vector_database.db (WAL checkpoint → clean upload)"
-  python3 -c "
-import sqlite3
-conn = sqlite3.connect('data/vector_database.db')
-conn.execute('PRAGMA wal_checkpoint(TRUNCATE)')
-conn.close()
-src = sqlite3.connect('data/vector_database.db')
-dst = sqlite3.connect('/tmp/vector_db_upload2.db')
-src.backup(dst)
-dst.close(); src.close()
-print('  Clean backup ready')
-"
+  validate_and_prepare_db "data/vector_database.db" "/tmp/vector_db_upload2.db" "vector_database.db" \
+    || die "vector_database.db validation failed — deploy aborted"
+
   az storage file upload \
     --share-name "$SHARE" --source /tmp/vector_db_upload2.db --path vector_database.db \
     --account-name "$STORAGE" --account-key "$STORAGE_KEY" \
     --output none
   rm -f /tmp/vector_db_upload2.db
-  # Delete stale WAL/SHM files so the new container doesn't replay old transactions
+
   az storage file delete --share-name "$SHARE" --path "vector_database.db-wal" \
     --account-name "$STORAGE" --account-key "$STORAGE_KEY" --output none 2>/dev/null || true
   az storage file delete --share-name "$SHARE" --path "vector_database.db-shm" \
     --account-name "$STORAGE" --account-key "$STORAGE_KEY" --output none 2>/dev/null || true
-  ok "vector_database.db uploaded"
+  ok "vector_database.db uploaded (VACUUM'd, DELETE mode, no WAL/SHM)"
 
   # ── If --db-only: exit here (no new container needed) ───────────────────────
   if $DB_ONLY; then
@@ -368,8 +400,8 @@ health_check() {
   local ip="$1" name="$2"
   info "Waiting for health check at http://${ip}:8000/health ..."
   local STATUS="unreachable"
-  # Up to 10 attempts × 20s = 200s, giving the WAL recovery plenty of time
-  for i in $(seq 1 10); do
+  # Up to 12 attempts × 20s = 240s, giving WAL recovery + DB mount plenty of time
+  for i in $(seq 1 12); do
     STATUS=$(curl -s --max-time 8 "http://${ip}:8000/health" 2>/dev/null \
       | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('status','unknown'))" 2>/dev/null \
       || echo "unreachable")
@@ -377,9 +409,58 @@ health_check() {
       ok "Health check passed! (attempt ${i})"
       break
     fi
-    warn "Attempt ${i}/10: status=${STATUS} — waiting 20s..."
+    warn "Attempt ${i}/12: status=${STATUS} — waiting 20s..."
     sleep 20
   done
+
+  # ── Deep DB validation: verify companies portal and SIC prediction actually work
+  if [[ "$STATUS" == "healthy" ]]; then
+    info "Deep validation: checking database and SIC prediction..."
+
+    # Check companies portal returns data (tests company_portal_view + all joins)
+    PORTAL_ERR=$(curl -s --max-time 15 "http://${ip}:8000/api/companies/portal?page=1&limit=5" 2>/dev/null \
+      | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+err=d.get('error','')
+total=d.get('total') or 0
+cnt=len(d.get('data') or [])
+if err: print('ERROR:'+str(err))
+elif cnt==0: print('ERROR:no_data_returned')
+else: print('OK:total='+str(total)+',data='+str(cnt))
+" 2>/dev/null || echo "ERROR:curl_failed")
+
+    if [[ "$PORTAL_ERR" == OK* ]]; then
+      ok "Database portal check: ${PORTAL_ERR}"
+    else
+      warn "Database portal check FAILED: ${PORTAL_ERR}"
+      warn "The app is up but company data may not load. Check logs:"
+      warn "  az container logs --name ${name} --resource-group ${RG}"
+      STATUS="degraded_db"
+    fi
+
+    # Check SIC prediction returns a real code (not 82990 fallback)
+    SIC_CHECK=$(curl -s --max-time 30 -X POST "http://${ip}:8000/api/predict_sic_agentic" \
+      -H "Content-Type: application/json" \
+      -d '{"company_name":"TESCO PLC","business_description":"Grocery supermarket retail food stores"}' 2>/dev/null \
+      | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+sic=d.get('predicted_sic_code','')
+method=d.get('prediction_method','')
+conf=d.get('confidence_score',0)
+if method=='intelligent_fallback' or sic=='82990':
+    print('WARN:fallback sic='+str(sic)+' method='+str(method))
+else:
+    print('OK:sic='+str(sic)+' method='+str(method)+' conf='+str(conf))
+" 2>/dev/null || echo "ERROR:curl_failed")
+
+    if [[ "$SIC_CHECK" == OK* ]]; then
+      ok "SIC prediction check: ${SIC_CHECK}"
+    else
+      warn "SIC prediction check: ${SIC_CHECK}"
+    fi
+  fi
 
   echo ""
   echo "============================================================"

@@ -61,7 +61,10 @@ class DatabaseConnection:
             conn.execute("PRAGMA foreign_keys = ON")
             
             # Optimize for read performance
-            conn.execute("PRAGMA journal_mode = WAL")
+            # Note: DELETE journal mode (not WAL) — Azure File Share (SMB) does not
+            # support WAL-mode shared memory, which causes 'database disk image is
+            # malformed' errors on network-mounted SQLite databases.
+            conn.execute("PRAGMA journal_mode = DELETE")
             conn.execute("PRAGMA synchronous = NORMAL")
             conn.execute("PRAGMA cache_size = 10000")
             conn.execute("PRAGMA temp_store = MEMORY")

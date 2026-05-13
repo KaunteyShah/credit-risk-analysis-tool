@@ -127,7 +127,9 @@ class VectorDatabaseConnection:
                         raise
             
             # Optimize for vector operations
-            conn.execute("PRAGMA journal_mode = WAL")
+            # Note: DELETE journal mode — Azure File Share (SMB) does not support WAL
+            # shared memory files; WAL mode causes 'database disk image is malformed'.
+            conn.execute("PRAGMA journal_mode = DELETE")
             conn.execute("PRAGMA synchronous = NORMAL")
             conn.execute("PRAGMA cache_size = 20000")  # More cache for vector operations
             conn.execute("PRAGMA temp_store = MEMORY")

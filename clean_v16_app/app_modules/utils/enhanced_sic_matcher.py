@@ -138,9 +138,19 @@ class EnhancedSICMatcher:
         Returns:
             List of dictionaries with detailed match results and reasoning
         """
-        if not business_desc or not self.sic_descriptions:
+        if not business_desc:
             return []
-        
+
+        # Lazy reload: handles Azure startup timing where the SMB volume may not
+        # have been fully available when load_sic_codes_from_db() ran at init time.
+        if not self.sic_descriptions:
+            logger.warning("⚠️ sic_descriptions empty — attempting lazy reload from DB")
+            success = self.load_sic_codes_from_db()
+            if not success or not self.sic_descriptions:
+                logger.error("❌ Lazy reload failed — sic_descriptions still empty, cannot match")
+                return []
+            logger.info(f"✅ Lazy reload succeeded — {len(self.sic_descriptions)} SIC codes now loaded")
+
         # STEP 1: Enhanced business activity extraction with context preservation
         extracted_activity = self._extract_business_activity_enhanced(business_desc)
         original_cleaned = self._clean_text_for_analysis(business_desc)

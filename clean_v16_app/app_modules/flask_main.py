@@ -343,8 +343,15 @@ def create_app():
     # Initialize Enhanced SIC Matcher for database-only approach
     try:
         config = get_credit_risk_config()
-        setattr(app, 'sic_matcher', EnhancedSICMatcher(config))
-        logger.info("✅ Enhanced SIC matcher initialized successfully with database-only approach")
+        sic_matcher_instance = EnhancedSICMatcher(config)
+        setattr(app, 'sic_matcher', sic_matcher_instance)
+        loaded_count = len(getattr(sic_matcher_instance, 'sic_descriptions', {}))
+        if loaded_count == 0:
+            logger.critical("🚨 CRITICAL: EnhancedSICMatcher loaded 0 SIC codes — "
+                            "predictions will fall back to 82990. "
+                            "DB may not be mounted yet (Azure File Share timing).")
+        else:
+            logger.info(f"✅ Enhanced SIC matcher initialized with {loaded_count} SIC codes")
     except Exception as e:
         logger.warning(f"⚠️ Enhanced SIC matcher initialization failed: {e}")
         setattr(app, 'sic_matcher', None)

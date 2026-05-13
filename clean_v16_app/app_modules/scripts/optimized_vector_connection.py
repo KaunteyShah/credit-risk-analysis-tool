@@ -65,7 +65,9 @@ class OptimizedVectorDB:
                 self._connection.loadextension(sqlite_vec.loadable_path())
                 
                 # Optimize for vector operations
-                self._connection.execute("PRAGMA journal_mode = WAL")
+                # Note: DELETE journal mode — Azure File Share (SMB) does not support WAL
+                # shared memory files; WAL mode causes 'database disk image is malformed'.
+                self._connection.execute("PRAGMA journal_mode = DELETE")
                 self._connection.execute("PRAGMA synchronous = NORMAL") 
                 self._connection.execute("PRAGMA cache_size = 50000")  # More cache for vectors
                 self._connection.execute("PRAGMA temp_store = MEMORY")

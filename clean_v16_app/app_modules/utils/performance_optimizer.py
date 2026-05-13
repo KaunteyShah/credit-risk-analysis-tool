@@ -42,7 +42,9 @@ class ConnectionPool:
         conn.row_factory = sqlite3.Row  # Enable dict-like access
         
         # Apply SQLite performance optimizations
-        conn.execute("PRAGMA journal_mode=WAL")  # Write-Ahead Logging
+        # Note: DELETE journal mode (not WAL) — Azure File Share (SMB) does not
+        # support WAL shared memory; WAL mode causes 'database disk image is malformed'.
+        conn.execute("PRAGMA journal_mode=DELETE")
         conn.execute("PRAGMA synchronous=NORMAL")  # Balance performance/safety
         conn.execute("PRAGMA cache_size=10000")  # 10MB cache
         conn.execute("PRAGMA temp_store=MEMORY")  # Use memory for temp tables

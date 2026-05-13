@@ -1393,19 +1393,24 @@ class RAGRevenueExtractor:
             'income_statement': 0.35,
             'continuing_ops': 0.32,
             'net_revenue': 0.30,
-            'total_revenue': 0.28,
-            'revenue_billions': 0.25,
+            'total_revenue': 0.28,      # also catches total_revenue_billions/millions
+            'consolidated_revenue': 0.25,
+            'revenue_billions': 0.25,   # also catches revenue_billions_comprehensive
+            'revenue_millions': 0.23,   # also catches total_revenue_millions
             'operating_revenue': 0.22,
+            'statement_top': 0.22,      # catches statement_top_revenue
             'sales_revenue': 0.20,
+            'revenue_raw': 0.18,        # catches revenue_raw_numbers
+            'billions_currency': 0.18,
             'turnover': 0.18,
-            'currency_first': 0.10,  # Least specific
+            'millions_currency': 0.15,
+            'currency_first': 0.10,     # Least specific
         }
-        
-        # Calculate specificity based on pattern name components
+
+        # Find best matching keyword (no break — take the highest scoring match)
         for keyword, score in specificity_keywords.items():
             if keyword in pattern_type.lower():
                 base_confidence = max(base_confidence, score)
-                break
         
         # Factor 2: Context Quality Analysis (0.0-0.3)
         context_lower = str(context).lower() if context else ""
@@ -1485,14 +1490,14 @@ class RAGRevenueExtractor:
         except Exception as e:
             self.logger.debug(f"Enhanced context scanning in confidence calc failed: {e}")
         
-        # ENHANCED FACTOR 7: Public API Proximity Boost (0.0-0.30)
-        # Boost confidence when amount is close to yfinance/public API data
+        # ENHANCED FACTOR 7: DB Proximity Boost (0.0-0.30)
+        # Boost confidence when amount is close to the database sales_gbp reference value.
         api_boost = 0.0
         try:
             api_boost = self._calculate_public_api_proximity_boost(amount, context)
             if api_boost > 0:
-                self.logger.info(f"📈 PUBLIC API PROXIMITY BOOST: +{api_boost:.3f} confidence "
-                               f"(amount £{amount/1000000000:.1f}B matches expected range)")
+                self.logger.info(f"📈 DB PROXIMITY BOOST: +{api_boost:.3f} confidence "
+                               f"(amount £{amount/1000000000:.2f}B matches DB reference)")
         except Exception as e:
             self.logger.debug(f"Public API proximity calculation failed: {e}")
         
@@ -1642,7 +1647,7 @@ class RAGRevenueExtractor:
         
         # PHASE 1: Base confidence from similarity score
         similarity = chunk_metadata.get('similarity_score', 0.0)
-        confidence += similarity * 0.2  # Reduced to make room for GAAP/IFRS scoring
+        confidence += similarity * 0.35  # Raised — vector similarity is a strong signal
         
         # PHASE 2: GAAP/IFRS Taxonomy-Based Confidence (HIGHEST PRIORITY)
         gaap_ifrs_boost = self._calculate_gaap_ifrs_confidence(text_lower)
@@ -1653,9 +1658,9 @@ class RAGRevenueExtractor:
         revenue_context_boost = 0.0
         for indicator in self.revenue_context_indicators:
             if indicator in text_lower:
-                revenue_context_boost += 0.10  # Reduced since GAAP/IFRS is now primary
-                break
-        
+                revenue_context_boost += 0.08  # Accumulate across all matched indicators
+        # No break — count all hits, cap at 0.25
+
         # Industry-agnostic revenue context boost (no company-specific logic)
         confidence += min(revenue_context_boost, 0.25)
         
@@ -1689,7 +1694,10 @@ class RAGRevenueExtractor:
             'income': 0.12,
             'gross revenue': 0.25,
             'net revenue': 0.25,
-            'total revenue': 0.30
+            'total revenue': 0.30,
+            'consolidated': 0.22,  # catches consolidated_revenue pattern type
+            'billions': 0.18,      # catches billions_currency pattern type
+            'millions': 0.12,      # catches millions_currency pattern type
         }
         
         term_bonus = 0.0
@@ -1698,13 +1706,13 @@ class RAGRevenueExtractor:
                 term_bonus = max(term_bonus, score)  # Take highest matching term
         confidence += term_bonus
         
-        # PHASE 5: Amount reasonableness validation
-        if 1000000 <= amount <= 50000000000:  # Reasonable revenue range (1M to 50B)
+        # PHASE 5: Amount reasonableness validation (supports SMEs through mega-caps)
+        if 1000000 <= amount <= 1000000000000:  # £1M to £1T — main plausible range
             confidence += 0.15
-        elif 100000 <= amount <= 1000000000:  # Acceptable range
+        elif 100000 <= amount < 1000000:  # Acceptable for small companies
             confidence += 0.08
-        elif amount < 10000 or amount > 100000000000:  # Unrealistic revenue
-            confidence -= 0.3
+        elif amount < 10000 or amount > 1000000000000:  # Very likely an error
+            confidence -= 0.15  # Reduced penalty (was -0.30)
         
         # PHASE 6: Enhanced financial context quality
         income_statement_words = ['consolidated', 'continuing operations', 'from sales', 'operating revenue']
@@ -2373,65 +2381,44 @@ class RAGRevenueExtractor:
     
     def _calculate_public_api_proximity_boost(self, amount: float, context: str = "") -> float:
         """
-        Calculate confidence boost based on proximity to public API data (yfinance).
-        
+        Calculate confidence boost based on proximity to the database sales_gbp reference value.
+
+        Uses the pre-fetched DB revenue stored in self._db_reference_revenue (set at the start
+        of extract_revenue / extract_revenue_pure_rag before the extraction loop).
+
         Returns boost value between 0.0-0.30:
-        - 0.30: Very close match (within 10% of expected)
-        - 0.15: Good match (within 25% of expected) 
-        - 0.05: Reasonable match (within 50% of expected)
-        - 0.0: No match or no API data available
+        - 0.30: Very close match (within 10% of DB value)
+        - 0.15: Good match (within 25% of DB value)
+        - 0.05: Reasonable match (within 50% of DB value)
+        - 0.0:  No DB reference available or amount is too far from DB value
         """
         try:
-            # Expected revenue ranges for major UK companies (in £)
-            # Based on yfinance data - this could be made dynamic via API call
-            EXPECTED_REVENUES = {
-                'tesco': 71_200_000_000,    # £71.2B from yfinance
-                'bp': 185_900_000_000,      # £185.9B 
-                'lloyds': 17_900_000_000,   # £17.9B
-                'barclays': 26_000_000_000, # £26.0B
-                'rio tinto': 53_700_000_000, # £53.7B
-                'jd sports': 12_400_000_000  # £12.4B
-            }
-            
-            # Try to identify company from context (simple keyword matching)
-            context_lower = context.lower()
-            expected_revenue = None
-            
-            for company, revenue in EXPECTED_REVENUES.items():
-                if company.replace(' ', '') in context_lower.replace(' ', ''):
-                    expected_revenue = revenue
-                    break
-            
-            # If no specific company match, use Tesco as default for testing
-            # (In production, this would use a proper company identifier)
-            if expected_revenue is None:
-                expected_revenue = EXPECTED_REVENUES['tesco']  # Default to Tesco for now
-            
-            # Calculate proximity percentage
+            # Use the DB reference value stored at the start of the extraction run.
+            # Never fall back to hardcoded figures — if no DB value is available,
+            # return 0 so we don't artificially inflate confidence.
+            expected_revenue = getattr(self, '_db_reference_revenue', None)
+
+            if not expected_revenue or expected_revenue <= 0:
+                self.logger.debug("No DB reference revenue available — skipping proximity boost")
+                return 0.0
+
+            import math as _math
             diff_ratio = abs(amount - expected_revenue) / expected_revenue
-            
-            # Apply proximity-based boost
-            if diff_ratio <= 0.10:  # Within 10%
-                boost = 0.30
-                self.logger.info(f"🎯 PERFECT API MATCH: £{amount/1000000000:.1f}B vs expected £{expected_revenue/1000000000:.1f}B "
+
+            # Logarithmic decay: 0% diff → 0.30, falls smoothly to 0 at 200% diff.
+            # Formula: boost = 0.30 * (1 - log(1+d) / log(1+2.0))
+            LOG_CUTOFF = 2.0
+            boost = 0.30 * max(0.0, 1.0 - _math.log(1 + diff_ratio) / _math.log(1 + LOG_CUTOFF))
+
+            if boost > 0:
+                self.logger.info(f"📈 LOG DB PROXIMITY BOOST: +{boost:.3f} for "
+                               f"£{amount/1e9:.2f}B vs DB £{expected_revenue/1e9:.2f}B "
                                f"(diff: {diff_ratio*100:.1f}%)")
-            elif diff_ratio <= 0.25:  # Within 25%  
-                boost = 0.15
-                self.logger.info(f"✅ GOOD API MATCH: £{amount/1000000000:.1f}B vs expected £{expected_revenue/1000000000:.1f}B "
-                               f"(diff: {diff_ratio*100:.1f}%)")
-            elif diff_ratio <= 0.50:  # Within 50%
-                boost = 0.05
-                self.logger.info(f"📊 REASONABLE API MATCH: £{amount/1000000000:.1f}B vs expected £{expected_revenue/1000000000:.1f}B "
-                               f"(diff: {diff_ratio*100:.1f}%)")
-            else:
-                boost = 0.0
-                self.logger.debug(f"❌ No API match: £{amount/1000000000:.1f}B vs expected £{expected_revenue/1000000000:.1f}B "
-                                f"(diff: {diff_ratio*100:.1f}%)")
-            
+
             return boost
-            
+
         except Exception as e:
-            self.logger.debug(f"Public API proximity calculation failed: {e}")
+            self.logger.debug(f"DB proximity boost calculation failed: {e}")
             return 0.0
     
     def _extract_page_info(self, context: str) -> Dict[str, Any]:
@@ -2611,19 +2598,17 @@ class RAGRevenueExtractor:
                 self.logger.warning(f"⚠️ Confidence recalculation failed for £{amount:,.0f}: {e}")
                 adjusted_confidence = original_confidence
 
-            # Direct DB proximity boost: continuous smooth decay based on how close
-            # the candidate is to the DB sales_gbp value (British companies — DB is GBP ground truth).
-            # Formula: boost = 0.25 * max(0, 1 - percentage_diff / 50)
-            #   0%  diff → +0.25 (perfect match)
-            #  10%  diff → +0.20
-            #  25%  diff → +0.125
-            #  50%+ diff → +0.00 (no boost beyond 50%)
-            proximity_boost = 0.25 * max(0.0, 1.0 - (percentage_diff / 50.0))
+            # Direct DB proximity boost: logarithmic decay matching the post-selection formula.
+            # log_score = 1 - log(1 + d) / log(1 + 2.0), scaled to max +0.25 additive boost.
+            import math as _math
+            _diff = percentage_diff / 100.0  # convert % back to ratio
+            log_score = max(0.0, 1.0 - _math.log(1 + _diff) / _math.log(1 + 2.0))
+            proximity_boost = 0.25 * log_score  # max +0.25 additive
 
             if proximity_boost > 0:
                 pre_boost = adjusted_confidence
                 adjusted_confidence = min(0.95, adjusted_confidence + proximity_boost)
-                self.logger.info(f"📌 DB PROXIMITY BOOST (+{proximity_boost:.3f}): "
+                self.logger.info(f"📌 LOG DB PROXIMITY BOOST (+{proximity_boost:.3f}): "
                                  f"£{amount:,.0f} is {percentage_diff:.1f}% from DB £{expected_revenue:,.0f} → "
                                  f"confidence {pre_boost:.3f} → {adjusted_confidence:.3f}")
 
@@ -3225,6 +3210,14 @@ class RAGRevenueExtractor:
         with open("/tmp/rag_debug.txt", "a") as f:
             f.write(f"extract_revenue called with {company_number} at {datetime.now()}\n")
         try:
+            # Pre-fetch DB reference revenue so _calculate_public_api_proximity_boost can use it
+            # without needing to reach back to the DB on every individual chunk candidate.
+            self._db_reference_revenue = self._get_expected_revenue_from_database(company_number)
+            if self._db_reference_revenue:
+                self.logger.info(f"📊 DB reference revenue for {company_number}: £{self._db_reference_revenue:,.0f}")
+            else:
+                self.logger.info(f"📊 No DB reference revenue found for {company_number} — proximity boost disabled")
+
             # Get all chunks for the specified company (FIXED: now uses company_number parameter)
             with self.vector_db.get_connection() as conn:
                 cursor = conn.cursor()
@@ -3456,15 +3449,46 @@ class RAGRevenueExtractor:
                         'total_candidates_found': len(found_candidates)
                     }
                 self.logger.info(f"🔧 DEBUG: Selection result: £{best_result['amount']:,.0f}")
+
+                # Post-selection confidence: use logarithmic DB-proximity score when a DB
+                # reference is available, otherwise fall back to the text-analysis base score.
+                #
+                # Formula:  confidence = 1 - log(1 + d) / log(1 + CUTOFF)
+                #   d = |extracted - db_ref| / db_ref   (fractional difference)
+                #   CUTOFF = 2.0  → score reaches 0 at 200% difference
+                #
+                # Key points on the curve:
+                #    0%  diff → 100%  |   5% → 95.6%  |  10% → 91.3%
+                #   25%  diff →  80%  |  50% → 63.1%  | 100% → 36.9%
+                import math as _math
+                raw_confidence = best_result['confidence']
+                db_ref = getattr(self, '_db_reference_revenue', None)
+                LOG_CUTOFF = 2.0  # diff_ratio at which confidence reaches 0
+                if db_ref and db_ref > 0 and best_result['amount']:
+                    selected_amount = best_result['amount']
+                    diff_ratio = abs(selected_amount - db_ref) / db_ref
+                    boosted_confidence = max(
+                        0.0,
+                        1.0 - _math.log(1 + diff_ratio) / _math.log(1 + LOG_CUTOFF)
+                    )
+                    self.logger.info(
+                        f"📌 LOG DB-PROXIMITY CONFIDENCE: £{selected_amount:,.0f} is "
+                        f"{diff_ratio*100:.1f}% from DB £{db_ref:,.0f} → "
+                        f"confidence = {boosted_confidence:.3f} "
+                        f"(text-base was {raw_confidence:.3f})"
+                    )
+                else:
+                    boosted_confidence = raw_confidence
+
                 best = {
                     'amount': best_result['amount'],
-                    'confidence': best_result['confidence'],
+                    'confidence': boosted_confidence,
                     'pattern_type': best_result.get('reasoning', 'selected_by_priority_scoring'),
                     'raw_match': 'selected_candidate',
                     'chunk': 0,
                     'context_snippet': best_result.get('context', '')
                 }
-                
+
                 # Prepare top 3 candidates for UI — sorted by confidence score (highest first)
                 candidates_by_confidence = sorted(found_candidates, key=lambda c: c.get('confidence', 0), reverse=True)
                 top_candidates = []
